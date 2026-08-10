@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { ArrowLeft, Check, Mail, Sparkles } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass";
+import { auth } from "@/lib/auth";
 import { appVersion } from "@/lib/version";
 
 export const dynamic = "force-dynamic";
@@ -20,18 +22,21 @@ const ABOUT_FEATURES = [
   "Progress tracking",
 ];
 
-export default function CreatorPage() {
+export default async function CreatorPage() {
   const version = appVersion();
+  const session = await auth.api
+    .getSession({ headers: await headers() })
+    .catch(() => null);
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div className="flex items-center gap-2">
         <Link
-          href="/settings"
+          href={session ? "/settings" : "/"}
           className="text-muted-foreground hover:text-foreground -ml-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm transition-colors"
         >
           <ArrowLeft className="size-4" />
-          Settings
+          {session ? "Settings" : "StudyFlow"}
         </Link>
       </div>
 

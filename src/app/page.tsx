@@ -351,9 +351,17 @@ export default async function LandingPage() {
             </div>
             <span className="font-medium">StudyFlow AI</span>
           </div>
-          <p className="text-muted-foreground text-xs">
-            Built by one person. No fake reviews, no hype — just a study tool.
-          </p>
+          <div className="flex flex-col items-center gap-1 md:items-end">
+            <p className="text-muted-foreground text-xs">
+              Built by one person. No fake reviews, no hype — just a study tool.
+            </p>
+            <Link
+              href="/about/creator"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+            >
+              Made by <span className="font-medium">Mithil</span> — StudyFlow AI
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
