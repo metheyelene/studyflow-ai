@@ -24,15 +24,19 @@ not modified beyond this doc until the plan is approved.
 
 ### 1.2 Backend gaps: server-action-only logic (NOT callable from Flutter)
 
-Next.js **server actions** are not HTTP endpoints. These exist as server actions
-today and must be exposed as REST routes before mobile can use them (Phase 0):
+Next.js **server actions** are not HTTP endpoints. These existed as server
+actions and are now exposed as REST routes (**Phase 0 — done**):
 
 | Logic | Today | Mobile needs |
 |---|---|---|
-| Analytics events (`trackEventAction`) | server action | `POST /api/analytics` |
-| Onboarding (`completeOnboarding`) | server action | `POST /api/onboarding` |
-| Profile/settings (`updateProfileAction`, password change, data export) | server action | `PUT /api/profile`, `PUT /api/profile/password`, `GET /api/profile/export` |
-| AI usage widget data | server component query | `GET /api/usage` |
+| Analytics events (`trackEventAction`) | **`POST /api/analytics`** (works logged out for pre-auth events) | done |
+| Onboarding (`completeOnboarding`) | **`GET` + `POST /api/onboarding`** (state restore + idempotent completion) | done |
+| Profile/settings (`updateProfileAction`, password change, data export) | **`GET` + `PUT /api/profile`**; password change stays on better-auth (`/api/auth/change-password`); data export remains a server action for now | mostly done |
+| AI usage widget data | **`GET /api/usage`** (plan + used/limit/remaining/reset) | done |
+
+The shared logic lives in `src/lib/onboarding.ts` and `src/lib/profile.ts` —
+the server actions and the REST routes call the same functions, so web and
+mobile validate and persist identically.
 
 ### 1.3 Schema-level reuse
 
@@ -238,7 +242,7 @@ accounts (Phase 21–22). No store credentials can be embedded in the repo.
 
 | Phase | Mobile work | Backend prerequisite |
 |---|---|---|
-| 0 | — | **REST endpoints**: `/api/analytics`, `/api/onboarding`, `/api/profile*`, `/api/usage` (server actions → routes). Small, do first. |
+| 0 | — | **REST endpoints** — **done**: `/api/analytics`, `/api/onboarding`, `/api/profile`, `/api/usage` (server actions → routes, shared lib logic, 21 new tests). |
 | 1 | `mobile/` scaffold, Riverpod + go_router + dio skeleton, CI (flutter analyze/test/build) | none |
 | 2 | Glass design system + tokens | none |
 | 3 | Navigation (bottom tab / rail / master-detail), deep links — **done** | none |

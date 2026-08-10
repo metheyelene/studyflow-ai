@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Flutter app — Dart/generated JS are checked by `flutter analyze`.
+    "mobile/**",
   ]),
 ]);
 

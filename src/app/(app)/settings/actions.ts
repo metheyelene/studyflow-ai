@@ -2,34 +2,15 @@
 
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 
 import { getDb, schema } from "@/db";
 import { auth } from "@/lib/auth";
+import {
+  EDUCATION_LEVELS,
+  updateProfile as updateProfileShared,
+} from "@/lib/profile";
 
-export const EDUCATION_LEVELS = [
-  { value: "high-school", label: "High school" },
-  { value: "undergraduate", label: "Undergraduate" },
-  { value: "postgraduate", label: "Postgraduate" },
-  { value: "professional", label: "Professional / working" },
-  { value: "other", label: "Other" },
-] as const;
-
-const profileSchema = z.object({
-  name: z.string().trim().min(1, "Your name can't be empty.").max(100),
-  educationLevel: z
-    .enum(["high-school", "undergraduate", "postgraduate", "professional", "other"])
-    .nullable()
-    .optional(),
-  course: z.string().trim().max(120).nullable().optional(),
-  dailyStudyMinutes: z.coerce
-    .number()
-    .int()
-    .min(5, "Minimum 5 minutes a day.")
-    .max(480, "That's a lot — max 480 minutes."),
-  timezone: z.string().trim().max(64).nullable().optional(),
-  goal: z.string().trim().max(200).nullable().optional(),
-});
+export { EDUCATION_LEVELS };
 
 export type ProfileFormState = {
   ok?: boolean;
@@ -43,7 +24,7 @@ export async function updateProfileAction(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { error: "Your session expired. Please log in again." };
 
-  const parsed = profileSchema.safeParse({
+  const result = await updateProfileShared(session.user.id, await headers(), {
     name: formData.get("name"),
     educationLevel: formData.get("educationLevel") || null,
     course: formData.get("course") || null,
@@ -52,38 +33,8 @@ export async function updateProfileAction(
     goal: formData.get("goal") || null,
   });
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Check your inputs." };
-  }
-
-  const db = getDb();
-  try {
-    await auth.api.updateUser({
-      headers: await headers(),
-      body: { name: parsed.data.name },
-    });
-
-    const values = {
-      educationLevel: parsed.data.educationLevel ?? null,
-      course: parsed.data.course ?? null,
-      dailyStudyMinutes: parsed.data.dailyStudyMinutes,
-      timezone: parsed.data.timezone ?? null,
-      goal: parsed.data.goal ?? null,
-    };
-
-    await db
-      .insert(schema.profiles)
-      .values({ userId: session.user.id, ...values })
-      .onConflictDoUpdate({
-        target: schema.profiles.userId,
-        set: values,
-      });
-
-    return { ok: true };
-  } catch (err) {
-    console.error("[settings] update profile failed:", err);
-    return { error: "We couldn't save your profile. Please try again." };
-  }
+  if ("error" in result) return { error: result.error };
+  return { ok: true };
 }
 
 export async function exportDataAction(): Promise<{ ok?: boolean; error?: string; data?: unknown }> {
