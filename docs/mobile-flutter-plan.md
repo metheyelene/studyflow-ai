@@ -71,6 +71,9 @@ verification gates; platform builds run in CI.
 - **Creator page** (from the earlier web feature, now in Flutter): MV
   monogram, mailto links via `url_launcher`, live version/build from
   `package_info_plus`, About StudyFlow, under Profile → Settings → About.
+  On web the section is public at `/about/creator` (linked from the landing
+  footer); the mobile screen is the 1:1 in-app equivalent — see §10 build
+  order for the explicit About/Creator row.
 - Verification: `flutter analyze` clean, 12 widget tests passing.
 - Next: Phase 0 (4 server-action → REST routes) + Phase 3 (navigation/
   routing to real screens).
@@ -226,6 +229,7 @@ accounts (Phase 21–22). No store credentials can be embedded in the repo.
 | 4 | Auth (cookie jar, restore session, reset password) | none |
 | 5 | Onboarding | `/api/onboarding` |
 | 6 | Dashboard (greeting, Today's Focus, quick actions, exam countdown, AI usage) | `/api/usage` |
+| 6.5 | **About / Creator** — Profile → Settings → About StudyFlow → Creator: glass creator card (MV monogram, bio, tappable `mailto:` Contact Creator / Send Feedback, live version via `package_info_plus`). Mirrors the public web route `/about/creator` (1:1 content mapping, in-app instead of a web page). Scaffolded in Phase 2; completed with the Profile/Settings phase. | none |
 | 7 | Notebooks list/create/rename/delete | existing |
 | 8 | Sources + upload (progress, retry, cancel) + scan/OCR | existing |
 | 9 | Notebook AI chat (streaming) + actions | existing |
@@ -238,6 +242,15 @@ accounts (Phase 21–22). No store credentials can be embedded in the repo.
 | 19–20 | Tests, perf/security audit | none |
 | 21–22 | iOS/Android release prep (icons, screenshots, store copy) | user's store accounts |
 | 23 | Production launch | user review of legal/billing |
+
+**About / Creator mapping** (web → mobile): the web app serves the creator
+page publicly at `/about/creator` (linked from the landing footer as "Made by
+Mithil — StudyFlow AI" and from Settings → About StudyFlow). The Flutter app
+reproduces the same section as an in-app screen under Profile → Settings →
+About StudyFlow → Creator — same monogram, quote, email, and Contact
+Creator / Send Feedback `mailto:` actions (`url_launcher`), with version/build
+read from the app config instead of `package.json`. No backend dependency;
+no extra permissions; only the two provided creator details are shown.
 
 ## 11. Testing & CI (§45–47)
 
