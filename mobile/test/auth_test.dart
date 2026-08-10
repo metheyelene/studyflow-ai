@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:studyflow_mobile/core/routing/app_router.dart';
+import 'package:studyflow_mobile/core/theme/app_theme.dart';
+import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
+import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
+import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 
 import 'helpers.dart';
 
@@ -57,6 +64,45 @@ void main() {
 
     expect(auth.signUpCalls, 1);
     expect(find.text('Ready to study?'), findsOneWidget);
+  });
+
+  testWidgets('boot from splash: signed-out session restore lands on login', (tester) async {
+    // Mirrors production boot: state starts initializing, the router shows
+    // the splash, then restore() resolves to signed-out (regression for the
+    // redirect that stranded users on /splash once auth resolved).
+    authEvents.reset();
+    final auth = FakeAuthRepository(current: null);
+
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(auth),
+          notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
+        ],
+        child: MaterialApp.router(
+          routerConfig: buildAppRouter(),
+          theme: buildAppTheme(Brightness.light),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // While restoring, the app sits on the splash.
+    expect(find.text('StudyFlow'), findsOneWidget);
+
+    // main.dart fires restore() from initState; mimic it.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp).first),
+    );
+    await container.read(authControllerProvider.notifier).restore();
+    await tester.pumpAndSettle();
+
+    // The splash must not linger — signed out means login.
+    expect(find.text('StudyFlow'), findsNothing);
+    expect(find.text('Welcome back'), findsOneWidget);
   });
 
   testWidgets('signing out from the profile returns to login', (tester) async {

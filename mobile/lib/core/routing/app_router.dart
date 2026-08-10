@@ -55,7 +55,8 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
 
       return switch (auth) {
         AuthInitializing() => loc == AppRoutes.splash ? null : AppRoutes.splash,
-        AuthUnauthenticated() => (onAuthPage || loc == AppRoutes.splash) ? null : AppRoutes.login,
+        // Splash is transient — never a resting place once auth resolves.
+        AuthUnauthenticated() => onAuthPage ? null : AppRoutes.login,
         AuthAuthenticated() => (onAuthPage || loc == AppRoutes.splash) ? AppRoutes.home : null,
       };
     },

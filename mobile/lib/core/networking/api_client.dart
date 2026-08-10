@@ -1,6 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -22,11 +23,19 @@ class ApiClient {
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 30),
         headers: {'Content-Type': 'application/json'},
+        // Cross-origin requests (web preview on another port) must send
+        // and receive the session cookie; the dio_web_adapter reads this
+        // from `extra` (sets XHR withCredentials). Ignored on native,
+        // where the cookie jar below manages cookies.
+        extra: {'withCredentials': true},
       ),
     );
-    // In-memory jar keeps cookies (session cookie) for the process
-    // lifetime; the token is also persisted separately for restores.
-    dio.interceptors.add(CookieManager(CookieJar()));
+    // dio_cookie_manager asserts against web (the browser owns cookies
+    // there); only the native jar keeps the session cookie for the
+    // process lifetime.
+    if (!kIsWeb) {
+      dio.interceptors.add(CookieManager(CookieJar()));
+    }
     return ApiClient._(dio);
   }
 
@@ -64,6 +73,10 @@ class ApiClient {
   }
 
   void _attachCookie(String token) {
+    // Browsers refuse to set the Cookie header from JS; on web the
+    // browser's own jar restores the session (cookie persists in the
+    // browser). Native cold starts re-attach the persisted token here.
+    if (kIsWeb) return;
     _dio.options.headers['Cookie'] = '${AppConfig.sessionCookieName}=$token';
   }
 

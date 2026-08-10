@@ -99,24 +99,26 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
     cookiePrefix: "studyflow",
-    // Trusted origins for cookie auth. Production is the web origin;
-    // dev adds the Flutter web preview origins (the app itself runs on
-    // other ports/origins during development). Native apps send no
-    // Origin header and are unaffected.
-    trustedOrigins:
-      process.env.NODE_ENV === "production"
-        ? ["https://studyflow.ai", "https://www.studyflow.ai"]
-        : [
-            appUrl,
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://localhost:3100",
-            "http://127.0.0.1:3100",
-            "http://localhost:3200",
-            "http://127.0.0.1:3200",
-            "http://localhost:52378",
-          ],
   },
+
+  // Trusted origins for cookie auth (top-level option — nested under
+  // `advanced` it is silently ignored). Production is the web origin;
+  // dev adds the Flutter web preview origins (the app itself runs on
+  // other ports/origins during development). Native apps send no
+  // Origin header and are unaffected.
+  trustedOrigins:
+    process.env.NODE_ENV === "production"
+      ? ["https://studyflow.ai", "https://www.studyflow.ai"]
+      : [
+          appUrl,
+          "http://localhost:3000",
+          "http://127.0.0.1:3000",
+          "http://localhost:3100",
+          "http://127.0.0.1:3100",
+          "http://localhost:3200",
+          "http://127.0.0.1:3200",
+          "http://localhost:52378",
+        ],
 });
 
 export type Session = typeof auth.$Infer.Session;
