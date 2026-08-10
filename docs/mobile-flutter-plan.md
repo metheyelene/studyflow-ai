@@ -54,18 +54,26 @@ server-side. **The Flutter app contains zero AI provider keys** (§40–41).
 
 ## 2. Environment constraint (read first)
 
-**Flutter/Dart is not installed on this machine** (verified: `flutter` and
-`dart` are absent). Consequences:
+~~**Flutter/Dart is not installed on this machine**~~ **Resolved**: Flutter
+3.44.9 (stable, arm64) installed via Homebrew. Android SDK and Xcode are not
+complete on this machine, so `flutter analyze` + `flutter test` are the local
+verification gates; platform builds run in CI.
 
-- `flutter create / analyze / test / build` cannot run here yet.
-- The plan below can be executed two ways:
-  1. **Install the Flutter SDK** (~1–2 GB download, modifies the machine
-     outside this repo — requires explicit approval), then scaffold + verify
-     in-repo (`mobile/`), with `flutter analyze` + `flutter test` in CI.
-  2. **Skeleton-only**: hand-write the Dart project in `mobile/` without
-     verification tooling — not recommended (unverifiable code ships).
-- Recommendation: **install Flutter (stable channel)**, approve the system
-  change, and build Phase 1–2 verified.
+## Status (updated)
+
+- **Phase 1 — scaffold**: `mobile/` created (android + ios + web targets),
+  core deps in (`riverpod`, `go_router`, `dio`, `flutter_secure_storage`,
+  `url_launcher`, `package_info_plus`).
+- **Phase 2 — design system**: theme tokens (light/dark), glass materials,
+  responsive breakpoints, and the full glass widget library (card, button,
+  pill, badge, input, sheet, progress, nav, misc) — all centralized, no
+  per-screen blur.
+- **Creator page** (from the earlier web feature, now in Flutter): MV
+  monogram, mailto links via `url_launcher`, live version/build from
+  `package_info_plus`, About StudyFlow, under Profile → Settings → About.
+- Verification: `flutter analyze` clean, 12 widget tests passing.
+- Next: Phase 0 (4 server-action → REST routes) + Phase 3 (navigation/
+  routing to real screens).
 
 ---
 
@@ -247,10 +255,8 @@ each release.
 
 ## 13. Open decisions requiring you
 
-1. **Install the Flutter SDK on this machine** (large download, system-level —
-   needs your go-ahead) so Phase 1–2 are built and verified here.
-2. **Repo layout**: `mobile/` inside `studyflow-ai` (recommended) vs. separate
-   repo.
+1. ~~**Install the Flutter SDK on this machine**~~ **Done** (see §2).
+2. **Repo layout**: `mobile/` inside `studyflow-ai` — **done** (monorepo).
 3. **Google OAuth on mobile**: in-app browser reuse vs. skip on mobile initially.
 4. **Store billing** accounts (Apple Developer, Google Play Console) are yours
    to create — the code will be ready before they're needed (Phase 15/21).
@@ -259,6 +265,6 @@ each release.
 
 ## 14. Immediate next step (recommended)
 
-Approve Flutter installation → Phase 0 (4 small REST routes in this repo,
-tested) + Phase 1 scaffold (`mobile/`) → Phase 2 design system. Each phase
-lands as a verified commit, same cadence as the web build.
+Phase 0 (4 small REST routes in this repo, tested) + Phase 3 (mobile
+navigation/routing to real screens). Each phase lands as a verified commit,
+same cadence as the web build.
