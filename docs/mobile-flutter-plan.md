@@ -74,6 +74,11 @@ verification gates; platform builds run in CI.
   On web the section is public at `/about/creator` (linked from the landing
   footer); the mobile screen is the 1:1 in-app equivalent — see §10 build
   order for the explicit About/Creator row.
+- **Web deep links**: `usePathUrlStrategy()` in `main.dart` (no-op on
+  mobile) so the Flutter web build answers real paths — the landing
+  footer's "Made by Mithil" href `/about/creator` opens the Creator screen
+  directly. SPA fallback (serve `index.html` for unknown paths) is required
+  when hosting the web build.
 - Verification: `flutter analyze` clean, 12 widget tests passing.
 - Next: Phase 0 (4 server-action → REST routes) + Phase 3 (navigation/
   routing to real screens).
