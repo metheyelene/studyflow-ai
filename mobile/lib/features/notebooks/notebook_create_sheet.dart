@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_input.dart';
+import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
 import 'notebooks_controller.dart';
 
-/// Create-notebook sheet. Honest about the current persistence story:
-/// notebooks live on this device until the backend client is wired up.
+/// Create-notebook sheet. Saves to the backend (signed-in users).
 Future<String?> showCreateNotebookSheet(BuildContext context) {
   return showGlassSheet<String>(
     context: context,
@@ -25,6 +25,7 @@ class _CreateNotebookSheet extends ConsumerStatefulWidget {
 
 class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
   final _controller = TextEditingController();
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -32,10 +33,17 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final title = _controller.text.trim();
-    if (title.isEmpty) return;
-    ref.read(notebooksProvider.notifier).create(title);
+    if (title.isEmpty || _busy) return;
+    setState(() => _busy = true);
+    final error = await ref.read(notebooksControllerProvider.notifier).create(title);
+    if (!mounted) return;
+    if (error != null) {
+      setState(() => _busy = false);
+      showGlassToast(context, error, error: true);
+      return;
+    }
     Navigator.of(context).pop(title);
   }
 
@@ -61,16 +69,22 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
             label: 'Name',
             hintText: 'e.g. Cell Biology — Unit 3',
             autofocus: true,
+            enabled: !_busy,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _submit(),
           ),
           const SizedBox(height: 8),
           Text(
-            'Stored on this device for now — saved to your account once sign-in is wired up.',
+            'Saved to your account — synced across your devices.',
             style: TextStyle(color: g.textMuted, fontSize: 11.5),
           ),
           const SizedBox(height: 16),
-          GlassButton(label: 'Create notebook', icon: Icons.add, onPressed: _submit, expand: true),
+          GlassButton(
+            label: _busy ? 'Creating…' : 'Create notebook',
+            icon: Icons.add,
+            onPressed: _busy ? null : _submit,
+            expand: true,
+          ),
         ],
       ),
     );

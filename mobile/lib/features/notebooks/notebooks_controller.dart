@@ -1,45 +1,53 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'notebook.dart';
+import 'notebooks_repository.dart';
 
-/// Device-local notebook state for Phase 3. Deliberately in-memory: the
-/// source of truth is the StudyFlow backend, which this list will sync
-/// against once the API client lands (Phases 4–8). Until then the UI is
-/// honest about it ("stored on this device").
-class NotebooksNotifier extends Notifier<List<LocalNotebook>> {
-  int _counter = 0;
-
+/// Backend-backed notebook state: loads on first watch, and create/delete
+/// update the list from the server's response. Loading and error states
+/// are first-class (the list UI renders skeletons / a retry card).
+class NotebooksController extends AsyncNotifier<List<Notebook>> {
   @override
-  List<LocalNotebook> build() => const [];
-
-  String _nextId() {
-    _counter++;
-    return 'local-${DateTime.now().microsecondsSinceEpoch}-$_counter';
+  Future<List<Notebook>> build() {
+    return ref.watch(notebooksRepositoryProvider).list();
   }
 
-  void create(String title) {
-    final clean = title.trim();
-    if (clean.isEmpty) return;
-    final now = DateTime.now();
-    state = [
-      LocalNotebook(id: _nextId(), title: clean, createdAt: now, updatedAt: now),
-      ...state,
-    ];
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(notebooksRepositoryProvider).list(),
+    );
   }
 
-  void rename(String id, String title) {
-    final clean = title.trim();
-    if (clean.isEmpty) return;
-    state = [
-      for (final n in state)
-        if (n.id == id) n.copyWith(title: clean, updatedAt: DateTime.now()) else n,
-    ];
+  /// Returns a friendly error string, or null on success.
+  Future<String?> create(String title, {String? description}) async {
+    try {
+      final created = await ref
+          .read(notebooksRepositoryProvider)
+          .create(title: title, description: description);
+      state = AsyncData([created, ...(state.valueOrNull ?? const [])]);
+      return null;
+    } catch (_) {
+      return 'Could not create the notebook. Please try again.';
+    }
   }
 
-  void delete(String id) {
-    state = [for (final n in state) if (n.id != id) n];
+  /// Returns a friendly error string, or null on success.
+  Future<String?> delete(String id) async {
+    try {
+      await ref.read(notebooksRepositoryProvider).delete(id);
+      state = AsyncData([
+        for (final n in state.valueOrNull ?? const <Notebook>[])
+          if (n.id != id) n,
+      ]);
+      return null;
+    } catch (_) {
+      return 'Could not delete the notebook. Please try again.';
+    }
   }
 }
 
-final notebooksProvider =
-    NotifierProvider<NotebooksNotifier, List<LocalNotebook>>(NotebooksNotifier.new);
+final notebooksControllerProvider =
+    AsyncNotifierProvider<NotebooksController, List<Notebook>>(
+  NotebooksController.new,
+);

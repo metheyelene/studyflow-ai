@@ -1,6 +1,11 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/about/creator_screen.dart';
+import '../../features/authentication/auth_controller.dart';
+import '../../features/authentication/auth_models.dart';
+import '../../features/authentication/login_screen.dart';
+import '../../features/authentication/signup_screen.dart';
+import '../../features/authentication/splash_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/notebooks/notebooks_screen.dart';
 import '../../features/placeholders.dart';
@@ -10,9 +15,13 @@ import '../../features/shell/home_shell.dart';
 
 /// Canonical route paths — the single source of truth for navigation and
 /// deep links. `/about/creator` matches the public web route exactly, so a
-/// web URL (`https://studyflow.ai/about/creator`) resolves to the same
-/// screen in the app.
+/// web URL (`https://studyflow.ai/about/creator`) handed to the app
+/// resolves to the same screen (it is auth-gated on mobile, like the web
+/// app shell).
 abstract final class AppRoutes {
+  static const splash = '/splash';
+  static const login = '/login';
+  static const signup = '/signup';
   static const home = '/home';
   static const notebooks = '/notebooks';
   static const notebookDetail = '/notebooks/:id';
@@ -24,17 +33,36 @@ abstract final class AppRoutes {
 }
 
 /// Builds the app router. `initialLocation` exists so deep-link launches
-/// (app opened on `/about/creator`) are testable.
+/// are testable.
 ///
 /// Deep links: go_router (v16+) matches incoming URLs by path, so a web URL
-/// like `https://studyflow.ai/about/creator` handed to the OS resolves to
-/// the route registered at `/about/creator` regardless of scheme/host. The
-/// platform registration that makes the OS deliver those URLs (iOS Universal
-/// Links / Android App Links) lands in the release-prep phases.
+/// like `https://studyflow.ai/about/creator` resolves to the route
+/// registered at `/about/creator` regardless of scheme/host. The platform
+/// registration that makes the OS deliver those URLs (iOS Universal Links /
+/// Android App Links) lands in the release-prep phases.
+///
+/// Auth gating: the router listens to [authEvents] and redirects — splash
+/// while the session restores, `/login` when logged out, and back into the
+/// app when logged in.
 GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
   return GoRouter(
     initialLocation: initialLocation,
+    refreshListenable: authEvents,
+    redirect: (context, state) {
+      final auth = authEvents.state;
+      final loc = state.matchedLocation;
+      final onAuthPage = loc == AppRoutes.login || loc == AppRoutes.signup;
+
+      return switch (auth) {
+        AuthInitializing() => loc == AppRoutes.splash ? null : AppRoutes.splash,
+        AuthUnauthenticated() => (onAuthPage || loc == AppRoutes.splash) ? null : AppRoutes.login,
+        AuthAuthenticated() => (onAuthPage || loc == AppRoutes.splash) ? AppRoutes.home : null,
+      };
+    },
     routes: [
+      GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return HomeShell(
@@ -68,7 +96,7 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
       ),
       GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
       GoRoute(path: AppRoutes.aboutCreator, builder: (context, state) => const CreatorScreen()),
-      // Auth + onboarding routes register here in Phase 4–5.
+      // Onboarding routes register in Phase 5.
     ],
   );
 }

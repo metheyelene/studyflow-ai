@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/authentication/auth_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,8 +15,21 @@ void main() {
   runApp(const ProviderScope(child: StudyFlowApp()));
 }
 
-class StudyFlowApp extends StatelessWidget {
+class StudyFlowApp extends ConsumerStatefulWidget {
   const StudyFlowApp({super.key});
+
+  @override
+  ConsumerState<StudyFlowApp> createState() => _StudyFlowAppState();
+}
+
+class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Restore the session: re-attach the persisted token and validate it.
+    // Until it resolves the router shows the splash.
+    ref.read(authControllerProvider.notifier).restore();
+  }
 
   @override
   Widget build(BuildContext context) {

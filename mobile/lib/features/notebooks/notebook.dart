@@ -1,10 +1,10 @@
-/// A study notebook. This local model backs the Phase 3 UI; once the
-/// backend client lands (Phases 4–8) the list is fetched from the API and
-/// these become plain cached copies of the server record.
-class LocalNotebook {
-  const LocalNotebook({
+/// A study notebook, matching the backend `GET/POST /api/notebooks`
+/// payload (dates arrive as ISO strings).
+class Notebook {
+  const Notebook({
     required this.id,
     required this.title,
+    this.description,
     required this.createdAt,
     required this.updatedAt,
     this.sourceCount = 0,
@@ -12,17 +12,19 @@ class LocalNotebook {
 
   final String id;
   final String title;
+  final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int sourceCount;
 
-  LocalNotebook copyWith({String? title, DateTime? updatedAt, int? sourceCount}) {
-    return LocalNotebook(
-      id: id,
-      title: title ?? this.title,
-      createdAt: createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      sourceCount: sourceCount ?? this.sourceCount,
+  factory Notebook.fromJson(Map<String, dynamic> json) {
+    return Notebook(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? 'Untitled',
+      description: json['description'] as String?,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      sourceCount: (json['sourceCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

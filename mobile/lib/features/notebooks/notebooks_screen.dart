@@ -18,8 +18,8 @@ class NotebooksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notebooks = ref.watch(notebooksProvider);
-    LocalNotebook? selected;
+    final notebooks = ref.watch(notebooksControllerProvider).valueOrNull ?? const <Notebook>[];
+    Notebook? selected;
     for (final n in notebooks) {
       if (n.id == selectedId) {
         selected = n;

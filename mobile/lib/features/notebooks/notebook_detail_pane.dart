@@ -16,7 +16,7 @@ import 'notebook.dart';
 class NotebookDetailPane extends StatefulWidget {
   const NotebookDetailPane({super.key, required this.notebook, this.showBack = false});
 
-  final LocalNotebook notebook;
+  final Notebook notebook;
   final bool showBack;
 
   @override

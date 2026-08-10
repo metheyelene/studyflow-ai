@@ -87,11 +87,19 @@ verification gates; platform builds run in CI.
   navigate, upcoming-exams section), notebooks (list + search + create via
   glass sheet, detail workspace with Sources / Ask AI / Study tools tabs),
   profile (plan card), with `/about/creator` reachable and a master-detail
-  split on tablet/desktop (`/notebooks/:id`). Notebooks hold device-local
-  state (Riverpod `NotebooksNotifier`) until the backend client lands.
-  Found + fixed a real bug: sheets/modals now use the root navigator so
-  they render above the floating bottom nav (branch navigators sit under
-  the shell); GlassTabBar scales down instead of overflowing.
+  split on tablet/desktop (`/notebooks/:id`). Found + fixed a real bug:
+  sheets/modals now use the root navigator so they render above the
+  floating bottom nav (branch navigators sit under the shell);
+  GlassTabBar scales down instead of overflowing.
+- **Phase 4 — auth + API client (done)**: dio `ApiClient` with cookie jar
+  and secure-storage session token; `ApiAuthRepository` (sign-up/sign-in/
+  sign-out/get-session) and `ApiNotebooksRepository` (list/create/delete);
+  auth-gated router (splash → login/signup screens → shell, automatic on
+  login/logout/restore); Profile shows identity + Sign out. **Notebooks are
+  now backend-backed** (`AsyncNotifier` with loading/error/retry states) —
+  no more device-local state. Backend support: CORS + preflight for
+  `/api/*` and better-auth trusted origins. 27 Flutter tests pass (auth
+  flows, notebook create/search/open/failure, master-detail, deep links).
 - Verification: `flutter analyze` clean, **21 tests passing** (notebook
   create/open/search, master-detail, controller, quick-action navigation),
   `flutter build web` succeeds.
@@ -162,17 +170,24 @@ bar), tablet ≥ 600dp (navigation rail), ≥ 900dp (master-detail: notebook lis
 
 ## 5. Auth on mobile
 
-Recommendation: **keep the existing Better Auth cookie flow** — dio
-`CookieJar` persists `better-auth.session_token`; zero backend change.
-- sign-up / sign-in / forgot-password / reset-password / logout: existing
-  `/api/auth/*` endpoints.
-- session restoration on cold start: `GET /api/auth/get-session` (auth API
-  catch-all) — 401 → routing to login.
-- Google OAuth on mobile: Better Auth's `/api/auth/oauth2` flows are
-  redirect-based; on mobile use the **in-app browser / custom tab** to reuse
-  the same endpoint without new backend work, or gate Google sign-in to
-  platforms where it's clean. Decision point at Phase 4.
-- account deletion: existing endpoint.
+**Done (Phase 4).** Kept the existing Better Auth cookie flow — dio
+`CookieJar` for the session cookie plus the token persisted in
+`flutter_secure_storage` (re-attached on cold start) so the session
+restores across app restarts.
+- sign-up / sign-in / logout: existing `/api/auth/*` endpoints via
+  `ApiAuthRepository`; session restoration via `GET /api/auth/get-session`.
+- Auth gating: the global router listens to an `AuthEvents` ChangeNotifier
+  (splash while restoring → `/login` when signed out → the shell when
+  signed in); screens are `LoginScreen` / `SignupScreen` (glass design);
+  Profile shows identity + Sign out.
+- Backend support added: better-auth `trustedOrigins` (dev previews +
+  production web origin) and CORS headers/preflight handling for `/api/*`
+  in `proxy.ts` — needed for the Flutter **web** preview; native apps send
+  no Origin header and are unaffected.
+- Google OAuth on mobile: still a decision point — Better Auth's oauth2
+  flows are redirect-based; use the in-app browser / custom tab later, or
+  gate Google sign-in to platforms where it's clean.
+- account deletion: existing endpoint (not yet surfaced in the UI).
 
 ## 6. Notebook experience mapping (web → mobile)
 
@@ -246,11 +261,11 @@ accounts (Phase 21–22). No store credentials can be embedded in the repo.
 | 1 | `mobile/` scaffold, Riverpod + go_router + dio skeleton, CI (flutter analyze/test/build) | none |
 | 2 | Glass design system + tokens | none |
 | 3 | Navigation (bottom tab / rail / master-detail), deep links — **done** | none |
-| 4 | Auth (cookie jar, restore session, reset password) | none |
+| 4 | Auth (cookie jar, restore session, reset password) — **done** | none |
 | 5 | Onboarding | `/api/onboarding` |
 | 6 | Dashboard (greeting, Today's Focus, quick actions, exam countdown, AI usage) | `/api/usage` |
 | 6.5 | **About / Creator** — Profile → Settings → About StudyFlow → Creator: glass creator card (MV monogram, bio, tappable `mailto:` Contact Creator / Send Feedback, live version via `package_info_plus`). Mirrors the public web route `/about/creator` (1:1 content mapping, in-app instead of a web page). Scaffolded in Phase 2; completed with the Profile/Settings phase. | none |
-| 7 | Notebooks list/create/rename/delete | existing |
+| 7 | Notebooks list/create/delete — **done (API-backed, Phase 4)** | existing |
 | 8 | Sources + upload (progress, retry, cancel) + scan/OCR | existing |
 | 9 | Notebook AI chat (streaming) + actions | existing |
 | 10 | Citations + source viewer | existing (chunk/page payload) |

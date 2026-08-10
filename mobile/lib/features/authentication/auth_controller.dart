@@ -1,0 +1,95 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'auth_models.dart';
+import 'auth_repository.dart';
+
+/// Router-facing auth store. The global [appRouter] uses this as its
+/// `refreshListenable` and reads [state] synchronously inside `redirect`,
+/// so login/logout/session-restore navigation happens automatically.
+/// [AuthController] mirrors it into Riverpod for widgets.
+class AuthEvents extends ChangeNotifier {
+  AuthEvents(this._state);
+
+  AuthState _state;
+  AuthState get state => _state;
+
+  void set(AuthState next) {
+    _state = next;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void debugSet(AuthState next) {
+    _state = next;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void reset() {
+    _state = const AuthInitializing();
+    notifyListeners();
+  }
+}
+
+/// The app's single auth store instance.
+final AuthEvents authEvents = AuthEvents(const AuthInitializing());
+
+/// Auth flow orchestration. Screens watch [authControllerProvider] for the
+/// current [AuthState]; the store keeps the router in sync. Sign-in/up
+/// return a friendly error string, or null on success.
+class AuthController extends Notifier<AuthState> {
+  @override
+  AuthState build() {
+    authEvents.addListener(_sync);
+    ref.onDispose(() => authEvents.removeListener(_sync));
+    return authEvents.state;
+  }
+
+  void _sync() {
+    state = authEvents.state;
+  }
+
+  AuthRepository get _repo => ref.read(authRepositoryProvider);
+
+  /// Re-attach the persisted token and validate it against the server.
+  Future<void> restore() async {
+    final user = await _repo.getSession();
+    authEvents.set(
+      user == null ? const AuthUnauthenticated() : AuthAuthenticated(user),
+    );
+  }
+
+  Future<String?> signIn({required String email, required String password}) async {
+    try {
+      final user = await _repo.signIn(email: email, password: password);
+      authEvents.set(AuthAuthenticated(user));
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    }
+  }
+
+  Future<String?> signUp({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final user = await _repo.signUp(name: name, email: email, password: password);
+      authEvents.set(AuthAuthenticated(user));
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    }
+  }
+
+  Future<void> signOut() async {
+    await _repo.signOut();
+    authEvents.set(const AuthUnauthenticated());
+  }
+}
+
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);

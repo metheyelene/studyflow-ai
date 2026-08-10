@@ -8,6 +8,7 @@ import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_input.dart';
+import '../../shared/widgets/glass/glass_misc.dart';
 import 'notebook.dart';
 import 'notebook_create_sheet.dart';
 import 'notebooks_controller.dart';
@@ -28,11 +29,8 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
 
   @override
   Widget build(BuildContext context) {
-    final notebooks = ref.watch(notebooksProvider);
+    final asyncNotebooks = ref.watch(notebooksControllerProvider);
     final query = _query.trim().toLowerCase();
-    final visible = query.isEmpty
-        ? notebooks
-        : [for (final n in notebooks) if (n.title.toLowerCase().contains(query)) n];
     final selectedId = widget.selectedId;
 
     return SafeArea(
@@ -68,28 +66,44 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: visible.isEmpty
-                ? _EmptyState(hasQuery: query.isNotEmpty)
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-                    itemCount: visible.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) {
-                      final n = visible[i];
-                      return _NotebookCard(
-                        notebook: n,
-                        selected: n.id == selectedId,
-                        onTap: () => _open(context, n),
-                      );
-                    },
-                  ),
+            child: asyncNotebooks.when(
+              loading: () => const _LoadingState(),
+              error: (_, _) => _ErrorState(
+                onRetry: () =>
+                    ref.read(notebooksControllerProvider.notifier).refresh(),
+              ),
+              data: (notebooks) {
+                final visible = query.isEmpty
+                    ? notebooks
+                    : [
+                        for (final n in notebooks)
+                          if (n.title.toLowerCase().contains(query)) n,
+                      ];
+                if (visible.isEmpty) {
+                  return _EmptyState(hasQuery: query.isNotEmpty);
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                  itemCount: visible.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, i) {
+                    final n = visible[i];
+                    return _NotebookCard(
+                      notebook: n,
+                      selected: n.id == selectedId,
+                      onTap: () => _open(context, n),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _open(BuildContext context, LocalNotebook notebook) {
+  void _open(BuildContext context, Notebook notebook) {
     final path = AppRoutes.notebookDetail.replaceFirst(':id', notebook.id);
     // Phone: push so back returns to the list. Wide screens already show
     // the detail pane — just update the selected notebook via the URL.
@@ -104,9 +118,18 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
 class _NotebookCard extends StatelessWidget {
   const _NotebookCard({required this.notebook, required this.selected, required this.onTap});
 
-  final LocalNotebook notebook;
+  final Notebook notebook;
   final bool selected;
   final VoidCallback onTap;
+
+  String _relative(DateTime time, DateTime now) {
+    final diff = now.difference(time);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${time.day}/${time.month}/${time.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +171,7 @@ class _NotebookCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${notebook.sourceCount} sources · updated just now',
+                        '${notebook.sourceCount} sources · updated ${_relative(notebook.updatedAt, DateTime.now())}',
                         style: TextStyle(color: g.textMuted, fontSize: 12.5),
                       ),
                     ],
@@ -158,6 +181,75 @@ class _NotebookCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: 4,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => GlassCard(
+        child: Row(
+          children: [
+            const GlassSkeleton(width: 40, height: 40, radius: 12),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  GlassSkeleton(width: 160, height: 15),
+                  SizedBox(height: 8),
+                  GlassSkeleton(width: 110, height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Center(
+      child: GlassCard(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 30, color: g.textMuted.withValues(alpha: 0.7)),
+            const SizedBox(height: 10),
+            Text(
+              'Could not load your notebooks',
+              style: TextStyle(color: g.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Check your connection and try again.',
+              style: TextStyle(color: g.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 14),
+            GlassButton(
+              label: 'Try again',
+              icon: Icons.refresh,
+              variant: GlassButtonVariant.glass,
+              onPressed: onRetry,
+            ),
+          ],
         ),
       ),
     );
