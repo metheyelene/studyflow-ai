@@ -110,6 +110,7 @@ export const subjects = pgTable(
 
 // ── notes ────────────────────────────────────────────────────────────
 // content holds the plain text (pasted, or extracted from a document).
+// favorite + archivedAt support the notes workspace (Phase 6).
 export const notes = pgTable(
   "notes",
   {
@@ -124,6 +125,8 @@ export const notes = pgTable(
     content: text("content").notNull(),
     sourceType: sourceTypeEnum("source_type").notNull().default("pasted"),
     wordCount: integer("word_count"),
+    favorite: boolean("favorite").notNull().default(false),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -132,7 +135,10 @@ export const notes = pgTable(
       .defaultNow()
       .$onUpdate(() => now()),
   },
-  (t) => [index("notes_user_updated_idx").on(t.userId, t.updatedAt)],
+  (t) => [
+    index("notes_user_updated_idx").on(t.userId, t.updatedAt),
+    index("notes_user_archived_idx").on(t.userId, t.archivedAt),
+  ],
 );
 
 // ── documents ────────────────────────────────────────────────────────
