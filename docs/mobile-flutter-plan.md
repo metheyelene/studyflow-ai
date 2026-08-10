@@ -79,9 +79,20 @@ verification gates; platform builds run in CI.
   footer's "Made by Mithil" href `/about/creator` opens the Creator screen
   directly. SPA fallback (serve `index.html` for unknown paths) is required
   when hosting the web build.
-- Verification: `flutter analyze` clean, 12 widget tests passing.
-- Next: Phase 0 (4 server-action → REST routes) + Phase 3 (navigation/
-  routing to real screens).
+- **Phase 3 — navigation to real screens**: dashboard (quick actions that
+  navigate, upcoming-exams section), notebooks (list + search + create via
+  glass sheet, detail workspace with Sources / Ask AI / Study tools tabs),
+  profile (plan card), with `/about/creator` reachable and a master-detail
+  split on tablet/desktop (`/notebooks/:id`). Notebooks hold device-local
+  state (Riverpod `NotebooksNotifier`) until the backend client lands.
+  Found + fixed a real bug: sheets/modals now use the root navigator so
+  they render above the floating bottom nav (branch navigators sit under
+  the shell); GlassTabBar scales down instead of overflowing.
+- Verification: `flutter analyze` clean, **21 tests passing** (notebook
+  create/open/search, master-detail, controller, quick-action navigation),
+  `flutter build web` succeeds.
+- Next: Phase 0 (4 server-action → REST routes) then Phase 4 (auth + API
+  client) to replace the device-local state with the real backend.
 
 ---
 
@@ -230,7 +241,7 @@ accounts (Phase 21–22). No store credentials can be embedded in the repo.
 | 0 | — | **REST endpoints**: `/api/analytics`, `/api/onboarding`, `/api/profile*`, `/api/usage` (server actions → routes). Small, do first. |
 | 1 | `mobile/` scaffold, Riverpod + go_router + dio skeleton, CI (flutter analyze/test/build) | none |
 | 2 | Glass design system + tokens | none |
-| 3 | Navigation (bottom tab / rail / master-detail), deep links | none |
+| 3 | Navigation (bottom tab / rail / master-detail), deep links — **done** | none |
 | 4 | Auth (cookie jar, restore session, reset password) | none |
 | 5 | Onboarding | `/api/onboarding` |
 | 6 | Dashboard (greeting, Today's Focus, quick actions, exam countdown, AI usage) | `/api/usage` |

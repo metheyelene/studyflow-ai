@@ -43,6 +43,25 @@ void main() {
     expect(find.text('Profile'), findsOneWidget); // bottom nav
   });
 
+  testWidgets('quick actions render and Upload notes navigates to notebooks',
+      (tester) async {
+    final router = buildAppRouter();
+    await pumpRouterApp(tester, router);
+
+    expect(find.text('QUICK ACTIONS'), findsOneWidget);
+    expect(find.text('Upload notes'), findsOneWidget);
+    expect(find.text('Summarize'), findsOneWidget);
+    expect(find.text('Study plan'), findsOneWidget);
+    expect(find.text('UPCOMING'), findsOneWidget);
+    expect(find.text('No upcoming exams'), findsOneWidget);
+
+    await tester.tap(find.text('Upload notes'));
+    await tester.pumpAndSettle();
+
+    // Real navigation: the notebooks tab opens with its honest empty state.
+    expect(find.text('No notebooks yet'), findsOneWidget);
+  });
+
   testWidgets('deep link to /about/creator opens the Creator screen on launch',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);

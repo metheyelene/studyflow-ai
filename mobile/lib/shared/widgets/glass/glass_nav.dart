@@ -207,32 +207,38 @@ class GlassTabBar extends StatelessWidget {
       tone: GlassTone.surfaceSubtle,
       radius: 14,
       padding: const EdgeInsets.all(4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < tabs.length; i++)
-            GestureDetector(
-              onTap: () => onChanged(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: i == currentIndex ? g.surfaceStrong : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: i == currentIndex ? Border.all(color: g.border) : null,
-                ),
-                child: Text(
-                  tabs[i],
-                  style: TextStyle(
-                    color: i == currentIndex ? g.textPrimary : g.textMuted,
-                    fontSize: 13,
-                    fontWeight: i == currentIndex ? FontWeight.w600 : FontWeight.w500,
+      // Scale down (never overflow) when the tab labels exceed the
+      // available width — matters on narrow screens and wide fonts.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < tabs.length; i++)
+              GestureDetector(
+                onTap: () => onChanged(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: i == currentIndex ? g.surfaceStrong : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: i == currentIndex ? Border.all(color: g.border) : null,
+                  ),
+                  child: Text(
+                    tabs[i],
+                    style: TextStyle(
+                      color: i == currentIndex ? g.textPrimary : g.textMuted,
+                      fontSize: 13,
+                      fontWeight: i == currentIndex ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

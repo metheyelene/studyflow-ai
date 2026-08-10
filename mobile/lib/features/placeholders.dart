@@ -2,23 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../shared/widgets/feature_placeholder.dart';
 
-/// Notebooks tab — placeholder until the notebooks client lands (Phase 7).
-class NotebooksScreen extends StatelessWidget {
-  const NotebooksScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const FeaturePlaceholder(
-      icon: Icons.library_books_outlined,
-      title: 'Notebooks',
-      description:
-          'Your private knowledge spaces — paste notes or upload PDFs, then ask '
-          'StudyFlow AI anything about them, with citations back to the source.',
-      note: 'Coming next in the mobile build. The web app already has this.',
-    );
-  }
-}
-
 /// Study tab — flashcards / quizzes / planner live here (Phases 11–13).
 class StudyScreen extends StatelessWidget {
   const StudyScreen({super.key});

@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/about/creator_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/notebooks/notebooks_screen.dart';
 import '../../features/placeholders.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -14,6 +15,7 @@ import '../../features/shell/home_shell.dart';
 abstract final class AppRoutes {
   static const home = '/home';
   static const notebooks = '/notebooks';
+  static const notebookDetail = '/notebooks/:id';
   static const study = '/study';
   static const progress = '/progress';
   static const profile = '/profile';
@@ -47,6 +49,11 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: AppRoutes.notebooks, builder: (context, state) => const NotebooksScreen()),
+            GoRoute(
+              path: AppRoutes.notebookDetail,
+              builder: (context, state) =>
+                  NotebooksScreen(selectedId: state.pathParameters['id']),
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: AppRoutes.study, builder: (context, state) => const StudyScreen()),

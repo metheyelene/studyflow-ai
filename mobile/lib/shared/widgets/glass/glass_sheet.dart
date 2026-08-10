@@ -6,6 +6,11 @@ import 'glass_card.dart';
 /// Show a floating translucent bottom sheet with a drag handle, spring
 /// animation, and (when enabled) backdrop blur. Returns the sheet's
 /// result like [showModalBottomSheet].
+///
+/// Always uses the root navigator: the app shell lives in a
+/// StatefulShellRoute whose branches have their own nested Navigators,
+/// and a sheet pushed onto a branch would render *under* the floating
+/// bottom nav bar.
 Future<T?> showGlassSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -14,6 +19,7 @@ Future<T?> showGlassSheet<T>({
   final g = context.glass;
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: isScrollControlled,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -73,6 +79,7 @@ class _SheetSurface extends StatelessWidget {
 
 /// Show a glass modal dialog: blurred backdrop surface, scale + fade
 /// entrance, centered. Returns the dialog's result like [showDialog].
+/// Uses the root navigator for the same reason as [showGlassSheet].
 Future<T?> showGlassModal<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -81,6 +88,7 @@ Future<T?> showGlassModal<T>({
   final g = context.glass;
   return showGeneralDialog<T>(
     context: context,
+    useRootNavigator: true,
     barrierDismissible: barrierDismissible,
     barrierLabel: 'Dismiss',
     barrierColor: Colors.black.withValues(alpha: 0.5),

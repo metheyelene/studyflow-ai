@@ -5,6 +5,7 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
+import '../../shared/widgets/glass/glass_pill.dart';
 
 /// Profile tab. Auth wiring arrives with the API client (Phase 4); this
 /// already surfaces Settings and the About StudyFlow → Creator path.
@@ -44,6 +45,44 @@ class ProfileScreen extends StatelessWidget {
                         'Your plan, preferences, and study data live here.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: g.textMuted, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.workspace_premium_outlined, size: 20, color: g.primary),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Your plan',
+                                  style: TextStyle(
+                                    color: g.textPrimary,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Free · founding-member offer arrives with payments.',
+                                  style: TextStyle(color: g.textMuted, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GlassBadge(
+                            label: 'Free',
+                            icon: Icons.check_circle_outline,
+                          ),
+                        ],
                       ),
                     ],
                   ),
