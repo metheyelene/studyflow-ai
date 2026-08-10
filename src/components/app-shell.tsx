@@ -10,6 +10,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/flashcards", label: "Flashcards" },
   { href: "/quizzes", label: "Quizzes" },
   { href: "/planner", label: "Planner" },
+  { href: "/settings", label: "Settings" },
 ];
 
 function Logo({ compact = false }: { compact?: boolean }) {

@@ -65,6 +65,8 @@ export const profiles = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     course: text("course"), // "what are you studying?"
+    educationLevel: text("education_level"), // high-school | undergrad | postgrad | professional | other
+    timezone: text("timezone"), // IANA name, e.g. "Asia/Kolkata"
     goal: text("goal"), // what they want help with
     dailyStudyMinutes: integer("daily_study_minutes").notNull().default(30),
     onboardingCompleted: boolean("onboarding_completed").notNull().default(false),

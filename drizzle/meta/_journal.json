@@ -8,6 +8,13 @@
       "when": 1786361513733,
       "tag": "0000_silky_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786368147991,
+      "tag": "0001_faithful_green_goblin",
+      "breakpoints": true
     }
   ]
 }
