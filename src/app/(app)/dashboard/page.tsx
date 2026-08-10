@@ -7,14 +7,18 @@ import {
   Flame,
   ListChecks,
   Sparkles,
-  Zap,
 } from "lucide-react";
 
 import { eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { auth } from "@/lib/auth";
+import { getPlanForSession } from "@/lib/premium";
+import { getAiUsage } from "@/lib/usage";
 import { Card, CardContent } from "@/components/ui/card";
+import { AiUsageWidget } from "@/components/ai-usage-widget";
+import { PremiumFeatureCard } from "@/components/premium-feature-card";
+import { GraduationCap, MessagesSquare, Timer } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -43,13 +47,10 @@ export default async function DashboardPage() {
       value: "—",
       hint: "Countdown appears here",
     },
-    {
-      icon: Zap,
-      title: "AI actions left",
-      value: "20 / 20",
-      hint: "Usage metering arrives in Week 3",
-    },
   ];
+
+  const planContext = await getPlanForSession();
+  const usage = planContext ? await getAiUsage(planContext.userId, planContext.plan) : null;
 
   const starters = [
     {
@@ -108,6 +109,32 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         ))}
+        {usage && <AiUsageWidget usage={usage} />}
+      </div>
+
+      {/* Premium features — discovery without spam (docs/premium-conversion.md §4) */}
+      <div>
+        <h2 className="mb-3 text-lg font-medium">Go further</h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <PremiumFeatureCard
+            icon={GraduationCap}
+            title="Smart Study Mode"
+            description="What to study, review, and quiz today — personalized from your material."
+            preview="Day 1: Cell Biology — review flashcards, quiz weak topic: Mitochondria…"
+          />
+          <PremiumFeatureCard
+            icon={MessagesSquare}
+            title="AI Study Tutor"
+            description="Ask anything about your notes. Get explanations, examples, and exam-focused answers."
+            preview="Teach me glycolysis like I'm a beginner…"
+          />
+          <PremiumFeatureCard
+            icon={Timer}
+            title="Exam Simulation"
+            description="A timed, mixed-topic exam from your own material, with a weak-area analysis after."
+            preview="30 questions · 45 minutes · scored + explained"
+          />
+        </div>
       </div>
 
       {/* Feature starters */}
