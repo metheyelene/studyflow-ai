@@ -27,6 +27,7 @@ export const config = {
   // this middleware adds the redirect + session refresh at the edge.
   matcher: [
     "/dashboard/:path*",
+    "/about/:path*",
     "/notebooks/:path*",
     "/notes/:path*",
     "/flashcards/:path*",

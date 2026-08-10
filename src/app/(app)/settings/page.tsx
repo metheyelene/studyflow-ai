@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import Link from "next/link";
-import { BadgeCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, ChevronRight, Info, Sparkles } from "lucide-react";
 
 import { ManageSubscriptionButton } from "@/components/manage-subscription-button";
 import { GlassCard } from "@/components/ui/glass";
@@ -94,6 +94,25 @@ export default async function SettingsPage() {
         profile={profile ?? null}
         subjects={subjects.map((s) => s.name)}
       />
+
+      {/* About */}
+      <GlassCard tone="secondary" className="p-6">
+        <Link
+          href="/about/creator"
+          className="group flex items-center gap-3 rounded-xl transition-colors"
+        >
+          <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <Info className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">About StudyFlow</p>
+            <p className="text-muted-foreground text-sm">
+              About the app and its creator
+            </p>
+          </div>
+          <ChevronRight className="text-muted-foreground group-hover:text-foreground size-4 transition-colors" />
+        </Link>
+      </GlassCard>
     </div>
   );
 }
