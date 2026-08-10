@@ -393,6 +393,135 @@ export const foundingMemberCounter = pgTable(
   },
 );
 
+// ── notebooks (source-grounded AI) ───────────────────────────────────
+// A notebook is an isolated knowledge space: one or more sources the
+// user added, which the AI answers from. See docs/source-grounded-ai.md.
+export const notebooks = pgTable(
+  "notebooks",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    subjectId: text("subject_id").references(() => subjects.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => now()),
+  },
+  (t) => [index("notebooks_user_updated_idx").on(t.userId, t.updatedAt)],
+);
+
+export const notebookSourceTypeEnum = pgEnum("notebook_source_type", [
+  "pasted",
+  "uploaded",
+  "url",
+  "transcript",
+]);
+
+export const notebookSourceStatusEnum = pgEnum("notebook_source_status", [
+  "processing",
+  "ready",
+  "failed",
+]);
+
+// A single source inside a notebook. `content` is the extracted plain
+// text (cleaned). `version` increments when the user replaces the file,
+// invalidating cached AI responses (the cache key includes it).
+export const notebookSources = pgTable(
+  "notebook_sources",
+  {
+    id: id(),
+    notebookId: text("notebook_id")
+      .notNull()
+      .references(() => notebooks.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    sourceType: notebookSourceTypeEnum("source_type").notNull().default("pasted"),
+    content: text("content").notNull().default(""),
+    status: notebookSourceStatusEnum("status").notNull().default("processing"),
+    errorMessage: text("error_message"),
+    wordCount: integer("word_count"),
+    pageCount: integer("page_count"),
+    meta: jsonb("meta").$type<Record<string, unknown>>(),
+    version: integer("version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => now()),
+  },
+  (t) => [
+    index("sources_notebook_idx").on(t.notebookId),
+    index("sources_user_idx").on(t.userId),
+  ],
+);
+
+// Retrieval units. charStart/charEnd and page let citations point back
+// into the original material; `embedding` is intentionally omitted in
+// the MVP (keyword-first retrieval — see docs/source-grounded-ai.md).
+export const sourceChunks = pgTable(
+  "source_chunks",
+  {
+    id: id(),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => notebookSources.id, { onDelete: "cascade" }),
+    notebookId: text("notebook_id")
+      .notNull()
+      .references(() => notebooks.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    chunkIndex: integer("chunk_index").notNull().default(0),
+    charStart: integer("char_start").notNull().default(0),
+    charEnd: integer("char_end").notNull().default(0),
+    page: integer("page"), // from the source's page markers, when known
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("chunks_source_idx").on(t.sourceId),
+    index("chunks_notebook_idx").on(t.notebookId),
+  ],
+);
+
+// AI response cache. Key = hash(notebook, sourceIds sorted, source
+// versions, question, action, mode, model). Invalidated implicitly: any
+// source change bumps the version, which changes the key. Cleanup
+// deletes entries older than CACHE_TTL_DAYS.
+export const aiCache = pgTable(
+  "ai_cache",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    notebookId: text("notebook_id")
+      .notNull()
+      .references(() => notebooks.id, { onDelete: "cascade" }),
+    key: text("key").notNull().unique(),
+    payload: jsonb("payload").notNull().$type<unknown>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("ai_cache_user_time_idx").on(t.userId, t.createdAt)],
+);
+
 // ── usage metering ───────────────────────────────────────────────────
 // Monthly counter per user per feature. The row's `limit` is the
 // entitlement at the time the period started (free vs premium), so

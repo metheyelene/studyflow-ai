@@ -18,6 +18,10 @@ export interface PlanLimits {
   documentsLifetime: number;
   /** Lifetime cap on subjects. Never resets. */
   subjectsLifetime: number;
+  /** Lifetime cap on notebooks (source-grounded AI). Never resets. */
+  notebooksLifetime: number;
+  /** Per-notebook cap on sources. */
+  sourcesPerNotebook: number;
   /** Fair-use ceiling on flashcard cards per month (≈ generations ×
    *  cards-per-generation). Enforced for free; a monitoring ceiling for
    *  premium, never shown as a hard wall. */
@@ -36,6 +40,8 @@ export const PLANS: Record<Plan, PlanLimits> = {
     aiActionsPerMonth: 20,
     documentsLifetime: 3,
     subjectsLifetime: 1,
+    notebooksLifetime: 3,
+    sourcesPerNotebook: 10,
     flashcardCardsPerMonth: 100,
     maxQuizQuestions: 10,
     maxFlashcardsPerGeneration: 20,
@@ -47,6 +53,8 @@ export const PLANS: Record<Plan, PlanLimits> = {
     aiActionsPerMonth: 500,
     documentsLifetime: 50,
     subjectsLifetime: 20,
+    notebooksLifetime: 20,
+    sourcesPerNotebook: 50,
     flashcardCardsPerMonth: 1_000,
     maxQuizQuestions: 20,
     maxFlashcardsPerGeneration: 30,

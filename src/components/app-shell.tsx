@@ -3,6 +3,7 @@ import {
   CalendarClock,
   FileText,
   LayoutDashboard,
+  Library,
   ListChecks,
   Settings,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import { UserMenu } from "@/components/user-menu";
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/notebooks", label: "Notebooks", icon: Library },
   { href: "/notes", label: "Notes", icon: FileText },
   { href: "/flashcards", label: "Flashcards", icon: BookOpen },
   { href: "/quizzes", label: "Quizzes", icon: ListChecks },

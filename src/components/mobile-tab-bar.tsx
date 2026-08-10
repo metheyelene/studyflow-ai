@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BookOpen, FileText, Home, User } from "lucide-react";
+import { BarChart3, FileText, Home, Library, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const TAB_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/notebooks", label: "Notebooks", icon: Library },
   { href: "/notes", label: "Notes", icon: FileText },
-  { href: "/flashcards", label: "Study", icon: BookOpen },
   { href: "/quizzes", label: "Progress", icon: BarChart3 },
   { href: "/settings", label: "Profile", icon: User },
 ];

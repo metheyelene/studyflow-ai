@@ -77,6 +77,53 @@ export async function getAiUsage(userId: string, plan: Plan): Promise<AiUsage> {
 }
 
 /**
+ * Atomically consume one unit of a lifetime bucket (notebooks, sources,
+ * documents, subjects). Same race-safe pattern as consumeAiAction;
+ * period is always "lifetime". Callers MUST check `allowed`.
+ */
+export async function consumeLifetime(
+  userId: string,
+  feature: string,
+  limit: number,
+): Promise<{ allowed: boolean; used: number }> {
+  const db = getDb();
+  const result = await db
+    .insert(schema.usage)
+    .values({
+      userId,
+      feature,
+      period: "lifetime",
+      count: 1,
+      limit,
+    })
+    .onConflictDoUpdate({
+      target: [schema.usage.userId, schema.usage.feature, schema.usage.period],
+      set: {
+        count: sql`${schema.usage.count} + 1`,
+        limit,
+      },
+      setWhere: sql`${schema.usage.count} < ${limit}`,
+    })
+    .returning({ count: schema.usage.count });
+
+  const used = result[0]?.count ?? limit;
+  return { allowed: used <= limit, used };
+}
+
+/** Current count of a lifetime bucket (0 if never incremented). */
+export async function getLifetimeCount(userId: string, feature: string): Promise<number> {
+  const db = getDb();
+  const row = await db.query.usage.findFirst({
+    where: and(
+      eq(schema.usage.userId, userId),
+      eq(schema.usage.feature, feature),
+      eq(schema.usage.period, "lifetime"),
+    ),
+  });
+  return row?.count ?? 0;
+}
+
+/**
  * Atomically consume one AI action for a user. Race-safe: the
  * increment only happens when count < limit in the same statement, so
  * concurrent requests can't overspend (the double-spend guard from

@@ -18,11 +18,13 @@ Everything else is server-only. Never put a secret in a `NEXT_PUBLIC_` var.
 | `DATABASE_URL_DIRECT` | Drizzle migrations (`npm run db:migrate`) | Neon project → **direct** connection string | Your Neon direct URL | Same (real Neon) |
 | `BETTER_AUTH_SECRET` | Signing + verifying sessions | `openssl rand -base64 32` | Generated once | **Must match the dev value** — if it differs, sessions break on redeploy |
 | `BETTER_AUTH_URL` | Auth base URL (redirects, cookies) | Your app URL | `http://localhost:3000` | `https://your-domain.com` |
-| `AI_PROVIDER` | Selects the AI provider | `openai` or `anthropic` | `openai` | `openai` |
+| `AI_PROVIDER_ORDER` | Failover order for AI providers (comma-separated) | `openai,anthropic` | `openai,anthropic` | Same |
 | `OPENAI_API_KEY` | OpenAI model calls | https://platform.openai.com/api-keys | `sk-…` | `sk-…` |
 
-`ANTHROPIC_API_KEY` is required **only if** `AI_PROVIDER=anthropic`
-(https://console.anthropic.com/settings/keys).
+`ANTHROPIC_API_KEY` is required only if it's in your `AI_PROVIDER_ORDER`
+(https://console.anthropic.com/settings/keys). `AI_MODEL_SIMPLE` /
+`AI_MODEL_STANDARD` / `AI_MODEL_COMPLEX` optionally override the per-tier
+model names (defaults are in `src/lib/ai/orchestrator.ts`).
 
 ### Email + optional auth (Phase 3)
 
