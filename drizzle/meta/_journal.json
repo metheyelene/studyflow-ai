@@ -15,6 +15,13 @@
       "when": 1786368147991,
       "tag": "0001_faithful_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786369594421,
+      "tag": "0002_salty_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

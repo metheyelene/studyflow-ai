@@ -28,6 +28,14 @@ export const EVENTS = {
   SUBSCRIPTION_STARTED: "subscription_started",
   SUBSCRIPTION_CANCELLED: "subscription_cancelled",
   UPGRADE_DECLINED: "upgrade_declined",
+
+  // Founding-member offer (docs/founding-members.md §analytics)
+  FOUNDING_OFFER_VIEWED: "founding_offer_viewed",
+  FOUNDING_CHECKOUT_STARTED: "founding_checkout_started",
+  FOUNDING_SUBSCRIPTION_COMPLETED: "founding_subscription_completed",
+  FOUNDING_SUBSCRIPTION_FAILED: "founding_subscription_failed",
+  FOUNDING_MEMBERSHIP_CLAIMED: "founding_membership_claimed",
+  FOUNDING_MEMBERSHIP_CANCELLED: "founding_membership_cancelled",
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];

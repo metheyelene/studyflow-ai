@@ -1,6 +1,10 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
+import { FoundingCard } from "@/components/founding-card";
+import { auth } from "@/lib/auth";
+import { getFoundingStatusSafe, isFoundingMember } from "@/lib/founding";
 import { PRICING } from "@/lib/plans";
 import { PricingTable } from "./pricing-table";
 
@@ -27,7 +31,15 @@ const FAQS = [
   },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const [founding, session] = await Promise.all([
+    getFoundingStatusSafe(),
+    auth.api.getSession({ headers: await headers() }).catch(() => null),
+  ]);
+  const alreadyMember = session
+    ? await isFoundingMember(session.user.id).catch(() => false)
+    : false;
+
   return (
     <div className="text-foreground min-h-dvh">
       <header className="sticky top-0 z-20 mx-auto mt-3 w-full max-w-5xl px-4">
@@ -70,6 +82,18 @@ export default function PricingPage() {
             Free · $0 — Premium · ${PRICING.monthlyUsd}/month or ${PRICING.yearlyUsd}/year
           </p>
         </div>
+
+        <section className="mt-10">
+          <FoundingCard
+            claimed={founding.claimed}
+            cap={founding.cap}
+            remaining={founding.remaining}
+            full={founding.full}
+            alreadyMember={alreadyMember}
+            isAuthed={!!session}
+            available={founding.available}
+          />
+        </section>
 
         <PricingTable />
 

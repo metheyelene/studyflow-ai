@@ -350,6 +350,49 @@ export const subscriptions = pgTable(
   ],
 );
 
+// ── founding members ─────────────────────────────────────────────────
+// Permanent claim records for the first-35 founding-member offer
+// (docs/founding-members.md). A row is created ONLY after the payment
+// webhook confirms a successful subscription, and it is NEVER deleted:
+// a claimed slot is permanently consumed, even if the member later
+// cancels (status flips to "canceled").
+export const foundingMembers = pgTable(
+  "founding_members",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: "cascade" }),
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .unique()
+      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("active"), // active | canceled
+    claimedAt: timestamp("claimed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("founding_members_status_idx").on(t.status)],
+);
+
+// Single-row atomic counter: the SOURCE OF TRUTH for how many founding
+// slots are claimed. `cap` lives in the database so the limit is not
+// buried in code. Allocation is an atomic conditional UPDATE — Postgres
+// row-locks this row, so concurrent claims can never exceed `cap`.
+export const foundingMemberCounter = pgTable(
+  "founding_member_counter",
+  {
+    id: integer("id").primaryKey(),
+    claimed: integer("claimed").notNull().default(0),
+    cap: integer("cap").notNull().default(35),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => now()),
+  },
+);
+
 // ── usage metering ───────────────────────────────────────────────────
 // Monthly counter per user per feature. The row's `limit` is the
 // entitlement at the time the period started (free vs premium), so

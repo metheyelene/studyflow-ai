@@ -10,9 +10,14 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { headers } from "next/headers";
+
+import { FoundingCard } from "@/components/founding-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
+import { getFoundingStatusSafe } from "@/lib/founding";
 import { PRICING, PLAN_COPY } from "@/lib/plans";
 
 const features = [
@@ -85,7 +90,12 @@ const faqs = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const [founding, session] = await Promise.all([
+    getFoundingStatusSafe(),
+    auth.api.getSession({ headers: await headers() }).catch(() => null),
+  ]);
+
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Nav — floating glass */}
@@ -219,6 +229,20 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Founding member offer */}
+      <section id="founding" className="mx-auto max-w-5xl px-4 py-16">
+        <FoundingCard
+          claimed={founding.claimed}
+          cap={founding.cap}
+          remaining={founding.remaining}
+          full={founding.full}
+          alreadyMember={false}
+          isAuthed={!!session}
+          available={founding.available}
+          compact
+        />
       </section>
 
       {/* Pricing */}

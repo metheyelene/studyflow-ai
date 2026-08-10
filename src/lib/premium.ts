@@ -12,9 +12,18 @@ import type { Plan } from "@/lib/plans";
 
 const ACTIVE_STATUSES = ["active", "trialing"] as const;
 
+/** Pure plan resolution from the stored subscription plan. Founding
+ *  members are premium for limits purposes — they get full Premium
+ *  features at the founding price. */
+export function planFromSubscription(plan: string | null): Plan {
+  return plan ? "premium" : "free";
+}
+
 export interface PlanContext {
   userId: string;
   plan: Plan;
+  /** Stored subscription plan ("premium" | "founding_member") or null. */
+  subscriptionPlan: string | null;
 }
 
 /**
@@ -34,7 +43,11 @@ export async function getPlanForSession(): Promise<PlanContext | null> {
     ),
   });
 
-  return { userId: session.user.id, plan: sub ? "premium" : "free" };
+  return {
+    userId: session.user.id,
+    plan: planFromSubscription(sub?.plan ?? null),
+    subscriptionPlan: sub ? sub.plan : null,
+  };
 }
 
 /** Convenience for server components: is this request premium? */

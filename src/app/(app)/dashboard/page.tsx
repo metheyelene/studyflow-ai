@@ -18,9 +18,11 @@ import { and, eq, gte } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { auth } from "@/lib/auth";
+import { getFoundingStatusSafe } from "@/lib/founding";
 import { getPlanForSession } from "@/lib/premium";
 import { getAiUsage } from "@/lib/usage";
 import { AiUsageWidget } from "@/components/ai-usage-widget";
+import { FoundingCard } from "@/components/founding-card";
 import { PremiumFeatureCard } from "@/components/premium-feature-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass";
@@ -92,6 +94,10 @@ export default async function DashboardPage() {
   const usage = planContext
     ? await getAiUsage(planContext.userId, planContext.plan)
     : null;
+
+  const founding = await getFoundingStatusSafe();
+  const isFoundingMember =
+    planContext?.subscriptionPlan === "founding_member";
 
   const streakDays = profile.studyStreak ?? 0;
   const focusLine =
@@ -259,6 +265,20 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Founding-member offer — only while genuinely open */}
+      {((founding.available && !founding.full) || isFoundingMember) && (
+        <FoundingCard
+          claimed={founding.claimed}
+          cap={founding.cap}
+          remaining={founding.remaining}
+          full={founding.full}
+          alreadyMember={isFoundingMember}
+          isAuthed
+          available={founding.available}
+          compact
+        />
+      )}
 
       {/* Premium features — discovery without spam */}
       <div>
