@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { GoogleButton } from "@/components/social-buttons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,7 +37,7 @@ export default function LoginPage() {
         setError(friendlyAuthError(authError));
         return;
       }
-      router.push("/app");
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       setError(friendlyAuthError(err));
@@ -94,7 +96,27 @@ export default function LoginPage() {
             {loading && <Loader2 className="animate-spin" />}
             Log in
           </Button>
+          <div className="flex items-center justify-between">
+            <Link
+              href="/forgot-password"
+              className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </form>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <Separator />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-card text-muted-foreground px-2 text-xs">or</span>
+          </div>
+        </div>
+
+        <GoogleButton />
+
         <p className="text-muted-foreground mt-4 text-center text-sm">
           New to StudyFlow?{" "}
           <Link href="/signup" className="text-foreground font-medium underline-offset-4 hover:underline">

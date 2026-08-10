@@ -18,7 +18,7 @@ export default async function OnboardingPage() {
   });
 
   // Already onboarded — send them to the dashboard.
-  if (profile?.onboardingCompleted) redirect("/app/dashboard");
+  if (profile?.onboardingCompleted) redirect("/dashboard");
 
   return (
     <div className="bg-muted/40 flex min-h-dvh flex-col">

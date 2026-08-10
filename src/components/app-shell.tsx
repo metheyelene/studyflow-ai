@@ -5,11 +5,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/app/dashboard", label: "Dashboard" },
-  { href: "/app/notes", label: "Notes" },
-  { href: "/app/flashcards", label: "Flashcards" },
-  { href: "/app/quizzes", label: "Quizzes" },
-  { href: "/app/planner", label: "Planner" },
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/notes", label: "Notes" },
+  { href: "/flashcards", label: "Flashcards" },
+  { href: "/quizzes", label: "Quizzes" },
+  { href: "/planner", label: "Planner" },
 ];
 
 function Logo({ compact = false }: { compact?: boolean }) {

@@ -57,28 +57,28 @@ export default async function DashboardPage() {
       title: "Add your notes",
       desc: "Paste text or upload a PDF — your notes become study material.",
       when: "Week 2",
-      href: "/app/notes",
+      href: "/notes",
     },
     {
       icon: Sparkles,
       title: "Generate summaries",
       desc: "Short, detailed, key concepts, definitions, and exam points.",
       when: "Week 3",
-      href: "/app/notes",
+      href: "/notes",
     },
     {
       icon: BookOpen,
       title: "Make flashcards",
       desc: "Auto-generated front/back cards with flip and review.",
       when: "Week 3",
-      href: "/app/flashcards",
+      href: "/flashcards",
     },
     {
       icon: ListChecks,
       title: "Take quizzes",
       desc: "MCQs with difficulty, score, and explanations.",
       when: "Week 3",
-      href: "/app/quizzes",
+      href: "/quizzes",
     },
   ];
 

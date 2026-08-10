@@ -24,6 +24,16 @@ Everything else is server-only. Never put a secret in a `NEXT_PUBLIC_` var.
 `ANTHROPIC_API_KEY` is required **only if** `AI_PROVIDER=anthropic`
 (https://console.anthropic.com/settings/keys).
 
+### Email + optional auth (Phase 3)
+
+| Variable | Required? | Used for |
+|---|---|---|
+| `EMAIL_VERIFICATION_REQUIRED` | No (default `false`) | `true` in production to gate sign-in behind email verification |
+| `RESEND_API_KEY` | No in dev (emails log to console) · **Yes in production** | Sending password-reset + verification emails |
+| `EMAIL_FROM` | No | Sender address (defaults to a StudyFlow placeholder) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Google OAuth (one-click signup). Add both to enable |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | No | Shows/hides the Google button in the UI (client IDs are public) |
+
 > **Neon gotcha:** the two strings are different. The **pooled** one contains
 > `-pooler` and is for the app (serverless-safe); the **direct** one is for
 > one-shot migrations. Swapping them works by accident for migrations but

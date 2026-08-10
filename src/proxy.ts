@@ -22,8 +22,17 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Protect everything under the authenticated app area and onboarding.
-  // Add "/admin/:path*" here once the admin panel exists (it has its
-  // own role check on top of this).
-  matcher: ["/app/:path*", "/onboarding/:path*"],
+  // Protect the authenticated app area, onboarding, and (later) admin.
+  // Each route also re-checks the session server-side in its layout —
+  // this middleware adds the redirect + session refresh at the edge.
+  matcher: [
+    "/dashboard/:path*",
+    "/notes/:path*",
+    "/flashcards/:path*",
+    "/quizzes/:path*",
+    "/planner/:path*",
+    "/settings/:path*",
+    "/onboarding/:path*",
+    "/admin/:path*",
+  ],
 };
