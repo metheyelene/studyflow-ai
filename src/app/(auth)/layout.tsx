@@ -4,8 +4,8 @@ export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="bg-muted/40 relative flex min-h-dvh flex-col">
-      <div className="absolute top-4 right-4">
+    <div className="relative flex min-h-dvh flex-col">
+      <div className="glass-subtle absolute top-3 right-3 z-10 rounded-full p-1.5">
         <ThemeToggle />
       </div>
       <main className="flex flex-1 items-center justify-center px-4 py-12">

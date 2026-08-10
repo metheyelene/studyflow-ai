@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GlassCard, GlassPill } from "@/components/ui/glass";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -74,6 +75,37 @@ export default function DesignSystemPage() {
         </p>
       </header>
 
+      <Section title="Glass materials">
+        <p className="text-muted-foreground text-sm">
+          Four tones form the material system — primary (content), secondary
+          (widgets), floating (quick actions), and modal (dialogs). The ambient
+          background behind every screen is set once in the root layout.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <GlassCard tone="primary" className="p-5">
+            <p className="text-sm font-medium">Glass primary</p>
+            <p className="text-muted-foreground text-xs">Content cards, main surfaces.</p>
+          </GlassCard>
+          <GlassCard tone="secondary" className="p-5">
+            <p className="text-sm font-medium">Glass secondary</p>
+            <p className="text-muted-foreground text-xs">Widgets — more transparent.</p>
+          </GlassCard>
+          <GlassCard tone="floating" className="p-5">
+            <p className="text-sm font-medium">Glass floating</p>
+            <p className="text-muted-foreground text-xs">Quick actions, elevated.</p>
+          </GlassCard>
+          <GlassCard tone="modal" className="p-5">
+            <p className="text-sm font-medium">Glass modal</p>
+            <p className="text-muted-foreground text-xs">Dialogs — strongest blur.</p>
+          </GlassCard>
+        </div>
+        <Demo>
+          <GlassPill>Contextual action</GlassPill>
+          <GlassPill selected>Selected</GlassPill>
+          <GlassPill>Explain this</GlassPill>
+        </Demo>
+      </Section>
+
       <Section title="Typography">
         <div className="space-y-1">
           <p className="text-4xl font-semibold tracking-tight">Display — Turn notes into a study system</p>
@@ -91,6 +123,8 @@ export default function DesignSystemPage() {
           <Button variant="secondary">Secondary</Button>
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
+          <Button variant="glass">Glass</Button>
+          <Button variant="glass-secondary">Glass secondary</Button>
           <Button variant="destructive">Destructive</Button>
           <Button variant="link">Link</Button>
           <Button size="sm">Small</Button>
@@ -319,8 +353,9 @@ export default function DesignSystemPage() {
 
       <Separator />
       <p className="text-muted-foreground pb-8 text-center text-xs">
-        Design tokens: <code className="bg-muted rounded px-1 py-0.5">globals.css</code> · Spec:{" "}
-        <code className="bg-muted rounded px-1 py-0.5">docs/ui-design-week1.md</code>
+        Design tokens: <code className="bg-muted rounded px-1 py-0.5">globals.css</code> · Specs:{" "}
+        <code className="bg-muted rounded px-1 py-0.5">docs/ui-design-week1.md</code> ·{" "}
+        <code className="bg-muted rounded px-1 py-0.5">docs/glass-ui-overhaul.md</code>
       </p>
     </div>
   );

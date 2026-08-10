@@ -88,11 +88,11 @@ const faqs = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+      {/* Nav — floating glass */}
+      <header className="sticky top-0 z-20 mx-auto mt-3 w-full max-w-5xl px-4">
+        <div className="glass-subtle flex h-14 items-center justify-between rounded-2xl px-4">
           <div className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
+            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-xl shadow-sm">
               <BookOpen className="size-4" />
             </div>
             <span className="font-semibold">StudyFlow</span>
@@ -124,33 +124,39 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-20 pb-16 text-center md:pt-28">
-        <Badge variant="secondary" className="mb-6">
-          AI study tools for students
-        </Badge>
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance md:text-6xl">
-          Turn your notes into your smartest study system.
-        </h1>
-        <p className="text-muted-foreground mt-6 max-w-xl text-lg text-pretty">
-          Upload or paste your notes and get AI summaries, flashcards, quizzes,
-          and a study plan in seconds — built for students preparing for exams.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href="/signup">
-              Start free — no card needed
-              <ArrowRight />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href="#how">See how it works</Link>
-          </Button>
+      <section className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-20 pb-16 text-center md:pt-28">
+        <div
+          aria-hidden
+          className="bg-primary/15 absolute top-1/2 left-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        />
+        <div className="relative">
+          <Badge variant="secondary" className="mb-6">
+            AI study tools for students
+          </Badge>
+          <h1 className="mx-auto max-w-2xl text-4xl font-semibold tracking-tight text-balance md:text-6xl">
+            Turn your notes into your smartest study system.
+          </h1>
+          <p className="text-muted-foreground mx-auto mt-6 max-w-xl text-lg text-pretty">
+            Upload or paste your notes and get AI summaries, flashcards, quizzes,
+            and a study plan in seconds — built for students preparing for exams.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/signup">
+                Start free — no card needed
+                <ArrowRight />
+              </Link>
+            </Button>
+            <Button asChild variant="glass-secondary" size="lg">
+              <Link href="#how">See how it works</Link>
+            </Button>
+          </div>
         </div>
 
         {/* App preview mock */}
         <div className="mt-14 w-full max-w-3xl">
-          <div className="rounded-2xl border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between border-b pb-4">
+          <div className="glass rounded-3xl p-6">
+            <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
                 <p className="text-sm font-medium">Cell Biology — Exam in 12 days</p>
                 <p className="text-muted-foreground text-xs">Notes · 2,400 words</p>
@@ -158,17 +164,17 @@ export default function LandingPage() {
               <Badge variant="secondary">Free plan · 18/20 AI actions</Badge>
             </div>
             <div className="grid gap-3 pt-4 sm:grid-cols-3">
-              <div className="rounded-xl border p-4">
+              <div className="glass-subtle rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Summary</p>
                 <p className="mt-1 text-sm">
                   Short · Detailed · Key concepts
                 </p>
               </div>
-              <div className="rounded-xl border p-4">
+              <div className="glass-subtle rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Flashcards</p>
                 <p className="mt-1 text-sm">20 cards generated</p>
               </div>
-              <div className="rounded-xl border p-4">
+              <div className="glass-subtle rounded-xl p-4">
                 <p className="text-xs text-muted-foreground">Quiz</p>
                 <p className="mt-1 text-sm">8/10 on last attempt</p>
               </div>
@@ -178,15 +184,15 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how" className="border-t bg-muted/40">
+      <section id="how" className="border-t border-border/60">
         <div className="mx-auto max-w-5xl px-4 py-16">
           <h2 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
             Three steps from notes to exam-ready
           </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
             {steps.map((step) => (
-              <div key={step.n} className="rounded-xl border bg-card p-6">
-                <span className="text-muted-foreground font-mono text-sm">
+              <div key={step.n} className="glass rounded-2xl p-6">
+                <span className="text-primary font-mono text-sm">
                   {step.n}
                 </span>
                 <h3 className="mt-2 font-medium">{step.title}</h3>
@@ -204,9 +210,9 @@ export default function LandingPage() {
         </h2>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="rounded-xl border bg-card p-6">
-              <div className="bg-accent flex size-10 items-center justify-center rounded-lg">
-                <f.icon className="size-5" />
+            <div key={f.title} className="glass rounded-2xl p-6">
+              <div className="bg-accent flex size-10 items-center justify-center rounded-xl">
+                <f.icon className="text-primary size-5" />
               </div>
               <h3 className="mt-4 font-medium">{f.title}</h3>
               <p className="text-muted-foreground mt-1 text-sm">{f.desc}</p>
@@ -216,7 +222,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="border-t bg-muted/40">
+      <section id="pricing" className="border-t border-border/60">
         <div className="mx-auto max-w-5xl px-4 py-16">
           <h2 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
             Simple, honest pricing
@@ -225,7 +231,7 @@ export default function LandingPage() {
             Start free. Upgrade only if it&apos;s actually useful to you.
           </p>
           <div className="mx-auto mt-10 grid max-w-3xl gap-4 md:grid-cols-2">
-            <div className="rounded-xl border bg-card p-6">
+            <div className="glass rounded-2xl p-6">
               <h3 className="font-medium">{PLAN_COPY.free.name}</h3>
               <p className="mt-2 text-3xl font-semibold">$0</p>
               <p className="text-muted-foreground text-sm">Forever</p>
@@ -237,33 +243,37 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Button asChild variant="outline" className="mt-6 w-full">
+              <Button asChild variant="glass-secondary" className="mt-6 w-full">
                 <Link href="/signup">Start free</Link>
               </Button>
             </div>
-            <div className="rounded-xl border border-primary bg-card p-6">
-              <div className="flex items-center justify-between">
+            <div className="glass-float relative rounded-2xl p-6">
+              <div
+                aria-hidden
+                className="bg-primary/10 absolute -top-12 right-0 size-40 rounded-full blur-3xl"
+              />
+              <div className="relative flex items-center justify-between">
                 <h3 className="font-medium">{PLAN_COPY.premium.name}</h3>
                 <Badge>Most popular</Badge>
               </div>
-              <p className="mt-2 text-3xl font-semibold">
+              <p className="relative mt-2 text-3xl font-semibold">
                 ${PRICING.monthlyUsd}
                 <span className="text-muted-foreground text-sm font-normal">
                   /month
                 </span>
               </p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground relative text-sm">
                 or ${PRICING.yearlyUsd}/year — about 2 months free
               </p>
-              <ul className="mt-5 space-y-2 text-sm">
+              <ul className="relative mt-5 space-y-2 text-sm">
                 {PLAN_COPY.premium.features.map((f) => (
                   <li key={f} className="flex items-center gap-2">
-                    <Check className="size-4" />
+                    <Check className="text-primary size-4" />
                     {f}
                   </li>
                 ))}
               </ul>
-              <Button asChild className="mt-6 w-full">
+              <Button asChild className="relative mt-6 w-full">
                 <Link href="/signup">Go premium</Link>
               </Button>
             </div>
@@ -282,7 +292,7 @@ export default function LandingPage() {
         </h2>
         <div className="mt-8 space-y-3">
           {faqs.map((f) => (
-            <details key={f.q} className="rounded-xl border bg-card px-5 py-4">
+            <details key={f.q} className="glass rounded-2xl px-5 py-4">
               <summary className="cursor-pointer font-medium">{f.q}</summary>
               <p className="text-muted-foreground mt-2 text-sm">{f.a}</p>
             </details>
@@ -291,7 +301,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t bg-muted/40">
+      <section className="border-t border-border/60">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
           <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
             Your next exam is closer than you think.
@@ -309,10 +319,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t">
+      <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm md:flex-row">
           <div className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-lg">
               <BookOpen className="size-3.5" />
             </div>
             <span className="font-medium">StudyFlow AI</span>

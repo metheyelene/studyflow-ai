@@ -29,29 +29,35 @@ const FAQS = [
 
 export default function PricingPage() {
   return (
-    <div className="bg-background text-foreground min-h-dvh">
-      <header className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
-            <BookOpen className="size-4" />
-          </div>
-          StudyFlow
-        </Link>
-        <nav className="flex items-center gap-3 text-sm">
-          <Link href="/login" className="text-muted-foreground hover:text-foreground">
-            Log in
+    <div className="text-foreground min-h-dvh">
+      <header className="sticky top-0 z-20 mx-auto mt-3 w-full max-w-5xl px-4">
+        <div className="glass-subtle flex h-14 items-center justify-between rounded-2xl px-4">
+          <Link href="/" className="flex items-center gap-2 font-semibold">
+            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-xl shadow-sm">
+              <BookOpen className="size-4" />
+            </div>
+            StudyFlow
           </Link>
-          <Link
-            href="/signup"
-            className="bg-primary text-primary-foreground rounded-full px-4 py-1.5 font-medium"
-          >
-            Get started
-          </Link>
-        </nav>
+          <nav className="flex items-center gap-3 text-sm">
+            <Link href="/login" className="text-muted-foreground hover:text-foreground">
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="bg-primary text-primary-foreground rounded-full px-4 py-1.5 font-medium shadow-sm"
+            >
+              Get started
+            </Link>
+          </nav>
+        </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pt-10 pb-20">
-        <div className="mx-auto max-w-xl text-center">
+      <main className="relative mx-auto max-w-5xl px-4 pt-12 pb-20">
+        <div
+          aria-hidden
+          className="bg-primary/15 absolute top-0 left-1/2 size-96 -translate-x-1/2 rounded-full blur-3xl"
+        />
+        <div className="relative mx-auto max-w-xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
             Simple, honest pricing
           </h1>
@@ -72,7 +78,7 @@ export default function PricingPage() {
           {FAQS.map((f) => (
             <details
               key={f.q}
-              className="border-border rounded-lg border px-4 py-3 [&_summary]:cursor-pointer"
+              className="glass rounded-2xl px-5 py-4 [&_summary]:cursor-pointer"
             >
               <summary className="text-sm font-medium">{f.q}</summary>
               <p className="text-muted-foreground mt-2 text-sm">{f.a}</p>

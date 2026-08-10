@@ -111,7 +111,7 @@ export default function LoginPage() {
             <Separator />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-card text-muted-foreground px-2 text-xs">or</span>
+            <span className="bg-background/70 text-muted-foreground px-2 text-xs backdrop-blur-sm">or</span>
           </div>
         </div>
 

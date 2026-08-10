@@ -12,9 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GlassPill } from "@/components/ui/glass";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 import { completeOnboarding, GOAL_OPTIONS } from "./actions";
 
@@ -158,7 +158,7 @@ export function OnboardingForm({ name }: { name: string }) {
             {exams.length < 3 && (
               <Button
                 type="button"
-                variant="outline"
+                variant="glass-secondary"
                 size="sm"
                 className="justify-self-start"
                 onClick={() =>
@@ -192,20 +192,13 @@ export function OnboardingForm({ name }: { name: string }) {
             <Label>What do you want help with?</Label>
             <div className="flex flex-wrap gap-2">
               {GOAL_OPTIONS.map((goal) => (
-                <button
+                <GlassPill
                   key={goal.value}
-                  type="button"
                   onClick={() => toggleGoal(goal.value)}
-                  aria-pressed={goals.includes(goal.value)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                    goals.includes(goal.value)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "hover:bg-accent",
-                  )}
+                  selected={goals.includes(goal.value)}
                 >
                   {goal.label}
-                </button>
+                </GlassPill>
               ))}
             </div>
           </div>

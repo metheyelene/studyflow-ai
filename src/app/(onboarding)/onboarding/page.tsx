@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
   if (profile?.onboardingCompleted) redirect("/dashboard");
 
   return (
-    <div className="bg-muted/40 flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col">
       <main className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           <OnboardingForm name={session.user.name} />

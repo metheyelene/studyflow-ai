@@ -65,9 +65,9 @@ export function PricingTable() {
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border">
+      <div className="glass overflow-hidden rounded-2xl">
         {/* Header row */}
-        <div className="grid grid-cols-[1.4fr_1fr_1.4fr] gap-2 border-b bg-muted/40 p-4 text-sm">
+        <div className="bg-glass-subtle grid grid-cols-[1.4fr_1fr_1.4fr] gap-2 border-b border-border/60 p-4 text-sm">
           <span className="font-medium">What you get</span>
           <span className="text-center font-medium">Free</span>
           <span className="text-center font-medium">Premium</span>
@@ -76,7 +76,7 @@ export function PricingTable() {
         {ROWS.map((row) => (
           <div
             key={row.feature}
-            className="grid grid-cols-[1.4fr_1fr_1.4fr] items-center gap-2 border-b px-4 py-2.5 text-sm last:border-b-0"
+            className="grid grid-cols-[1.4fr_1fr_1.4fr] items-center gap-2 border-b border-border/60 px-4 py-2.5 text-sm last:border-b-0"
           >
             <span>{row.feature}</span>
             <Cell value={row.free} />
@@ -85,7 +85,7 @@ export function PricingTable() {
         ))}
 
         {/* CTA row */}
-        <div className="grid grid-cols-[1.4fr_1fr_1.4fr] gap-2 border-t bg-muted/40 p-4 text-sm">
+        <div className="bg-glass-subtle grid grid-cols-[1.4fr_1fr_1.4fr] gap-2 border-t border-border/60 p-4 text-sm">
           <span className="flex items-center text-xs text-muted-foreground">
             {yearly
               ? `Yearly = $${perMonth}/month billed annually`
