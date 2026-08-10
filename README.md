@@ -5,84 +5,117 @@
 AI-powered study app for students preparing for exams: upload or paste notes,
 then generate summaries, flashcards, quizzes, and study plans.
 
-**Status:** Phase 1 (architecture) complete · Phase 2 (database + auth) in progress.
-See [`docs/architecture.md`](docs/architecture.md) for the full spec.
+**Status:** Weeks 1 of the 5-week MVP plan are built (see
+[`docs/mvp-plan.md`](docs/mvp-plan.md)): database + auth skeleton, landing
+page, signup/login, onboarding, app shell with dark/light theming, and a
+green CI pipeline. The app deploys to Vercel; the database is Neon Postgres.
 
 ## Stack
 
-Next.js 16 · React 19 · TypeScript · Tailwind v4 · Drizzle ORM · PostgreSQL (Neon) ·
-Better Auth · Vercel AI SDK · Stripe (later) · Vercel + GitHub Actions.
+| Layer | Choice |
+|---|---|
+| Frontend/backend | Next.js 16 (App Router) · React 19 · TypeScript |
+| Styling | Tailwind CSS v4 · shadcn-style UI primitives · next-themes (dark/light) |
+| Database | PostgreSQL on Neon · Drizzle ORM (SQL migrations) |
+| Auth | Better Auth (email/password; OAuth later) |
+| AI | Vercel AI SDK, provider-agnostic (`src/lib/ai/provider.ts`) |
+| Tests | Vitest (unit) · Playwright (E2E, later phases) |
+| Deploy | Vercel (production + previews) · GitHub Actions (CI) |
 
-## Local setup
+## Quick start (development)
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Create your local env file
+# 2. Create your local env file and fill it in
 cp .env.example .env
-#    → fill in DATABASE_URL, DATABASE_URL_DIRECT, BETTER_AUTH_SECRET
-#      (see "Environment variables" below)
+#    → see "Environment variables" and docs/environment-variables.md
 
-# 3. (After creating the Neon database) apply the schema:
+# 3. Apply the database schema (after creating the Neon database)
 npm run db:migrate
 
 # 4. Start the dev server
 npm run dev
 #    → http://localhost:3000
-
-# 5. (Optional) explore the database visually:
-npm run db:studio
 ```
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Start the dev server |
+| `npm run dev` | Start the dev server (Turbopack) |
 | `npm run build` | Production build |
-| `npm run start` | Run the production build |
-| `npm run lint` | Lint |
-| `npm run typecheck` | Type-check (no output = no errors) |
+| `npm run start` | Run the production build locally |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` (no output = clean) |
+| `npm test` | Vitest unit tests (`vitest run`) |
 | `npm run db:generate` | Generate a migration from schema changes |
 | `npm run db:migrate` | Apply migrations to the database |
-| `npm run db:push` | Push schema directly (dev only, not for production) |
+| `npm run db:push` | Push schema directly — dev only, never production |
 | `npm run db:studio` | Open Drizzle Studio (visual DB browser) |
 
 ## Environment variables
 
-Copy `.env.example` → `.env` and fill in. **Never commit `.env`.**
+Copy `.env.example` → `.env` and fill in. **Never commit `.env`** — it is
+gitignored. Full reference with per-environment guidance:
+[`docs/environment-variables.md`](docs/environment-variables.md).
 
 | Variable | Where to get it | Used for |
 |---|---|---|
-| `DATABASE_URL` | Neon project → pooled connection string | App database connections |
-| `DATABASE_URL_DIRECT` | Neon project → direct connection string | Migrations |
-| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` | Signing sessions |
+| `DATABASE_URL` | Neon → **pooled** connection string | App database connections |
+| `DATABASE_URL_DIRECT` | Neon → **direct** connection string | Migrations |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` | Signing sessions (must match across environments) |
 | `BETTER_AUTH_URL` | `http://localhost:3000` (dev) / your domain (prod) | Auth base URL |
 | `AI_PROVIDER` | `openai` or `anthropic` | Which AI provider to use |
 | `OPENAI_API_KEY` | https://platform.openai.com/api-keys | OpenAI calls |
 | `ANTHROPIC_API_KEY` | https://console.anthropic.com/settings/keys | Anthropic calls |
 
-Later phases add: Stripe keys, R2 keys, Upstash URL/token, Sentry DSN (see
-`.env.example` for placeholders).
+Later phases add: Stripe keys, Cloudflare R2 keys, Upstash URL/token, Sentry
+DSN (placeholders are in `.env.example`).
 
 ## Project structure
 
 ```
 src/
-  app/                # Pages + API routes (App Router)
-  db/                 # Schema + database client
-  lib/                # auth, AI provider layer, services
-  middleware.ts       # session refresh + route guards
-drizzle/              # SQL migrations
-docs/architecture.md  # the architecture spec
+  app/                 # Pages + API routes (App Router)
+    (app)/             #   authenticated app shell: dashboard, notes, flashcards, quizzes, planner
+    (auth)/            #   login, signup
+    (onboarding)/      #   onboarding flow
+    api/auth/[...all]/ #   Better Auth handler
+  components/
+    ui/                #   design-system primitives (button, card, input, …)
+    app-shell.tsx      #   authenticated layout (sidebar + responsive nav)
+  db/                  #   schema (auth + domain) + client
+  lib/
+    ai/                #   provider-agnostic AI layer (provider.ts, generate.ts)
+    auth.ts            #   Better Auth server config
+    auth-client.ts     #   Better Auth React client
+    plans.ts           #   free/premium limits — single source of truth
+  proxy.ts             #   Next 16 edge middleware: session guard + refresh
+drizzle/               # SQL migrations (generated by drizzle-kit)
+.github/workflows/     # CI: lint → typecheck → tests → build → audit → secret scan
+docs/                  # Architecture, plans, MVP plan, playbook, UI design
 ```
 
-## Next steps (Phase 2)
+## Documentation
 
-1. Create a free Neon account (https://neon.tech) → new project → copy the
-   two connection strings into `.env`.
-2. Run `npm run db:migrate`.
-3. Start the dev server and confirm `http://localhost:3000` loads.
-4. We'll then add the signup/login pages (Phase 2 finish), then move to
-   Phase 3 (core UI).
+| Doc | What it covers |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | Stack decisions, system architecture, DB schema, security, costs |
+| [`docs/plans-and-limits.md`](docs/plans-and-limits.md) | Free/premium limits + rationale (source: `src/lib/plans.ts`) |
+| [`docs/mvp-plan.md`](docs/mvp-plan.md) | Week-by-week build tracker with gates |
+| [`docs/ui-design-week1.md`](docs/ui-design-week1.md) | Design system: tokens, layouts, component conventions |
+| [`docs/playbook-first-students.md`](docs/playbook-first-students.md) | How we recruit the first 20–50 students |
+| [`docs/environment-variables.md`](docs/environment-variables.md) | Full env var reference |
+| [`docs/development.md`](docs/development.md) | Dev setup + common workflows |
+| [`docs/production.md`](docs/production.md) | Production setup + monitoring |
+| [`docs/deployment.md`](docs/deployment.md) | Deploying: CI/CD + Vercel |
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License / status
+
+Pre-launch private project. Not open source yet.
