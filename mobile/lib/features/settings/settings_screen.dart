@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
@@ -67,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
                           subtitle: 'About the app and its creator',
                           leading: Icon(Icons.info_outline, size: 22, color: g.primary),
                           trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                          onTap: () => context.go('/about/creator'),
+                          onTap: () => context.go(AppRoutes.aboutCreator),
                         ),
                       ],
                     ),

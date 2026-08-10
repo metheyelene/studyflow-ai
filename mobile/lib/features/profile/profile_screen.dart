@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
@@ -57,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
                         subtitle: 'Profile, preferences, account',
                         leading: Icon(Icons.settings_outlined, size: 22, color: g.primary),
                         trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                        onTap: () => context.go('/settings'),
+                        onTap: () => context.go(AppRoutes.settings),
                       ),
                       const Divider(color: Color(0x14000000), height: 1, indent: 50),
                       GlassListTile(
@@ -65,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
                         subtitle: 'About the app and its creator',
                         leading: Icon(Icons.info_outline, size: 22, color: g.primary),
                         trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                        onTap: () => context.go('/about/creator'),
+                        onTap: () => context.go(AppRoutes.aboutCreator),
                       ),
                     ],
                   ),
