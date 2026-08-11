@@ -34,7 +34,15 @@ plan is a Phase 28 deliverable).
 3. After that: push to `main` → production deploy; every PR/branch → its own
    preview URL, automatically.
 
-Full steps, including the CLI alternative: [deployment.md](deployment.md).
+CLI alternative (repo is already linked via `.vercel/project.json`):
+
+```bash
+npx vercel login
+npx vercel --prod
+```
+
+Exact end-to-end steps (Neon → env → deploy → verify → mobile):
+[deployment.md](deployment.md).
 
 ## 3. Environment variables in Vercel
 
@@ -46,11 +54,16 @@ Add these to **Production** and **Preview** (all stored as **Sensitive**):
 | `DATABASE_URL_DIRECT` | Neon direct URL (real) |
 | `BETTER_AUTH_SECRET` | Same value as local `.env` — otherwise sessions break |
 | `BETTER_AUTH_URL` | `https://your-domain.com` |
-| `AI_PROVIDER` | `openai` |
-| `OPENAI_API_KEY` | Your key |
+| `TRUSTED_ORIGINS_EXTRA` | Only if the Flutter web build is served from another origin (comma-separated); not needed for native apps |
+| `AI_PROVIDER_ORDER` | `openai` (or `openai,anthropic`) |
+| `OPENAI_API_KEY` | Your key (only if OpenAI is in the order) |
 
 Later phases add Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-`NEXT_PUBLIC_STRIPE_PRICE_*`), R2 (`R2_*`), Upstash, and Sentry.
+`STRIPE_FOUNDING_PRICE_ID`, `APP_URL`), R2 (`R2_*`), Upstash, and Sentry.
+
+> **Mobile app:** the Flutter app bakes its API origin at build time from the
+> GitHub Actions `API_BASE_URL` variable. Set it to the deployed domain and
+> push a new release tag — see [deployment.md](deployment.md) §7.
 
 > **Remember:** deployments snapshot env vars at build time — after changing
 > them, redeploy.
