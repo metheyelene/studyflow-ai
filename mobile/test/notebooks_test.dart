@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_controller.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 
@@ -138,4 +139,14 @@ class _FailingNotebooksRepository implements NotebooksRepository {
 
   @override
   Future<void> delete(String id) async {}
+
+  @override
+  Future<ChatReply> chat(
+    String notebookId, {
+    required String question,
+    String mode = 'sources',
+    List<ChatMessage> history = const [],
+  }) async {
+    throw const NotebooksException('Could not reach the AI.');
+  }
 }

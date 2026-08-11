@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/networking/api_client.dart';
 import 'notebook.dart';
+import 'notebook_chat.dart';
 
 class NotebooksException implements Exception {
   const NotebooksException(this.message);
@@ -12,6 +14,15 @@ abstract class NotebooksRepository {
   Future<List<Notebook>> list();
   Future<Notebook> create({required String title, String? description});
   Future<void> delete(String id);
+
+  /// Ask the notebook's grounded AI. [history] is the prior conversation
+  /// as (role, content) pairs, oldest first.
+  Future<ChatReply> chat(
+    String notebookId, {
+    required String question,
+    String mode = 'sources',
+    List<ChatMessage> history = const [],
+  });
 }
 
 /// Backend-backed implementation. The source of truth is the StudyFlow
@@ -48,6 +59,52 @@ class ApiNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> delete(String id) async {
     await _client.delete('/api/notebooks/$id');
+  }
+
+  @override
+  Future<ChatReply> chat(
+    String notebookId, {
+    required String question,
+    String mode = 'sources',
+    List<ChatMessage> history = const [],
+  }) async {
+    try {
+      final res = await _client.postPlain(
+        '/api/notebooks/$notebookId/chat',
+        data: {
+          'question': question,
+          'mode': mode,
+          'history': [
+            for (final m in history) {'role': m.isUser ? 'user' : 'assistant', 'content': m.content},
+          ],
+        },
+      );
+      final body = res.data;
+      if (body is! String || body.isEmpty) {
+        throw const NotebooksException('The AI returned an empty answer. Please try again.');
+      }
+      return parseChatReply(body);
+    } on DioException catch (e) {
+      throw NotebooksException(_friendlyChatError(e));
+    }
+  }
+
+  String _friendlyChatError(DioException e) {
+    final status = e.response?.statusCode;
+    final message = e.response?.data is Map
+        ? (e.response!.data as Map)['error']
+        : null;
+    return switch (status) {
+      400 || 422 => (message is String && message.isNotEmpty)
+          ? message
+          : 'The AI could not answer that. Try rephrasing the question.',
+      429 => (message is String && message.isNotEmpty)
+          ? message
+          : "You've used this month's free AI allowance. Upgrade for a higher limit.",
+      401 => 'Your session expired. Please log in again.',
+      null => 'Could not reach the server. Check your connection and try again.',
+      _ => 'Something went wrong. Please try again.',
+    };
   }
 }
 

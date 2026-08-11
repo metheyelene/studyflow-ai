@@ -44,6 +44,15 @@ class ApiClient {
 
   Future<Response<T>> post<T>(String path, {Object? data}) => _dio.post<T>(path, data: data);
 
+  /// POST that treats the response body as raw text — used by the notebook
+  /// chat endpoint, whose body is a streamed answer followed by a citation
+  /// trailer (not JSON).
+  Future<Response<String>> postPlain(String path, {Object? data}) => _dio.post<String>(
+        path,
+        data: data,
+        options: Options(responseType: ResponseType.plain),
+      );
+
   Future<Response<T>> put<T>(String path, {Object? data}) => _dio.put<T>(path, data: data);
 
   Future<Response<T>> delete<T>(String path) => _dio.delete<T>(path);

@@ -8,6 +8,7 @@ import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
@@ -85,6 +86,9 @@ class FakeOnboardingRepository implements OnboardingRepository {
 class FakeNotebooksRepository implements NotebooksRepository {
   final List<Notebook> notebooks = [];
   int _counter = 0;
+  int chatCalls = 0;
+  List<String> chatQuestions = [];
+  bool failChat = false;
 
   @override
   Future<List<Notebook>> list() async => List.of(notebooks);
@@ -105,6 +109,32 @@ class FakeNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> delete(String id) async {
     notebooks.removeWhere((n) => n.id == id);
+  }
+
+  @override
+  Future<ChatReply> chat(
+    String notebookId, {
+    required String question,
+    String mode = 'sources',
+    List<ChatMessage> history = const [],
+  }) async {
+    chatCalls++;
+    chatQuestions.add(question);
+    if (failChat) {
+      throw const NotebooksException('The AI could not answer that. Try rephrasing the question.');
+    }
+    return ChatReply(
+      answer: 'Photosynthesis converts light into chemical energy, as covered in your notes.',
+      citations: const [
+        ChatCitation(
+          marker: 1,
+          sourceId: 'src-1',
+          sourceTitle: 'Biology Notes',
+          page: 12,
+          excerpt: 'Photosynthesis converts light energy into chemical energy.',
+        ),
+      ],
+    );
   }
 }
 

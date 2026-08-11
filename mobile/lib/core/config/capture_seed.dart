@@ -14,6 +14,7 @@ import 'capture_storage.dart';
 import '../../features/authentication/auth_models.dart';
 import '../../features/authentication/auth_repository.dart';
 import '../../features/notebooks/notebook.dart';
+import '../../features/notebooks/notebook_chat.dart';
 import '../../features/notebooks/notebooks_repository.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_repository.dart';
@@ -101,6 +102,28 @@ class CaptureNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> delete(String id) async {
     _notebooks.removeWhere((n) => n.id == id);
+  }
+
+  @override
+  Future<ChatReply> chat(
+    String notebookId, {
+    required String question,
+    String mode = 'sources',
+    List<ChatMessage> history = const [],
+  }) async {
+    return ChatReply(
+      answer: 'Sample answer: based on your sources, this is the key idea. '
+          'It is stated in your lecture notes.',
+      citations: const [
+        ChatCitation(
+          marker: 1,
+          sourceId: 'src-1',
+          sourceTitle: 'Sample: Cell Biology — Unit 2',
+          page: 4,
+          excerpt: 'Photosynthesis converts light energy into chemical energy.',
+        ),
+      ],
+    );
   }
 }
 

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_input.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
+import '../../shared/widgets/glass/glass_sheet.dart';
 import 'notebook.dart';
+import 'notebook_chat.dart';
+import 'notebooks_controller.dart';
 
 /// The notebook workspace — sources, AI chat, and study tools. Structure
 /// mirrors the web app; the backend wiring (upload, chat, actions) lands
@@ -74,7 +79,7 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
           Expanded(
             child: switch (_tab) {
               0 => const _SourcesTab(),
-              1 => const _AskAiTab(),
+              1 => _AskAiTab(notebookId: notebook.id),
               _ => const _StudyToolsTab(),
             },
           ),
@@ -171,68 +176,284 @@ class _SourcesTab extends StatelessWidget {
   }
 }
 
-class _AskAiTab extends StatefulWidget {
-  const _AskAiTab();
+class _AskAiTab extends ConsumerStatefulWidget {
+  const _AskAiTab({required this.notebookId});
+
+  final String notebookId;
 
   @override
-  State<_AskAiTab> createState() => _AskAiTabState();
+  ConsumerState<_AskAiTab> createState() => _AskAiTabState();
 }
 
-class _AskAiTabState extends State<_AskAiTab> {
+class _AskAiTabState extends ConsumerState<_AskAiTab> {
   final _controller = TextEditingController();
+  final _scroll = ScrollController();
 
   @override
   void dispose() {
     _controller.dispose();
+    _scroll.dispose();
     super.dispose();
+  }
+
+  void _send() {
+    final text = _controller.text;
+    if (text.trim().isEmpty) return;
+    _controller.clear();
+    ref.read(notebookChatControllerProvider(widget.notebookId).notifier).send(text);
   }
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-      child: Column(
-        children: [
-          GlassCard(
-            child: Column(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: g.primarySoft,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Icons.auto_awesome, size: 24, color: g.primary),
+    final chat = ref.watch(notebookChatControllerProvider(widget.notebookId));
+    final messages = chat.messages.reversed.toList();
+
+    return Column(
+      children: [
+        Expanded(
+          child: chat.messages.isEmpty
+              ? const _ChatEmptyState()
+              : ListView.builder(
+                  controller: _scroll,
+                  reverse: true,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  itemCount: messages.length,
+                  itemBuilder: (context, i) => _MessageBubble(message: messages[i]),
                 ),
-                const SizedBox(height: 14),
-                Text('Ask your notebook', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(
-                  'Questions get source-grounded answers with citations once '
-                  'your material is added. Notebook AI arrives with the backend.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          GlassInput(
-            controller: _controller,
-            hintText: 'e.g. Summarize the key concepts…',
-            prefixIcon: Icons.question_answer_outlined,
-            suffix: IconButton(
-              icon: Icon(Icons.send, size: 18, color: g.primary),
-              tooltip: 'Ask',
-              onPressed: () => showGlassToast(
-                context,
-                'Notebook AI arrives with the backend (next phases).',
+        ),
+        if (chat.error != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: g.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: g.danger.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                chat.error!,
+                style: TextStyle(color: g.danger, fontSize: 13),
               ),
             ),
           ),
+          const SizedBox(height: 8),
         ],
+        Padding(
+          // Phones: the floating bottom nav overlays the branch content
+          // (the shell's Stack sits above the pushed route), so the input
+          // needs clearance to stay tappable above it.
+          padding: EdgeInsets.fromLTRB(16, 0, 16, context.isPhone ? 96 : 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: GlassInput(
+                  controller: _controller,
+                  hintText: 'Ask your notebook…',
+                  prefixIcon: Icons.question_answer_outlined,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GlassButton(
+                label: 'Ask',
+                icon: Icons.send,
+                semanticLabel: 'Ask',
+                onPressed: chat.busy ? null : _send,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChatEmptyState extends StatelessWidget {
+  const _ChatEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: GlassCard(
+        child: Column(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: g.primarySoft,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(Icons.auto_awesome, size: 24, color: g.primary),
+            ),
+            const SizedBox(height: 14),
+            Text('Ask your notebook', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              'Answers are grounded in your sources and come with citations '
+              'you can tap to see the original material.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  const _MessageBubble({required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final isUser = message.isUser;
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 320),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          color: isUser ? g.primary : g.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: isUser
+              ? null
+              : Border.all(color: g.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.content,
+              style: TextStyle(
+                color: isUser ? g.textOnPrimary : g.textPrimary,
+                fontSize: 14,
+                height: 1.45,
+              ),
+            ),
+            if (!isUser && message.citations.isNotEmpty) ...[getCitations(context, message.citations)],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget getCitations(BuildContext context, List<ChatCitation> citations) {
+    final g = context.glass;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text(
+          'Sources',
+          style: TextStyle(
+            color: g.textMuted,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final c in citations)
+              _CitationChip(citation: c, onTap: () => _showCitation(context, c)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showCitation(BuildContext context, ChatCitation citation) {
+    showGlassSheet(
+      context: context,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.description_outlined, size: 18, color: context.glass.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    citation.label,
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              citation.excerpt,
+              style: TextStyle(
+                color: context.glass.textPrimary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CitationChip extends StatelessWidget {
+  const _CitationChip({required this.citation, required this.onTap});
+
+  final ChatCitation citation;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: g.primarySoft,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: g.primary.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '[${citation.marker}] ',
+                style: TextStyle(color: g.primary, fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              Flexible(
+                child: Text(
+                  citation.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: g.textPrimary, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
