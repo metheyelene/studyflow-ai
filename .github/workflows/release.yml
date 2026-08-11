@@ -36,7 +36,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          working-directory: mobile
 
       - name: Decode release keystore
         run: |
@@ -72,9 +71,7 @@ jobs:
             mobile/build/app/outputs/flutter-apk/app-release.apk \
             mobile/build/app/outputs/bundle/release/app-release.aab \
             --title "StudyFlow AI $GITHUB_REF_NAME" \
-            --notes "Signed Android build. APK installs directly on any Android phone (Settings → Allow unknown sources); the .aab is for the Play Store.
-
-**Before distributing:** set the \`API_BASE_URL\` repository variable to your deployed backend, then push a new tag — otherwise the app cannot sign in."
+            --notes "Signed Android build. APK installs directly on any Android phone. The .aab is for the Play Store. Set the API_BASE_URL repository variable to your deployed backend before distributing."
 
   ios:
     name: Verify iOS build compiles (unsigned)
@@ -88,7 +85,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          working-directory: mobile
 
       - name: Build iOS (no codesign)
         working-directory: mobile
