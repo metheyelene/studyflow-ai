@@ -85,6 +85,9 @@ Variables**. Add to **Production** and **Preview** (mark Sensitive):
 | `OPENAI_API_KEY` | your key (only if OpenAI is in the order) |
 | `EMAIL_VERIFICATION_REQUIRED` | `false` for now (true once email works) |
 | `RESEND_API_KEY` | optional until password-reset emails are live |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry public DSN — safe to expose in the client bundle (see §3.1) |
+| `SENTRY_DSN` | optional server-side DSN; falls back to `NEXT_PUBLIC_SENTRY_DSN` |
+| `SENTRY_ORG` · `SENTRY_PROJECT` · `SENTRY_AUTH_TOKEN` | optional — enable source-map upload during `next build` (see §3.1) |
 
 Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `STRIPE_FOUNDING_PRICE_ID`, `APP_URL`) and `ADMIN_EMAILS` are needed once
@@ -92,6 +95,30 @@ payments/admin go live — add them before enabling those features.
 
 > Deployments snapshot env vars at build time. After changing any var,
 > redeploy (or Vercel will do it on the next push).
+
+### 3.1 Sentry error monitoring
+
+1. sentry.io → create a project for this app (e.g. `studyflow-nextjs`).
+2. Copy the **Client Keys (DSN)** from Settings → Projects → *Client Keys*.
+3. Vercel env (Production + Preview): `NEXT_PUBLIC_SENTRY_DSN` = the DSN.
+   Add `SENTRY_DSN` too only if you want a separate server-side key.
+4. Redeploy. From then on: unhandled client/server/edge errors flow into
+   Sentry automatically (the SDK is wired via `sentry.*.config.ts` +
+   `instrumentation.ts` + `withSentryConfig` in `next.config.ts`).
+5. **Stack traces (optional but recommended):** to symbolicate errors you
+   need source maps. Settings → Projects → *Client Keys* → create an auth
+   token, then set `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
+   (Vercel, build-time, **sensitive**) — `next build` then uploads maps
+   and tags the release automatically.
+
+   Without those three vars the SDK still captures and reports errors
+   (minus readable stack frames) and the build stays silent — local dev
+   and CI never need them.
+
+   > The `@sentry/cli` postinstall is blocked by this repo's npm
+   > `allow-scripts` policy; that's fine — the CLI is only invoked when
+   > `SENTRY_AUTH_TOKEN` is present. Approve the script or run
+   > `npm approve-scripts @sentry/cli` if source-map upload is needed.
 
 ## 4. Connect GitHub → Vercel (recommended) or deploy with the CLI
 
