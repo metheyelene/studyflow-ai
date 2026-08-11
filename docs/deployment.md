@@ -133,7 +133,25 @@ curl -s https://<your-domain>/api/auth/get-session
 #   expect: {}  (HTTP 200 = auth handler alive; no session = correct)
 curl -s -o /dev/null -w "%{http_code}\n" https://<your-domain>/api/usage
 #   expect: 401  (route alive, unauthenticated → 401, NOT 404)
+curl -s https://<your-domain>/api/health
+#   expect: 200 {"status":"ok","version":"…","database":"ok",…} (503 when DB is down)
 ```
+
+### Health & uptime monitoring
+
+`GET /api/health` is a public, no-auth endpoint that reports the app version
+and live DB connectivity (a hung database answers "down" within 5s, it never
+hangs the monitor). It returns **200** when healthy and **503** when the
+database is unreachable.
+
+- **Vercel Cron (automatic):** `vercel.json` schedules `/api/health` every 5
+  minutes on the Hobby plan and up — you'll see it in Vercel's **Cron** tab.
+- **External monitor:** point UptimeRobot / Healthchecks / BetterStack at
+  `https://<your-domain>/api/health` with a 200 = up, 503 = down rule and a
+  1–2 min check interval.
+- Every 5-minute hit counts toward the Hobby cron limit (free tier includes a
+  generous monthly allowance; `/api/health` is a single `SELECT 1`, so it's
+  effectively free).
 
 Then the full live smoke test with a real account:
 sign up → verify email (if enabled) → complete onboarding → create a notebook
