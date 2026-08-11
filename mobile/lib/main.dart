@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:flutter/semantics.dart';
 
+import 'core/config/app_config.dart';
+import 'core/config/capture_seed.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/authentication/auth_controller.dart';
@@ -12,7 +15,20 @@ void main() {
   // `/about/creator` — the landing footer's "Made by Mithil" href — open
   // the matching route directly instead of requiring a `#/` hash.
   usePathUrlStrategy();
-  runApp(const ProviderScope(child: StudyFlowApp()));
+
+  // Screenshot-capture builds: expose the semantics tree so the driver can
+  // click real widgets, and swap in seeded in-memory repositories. Never
+  // enabled in normal or release builds.
+  if (AppConfig.captureMode) {
+    SemanticsBinding.instance.ensureSemantics();
+  }
+
+  runApp(
+    ProviderScope(
+      overrides: AppConfig.captureMode ? captureOverrides : const [],
+      child: const StudyFlowApp(),
+    ),
+  );
 }
 
 class StudyFlowApp extends ConsumerStatefulWidget {

@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/config/app_config.dart';
 import '../../features/about/creator_screen.dart';
 import '../../features/authentication/auth_controller.dart';
 import '../../features/authentication/auth_models.dart';
@@ -64,6 +66,16 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupScreen()),
+      // Capture builds: the driver sets the signed-in flag in localStorage
+      // directly (see mobile/tool/capture-screenshots.js), which the seeded
+      // auth repository reads on the next full page load. No special route
+      // is needed — a redirect would race the session restore.
+      if (AppConfig.captureMode)
+        GoRoute(
+          path: '/capture/health',
+          builder: (context, state) =>
+              const Scaffold(body: Center(child: Text('capture ok'))),
+        ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return HomeShell(

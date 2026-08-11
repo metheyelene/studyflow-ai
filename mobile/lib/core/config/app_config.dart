@@ -10,6 +10,16 @@ abstract final class AppConfig {
     defaultValue: 'http://127.0.0.1:3100',
   );
 
+  /// Screenshot-capture mode (`--dart-define=CAPTURE_MODE=true`). Boots the
+  /// app signed in with seeded sample notebooks and exposes the semantics
+  /// tree, so the capture driver (mobile/tool/capture_screenshots.sh) can
+  /// click real widgets and produce Play Store phone screenshots without a
+  /// live backend. Only ever set for screenshot builds — never in release.
+  static const bool captureMode = bool.fromEnvironment(
+    'CAPTURE_MODE',
+    defaultValue: false,
+  );
+
   /// Better-auth session cookie (cookiePrefix "studyflow" + session_token).
   static const String sessionCookieName = 'studyflow.session_token';
 

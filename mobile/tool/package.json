@@ -1,0 +1,8 @@
+{
+  "name": "studyflow-capture-tool",
+  "private": true,
+  "description": "Play Store screenshot capture driver for the StudyFlow Flutter web build.",
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
