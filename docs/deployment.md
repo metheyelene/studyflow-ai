@@ -69,6 +69,26 @@ npm run db:migrate
 The **same** `BETTER_AUTH_SECRET` must be used in local, Vercel preview, and
 Vercel production — if they differ, sessions break on every redeploy.
 
+### Local development without Neon
+
+If you don't have the Neon URLs handy, you can develop against a **real
+Postgres that runs inside the repo** — no system install, no credentials:
+
+```bash
+node scripts/dev-db.mjs   # starts Postgres 18 on 127.0.0.1:5432 (foreground)
+# then, in another terminal:
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/studyflow"
+export DATABASE_URL_DIRECT="postgresql://postgres:postgres@localhost:5432/studyflow"
+npm run db:migrate
+npm run dev
+```
+
+The script initialises a cluster in `.freebuff/pgdata` on first run and
+reuses it afterwards (idempotent). Run it detached if your shell kills
+background children, e.g. via `python3 -c "...start_new_session=True..."`.
+Port override: `PGPORT=5433 node scripts/dev-db.mjs`. This is a dev-only
+convenience — production always uses the Neon URLs from §1.
+
 ## 3. Vercel environment variables (MANUAL)
 
 Vercel dashboard → project (`studyflow-ai`) → **Settings → Environment

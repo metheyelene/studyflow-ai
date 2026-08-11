@@ -54,7 +54,7 @@ class ExamCountdownCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    exam.date,
+                    exam.displayDate,
                     style: TextStyle(color: g.textMuted, fontSize: 12.5),
                   ),
                 ],

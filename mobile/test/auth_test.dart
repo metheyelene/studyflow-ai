@@ -6,6 +6,7 @@ import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
 import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
+import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 
 import 'helpers.dart';
@@ -118,5 +119,45 @@ void main() {
 
     expect(auth.signOutCalls, 1);
     expect(find.text('Welcome back'), findsOneWidget);
+  });
+
+  testWidgets('a different account never sees the previous user\'s cached dashboard data',
+      (tester) async {
+    // Regression: user-scoped providers were cached across sign-out/sign-in,
+    // so a second account on the same device saw the first account's exams.
+    final dashboard = FakeDashboardRepository(
+      currentExams: [
+        const UpcomingExam(
+          id: 'ex-a',
+          title: 'User A Exam',
+          date: '2026-09-15T00:00:00.000Z',
+        ),
+      ],
+    );
+    await pumpApp(tester, dashboard: dashboard);
+    expect(find.text('User A Exam'), findsOneWidget);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp).first),
+    );
+    await container.read(authControllerProvider.notifier).signOut();
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back'), findsOneWidget);
+
+    // The next account's data differs; the dashboard must refetch.
+    dashboard.currentExams = [
+      const UpcomingExam(
+        id: 'ex-b',
+        title: 'User B Exam',
+        date: '2026-09-16T00:00:00.000Z',
+      ),
+    ];
+    await container
+        .read(authControllerProvider.notifier)
+        .signIn(email: 'b@example.com', password: 'password123');
+    await tester.pumpAndSettle();
+
+    expect(find.text('User B Exam'), findsOneWidget);
+    expect(find.text('User A Exam'), findsNothing);
   });
 }

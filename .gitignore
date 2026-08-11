@@ -46,3 +46,4 @@ next-env.d.ts
 .freebuff/introspect-*
 .freebuff/studyflow-release.jks
 .freebuff/keystore-password.txt
+.freebuff/pgdata/   # in-project dev Postgres cluster (scripts/dev-db.mjs)

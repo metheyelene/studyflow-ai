@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dashboard/dashboard_controller.dart';
+import '../notebooks/notebooks_controller.dart';
 import '../onboarding/onboarding_controller.dart';
 import '../onboarding/onboarding_models.dart';
 import 'auth_models.dart';
@@ -57,6 +59,7 @@ class AuthController extends Notifier<AuthState> {
   /// Re-attach the persisted token and validate it against the server.
   Future<void> restore() async {
     final user = await _repo.getSession();
+    _resetUserScopedState();
     authEvents.set(
       user == null ? const AuthUnauthenticated() : AuthAuthenticated(user),
     );
@@ -66,6 +69,7 @@ class AuthController extends Notifier<AuthState> {
   Future<String?> signIn({required String email, required String password}) async {
     try {
       final user = await _repo.signIn(email: email, password: password);
+      _resetUserScopedState();
       authEvents.set(AuthAuthenticated(user));
       await _refreshOnboarding();
       return null;
@@ -81,6 +85,7 @@ class AuthController extends Notifier<AuthState> {
   }) async {
     try {
       final user = await _repo.signUp(name: name, email: email, password: password);
+      _resetUserScopedState();
       authEvents.set(AuthAuthenticated(user));
       await _refreshOnboarding();
       return null;
@@ -91,8 +96,18 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _repo.signOut();
+    _resetUserScopedState();
     onboardingEvents.set(OnboardingStatus.unknown);
     authEvents.set(const AuthUnauthenticated());
+  }
+
+  /// Drop cached, user-scoped state so a different account (or a fresh
+  /// sign-out) never sees the previous user's data. Providers refetch on
+  /// the next screen build.
+  void _resetUserScopedState() {
+    ref.invalidate(dashboardControllerProvider);
+    ref.invalidate(notebooksControllerProvider);
+    ref.invalidate(notebookChatControllerProvider);
   }
 
   /// Fetch the onboarding gate state for the newly authenticated user. The

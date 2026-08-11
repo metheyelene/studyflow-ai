@@ -36,6 +36,13 @@
       "when": 1786377191024,
       "tag": "0004_swift_stephen_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786470576794,
+      "tag": "0005_add_account_issuer",
+      "breakpoints": true
     }
   ]
 }

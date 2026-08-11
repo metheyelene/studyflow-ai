@@ -57,6 +57,19 @@ class UpcomingExam {
     if (d == null) return -1;
     return d.difference(DateTime(now.year, now.month, now.day)).inDays;
   }
+
+  /// Human-readable date for the UI (e.g. "Sep 15, 2026"). The API sends
+  /// a full ISO timestamp; this keeps the raw string off-screen.
+  String get displayDate {
+    final d = DateTime.tryParse(date);
+    if (d == null) return date;
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final m = months[d.month - 1];
+    return '$m ${d.day}, ${d.year}';
+  }
 }
 
 abstract class DashboardRepository {

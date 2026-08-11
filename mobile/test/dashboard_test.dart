@@ -41,6 +41,23 @@ void main() {
     expect(find.text('12 days'), findsOneWidget);
   });
 
+  testWidgets('exam dates render human-readable, never the raw ISO string', (tester) async {
+    // The API sends full ISO timestamps (e.g. 2026-09-15T00:00:00.000Z).
+    final dashboard = FakeDashboardRepository(
+      currentExams: [
+        UpcomingExam(
+          id: 'ex-2',
+          title: 'Physics Midterm',
+          date: '2026-09-15T00:00:00.000Z',
+        ),
+      ],
+    );
+    await pumpApp(tester, dashboard: dashboard);
+
+    expect(find.textContaining('T00:00:00'), findsNothing);
+    expect(find.text('Sep 15, 2026'), findsOneWidget);
+  });
+
   testWidgets('empty exams show the honest empty state', (tester) async {
     await pumpApp(tester, dashboard: FakeDashboardRepository(currentExams: const []));
 
