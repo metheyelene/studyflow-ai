@@ -361,6 +361,17 @@ export default async function LandingPage() {
             >
               Made by <span className="font-medium">Mithil</span> — StudyFlow AI
             </Link>
+            <div className="flex items-center gap-3 text-xs">
+              <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                Terms
+              </Link>
+              <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                Pricing
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
