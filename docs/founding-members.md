@@ -4,6 +4,10 @@
 **first 35 successful subscriptions**. No fake scarcity anywhere: every number on
 screen is computed server-side from the database.
 
+> **Billing channel:** Stripe on web, **Google Play Billing on Android** — see
+> [`docs/billing-decision.md`](./billing-decision.md) for the decision and the exact
+> Play Console steps. Do NOT point Android users at Stripe or a raw PhonePe page.
+
 ---
 
 ## 1. What counts as a founding member (counting rule)
