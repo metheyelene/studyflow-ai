@@ -53,6 +53,40 @@ void main() {
     expect(find.text('No notebooks yet'), findsOneWidget);
   });
 
+  testWidgets('every quick action lands on the tab mirroring its web destination',
+      (tester) async {
+    await pumpApp(tester);
+
+    // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes, Create Summary,
+    // Flashcards, and Generate Quiz all link to /notebooks; Study Plan links
+    // to /planner (mobile: /study, where planner content will live).
+    const notebookActions = ['Upload notes', 'Summarize', 'Flashcards', 'Quiz'];
+    for (final label in notebookActions) {
+      await tester.ensureVisible(find.text(label));
+      await tester.tap(find.text(label));
+      await tester.pumpAndSettle();
+
+      // Real navigation: the notebooks tab opens with its empty state.
+      expect(find.text('No notebooks yet'), findsOneWidget,
+          reason: '$label should open the notebooks tab (web: /notebooks)');
+
+      // Return to Home so the next action starts from the dashboard.
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(find.text('QUICK ACTIONS'), findsOneWidget);
+    }
+
+    // Study plan mirrors the web's /planner destination → the Study tab.
+    await tester.ensureVisible(find.text('Study plan'));
+    await tester.tap(find.text('Study plan'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Flashcards, quizzes, and your study plan'),
+      findsOneWidget,
+      reason: 'Study plan should open the Study tab (web: /planner)',
+    );
+  });
+
   testWidgets('deep link to /about/creator opens the Creator screen on launch',
       (tester) async {
     final router = buildAppRouter(initialLocation: AppRoutes.aboutCreator);

@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in the main manifest: debug builds inherit it from the
+         debug overlay, but release builds have no network without this. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="studyflow_mobile"
+        android:label="StudyFlow AI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

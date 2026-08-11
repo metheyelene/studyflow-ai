@@ -44,3 +44,5 @@ next-env.d.ts
 # Local preview/backend daemon artifacts
 .freebuff/*.log
 .freebuff/introspect-*
+.freebuff/studyflow-release.jks
+.freebuff/keystore-password.txt

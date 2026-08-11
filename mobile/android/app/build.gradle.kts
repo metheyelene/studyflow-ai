@@ -4,9 +4,24 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.io.File
+
+// Release signing reads from env vars (set in CI from GitHub secrets).
+// Falls back to debug signing when absent, so `flutter run --release`
+// and local builds keep working without a keystore.
+fun releaseKeystore(): File? {
+    val path = System.getenv("STUDYFLOW_KEYSTORE_PATH")
+    if (path.isNullOrBlank()) return null
+    val f = File(path)
+    return if (f.exists()) f else null
+}
+
+fun envOrNull(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+
 android {
     namespace = "ai.studyflow.studyflow_mobile"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage requires SDK 37; pin above the Flutter default.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -15,21 +30,31 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "ai.studyflow.studyflow_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        val keystore = releaseKeystore()
+        val storePass = envOrNull("STUDYFLOW_KEYSTORE_PASSWORD")
+        val alias = envOrNull("STUDYFLOW_KEY_ALIAS")
+        val keyPass = envOrNull("STUDYFLOW_KEY_PASSWORD")
+        if (keystore != null && storePass != null && alias != null && keyPass != null) {
+            create("release") {
+                storeFile = keystore
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 }
