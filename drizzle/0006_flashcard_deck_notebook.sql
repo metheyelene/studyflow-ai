@@ -1,0 +1,2 @@
+ALTER TABLE "flashcard_decks" ADD COLUMN "notebook_id" text;--> statement-breakpoint
+ALTER TABLE "flashcard_decks" ADD CONSTRAINT "flashcard_decks_notebook_id_notebooks_id_fk" FOREIGN KEY ("notebook_id") REFERENCES "public"."notebooks"("id") ON DELETE set null ON UPDATE no action;

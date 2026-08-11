@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
@@ -11,6 +12,8 @@ import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
+import '../flashcards/flashcards_controller.dart';
+import '../flashcards/flashcards_repository.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
@@ -80,7 +83,10 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
             child: switch (_tab) {
               0 => _SourcesTab(notebookId: notebook.id),
               1 => _AskAiTab(notebookId: notebook.id),
-              _ => _StudyToolsTab(onAskAi: () => setState(() => _tab = 1)),
+              _ => _StudyToolsTab(
+                    notebookId: notebook.id,
+                    onAskAi: () => setState(() => _tab = 1),
+                  ),
             },
           ),
         ],
@@ -782,23 +788,44 @@ class _CitationChip extends StatelessWidget {
 
 // ─────────────────────────── Study tools ───────────────────────────
 
-/// Honest study-tools tab: no fake actions. Tools are generated from a
-/// notebook's sources via the AI; the real next step today is asking the
-/// notebook (or adding sources), so that's the CTA.
-class _StudyToolsTab extends StatelessWidget {
-  const _StudyToolsTab({required this.onAskAi});
+/// Honest study-tools tab: tools are generated from a notebook's sources
+/// via the AI. Flashcards is wired end-to-end (generate → study session);
+/// the rest route to asking the notebook.
+class _StudyToolsTab extends ConsumerStatefulWidget {
+  const _StudyToolsTab({required this.notebookId, required this.onAskAi});
 
+  final String notebookId;
   final VoidCallback onAskAi;
+
+  @override
+  ConsumerState<_StudyToolsTab> createState() => _StudyToolsTabState();
+}
+
+class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
+  bool _flashcardBusy = false;
+
+  Future<void> _generateFlashcards() async {
+    setState(() => _flashcardBusy = true);
+    try {
+      final detail = await ref
+          .read(flashcardsControllerProvider.notifier)
+          .generate(widget.notebookId);
+      if (!mounted) return;
+      context.push('${AppRoutes.flashcards}/${detail.deck.id}');
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is FlashcardsException
+          ? e.message
+          : 'Could not generate that deck. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _flashcardBusy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    const tools = [
-      (Icons.summarize_outlined, 'Summaries', 'Short, detailed, or exam-focused summaries of your material'),
-      (Icons.style_outlined, 'Flashcards', 'Source-grounded front/back cards from your notes'),
-      (Icons.quiz_outlined, 'Quizzes', 'MCQs generated from your material'),
-      (Icons.menu_book_outlined, 'Study guides', 'Key concepts, definitions, and formulas'),
-    ];
     return ListView(
       padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 24),
       children: [
@@ -817,7 +844,7 @@ class _StudyToolsTab extends StatelessWidget {
               GlassButton(
                 label: 'Ask your notebook',
                 icon: Icons.auto_awesome,
-                onPressed: onAskAi,
+                onPressed: widget.onAskAi,
               ),
             ],
           ),
@@ -827,14 +854,48 @@ class _StudyToolsTab extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              for (var i = 0; i < tools.length; i++) ...[
-                if (i > 0) Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
-                GlassListTile(
-                  title: tools[i].$2,
-                  subtitle: tools[i].$3,
-                  leading: Icon(tools[i].$1, size: 22, color: g.primary),
-                ),
-              ],
+              GlassListTile(
+                title: 'Flashcards',
+                subtitle: _flashcardBusy
+                    ? 'Reading your sources…'
+                    : 'Source-grounded front/back cards from your notes',
+                leading: _flashcardBusy
+                    ? Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(g.primary),
+                          ),
+                        ),
+                      )
+                    : Icon(Icons.style_outlined, size: 22, color: g.primary),
+                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                onTap: _flashcardBusy ? null : _generateFlashcards,
+              ),
+              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              GlassListTile(
+                title: 'Quizzes',
+                subtitle: 'MCQs generated from your material',
+                leading: Icon(Icons.quiz_outlined, size: 22, color: g.primary),
+                onTap: widget.onAskAi,
+              ),
+              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              GlassListTile(
+                title: 'Summaries',
+                subtitle: 'Short, detailed, or exam-focused summaries of your material',
+                leading: Icon(Icons.summarize_outlined, size: 22, color: g.primary),
+                onTap: widget.onAskAi,
+              ),
+              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              GlassListTile(
+                title: 'Study guides',
+                subtitle: 'Key concepts, definitions, and formulas',
+                leading: Icon(Icons.menu_book_outlined, size: 22, color: g.primary),
+                onTap: widget.onAskAi,
+              ),
             ],
           ),
         ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/time.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
@@ -122,15 +123,6 @@ class _NotebookCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  String _relative(DateTime time, DateTime now) {
-    final diff = now.difference(time);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${time.day}/${time.month}/${time.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
@@ -171,7 +163,7 @@ class _NotebookCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${notebook.sourceCount} sources · updated ${_relative(notebook.updatedAt, DateTime.now())}',
+                        '${notebook.sourceCount} sources · updated ${relativeTime(notebook.updatedAt, DateTime.now())}',
                         style: TextStyle(color: g.textMuted, fontSize: 12.5),
                       ),
                     ],

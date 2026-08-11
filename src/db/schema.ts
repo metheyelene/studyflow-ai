@@ -181,6 +181,9 @@ export const flashcardDecks = pgTable(
     subjectId: text("subject_id").references(() => subjects.id, {
       onDelete: "set null",
     }),
+    notebookId: text("notebook_id").references(() => notebooks.id, {
+      onDelete: "set null",
+    }),
     title: text("title").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

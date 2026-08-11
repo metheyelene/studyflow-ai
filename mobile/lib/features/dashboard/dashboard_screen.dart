@@ -363,12 +363,14 @@ class _QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    // Tabs navigate with go(); pushed detail routes (flashcards) use push()
+    // so back returns to the dashboard instead of hitting an empty stack.
     const actions = [
-      (Icons.upload_file, 'Upload notes', AppRoutes.notebooks),
-      (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks),
-      (Icons.style_outlined, 'Flashcards', AppRoutes.notebooks),
-      (Icons.quiz_outlined, 'Quiz', AppRoutes.notebooks),
-      (Icons.event_available_outlined, 'Study plan', AppRoutes.study),
+      (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
+      (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
+      (Icons.style_outlined, 'Flashcards', AppRoutes.flashcards, true),
+      (Icons.quiz_outlined, 'Quiz', AppRoutes.notebooks, false),
+      (Icons.event_available_outlined, 'Study plan', AppRoutes.study, false),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -384,7 +386,7 @@ class _QuickActionsGrid extends StatelessWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => context.go(a.$3),
+                    onTap: () => a.$4 ? context.push(a.$3) : context.go(a.$3),
                     borderRadius: BorderRadius.circular(16),
                     child: Ink(
                       padding: const EdgeInsets.all(14),

@@ -15,7 +15,7 @@ import { z } from "zod";
 import { getCached, putCached, cacheKey as buildCacheKey } from "@/lib/ai/cache";
 import { generate, generateJson, resolveModel } from "@/lib/ai/orchestrator";
 import { hybridRetrieve, type RetrievableChunk } from "@/lib/ai/retrieval";
-import { loadChunks, sourceVersions } from "@/lib/ai/sources";
+import { getSourcesForUser, loadChunks, sourceVersions } from "@/lib/ai/sources";
 import { systemPrompt } from "@/lib/ai/prompts";
 
 export type ActionName =
@@ -209,12 +209,23 @@ async function retrieveContext(ctx: ActionContext, query: string, topK = 10) {
     page: s.page,
     sourceTitle: s.sourceTitle,
   }));
-  return hybridRetrieve(query, chunks, { topK, sourceIds: ctx.sourceIds });
+  const retrieved = await hybridRetrieve(query, chunks, { topK, sourceIds: ctx.sourceIds });
+  // A short source can score zero against a generic generation query (e.g.
+  // "main content and key concepts"). Fall back to the first chunks in
+  // source order so generation still works when retrieval finds nothing.
+  // Bounded by topK — never the whole document collection.
+  if (retrieved.length === 0) {
+    return chunks.slice(0, topK);
+  }
+  return retrieved;
 }
 
 async function sourceIdsForNotebook(ctx: ActionContext): Promise<string[]> {
-  const sources = await loadChunks(ctx.userId, ctx.notebookId, []);
-  return sources.map((s) => s.sourceId);
+  // loadChunks([]) means "no chunks" by contract, so resolve the ready
+  // source ids directly — otherwise every action/chat without explicit
+  // sourceIds resolves to no sources at all.
+  const sources = await getSourcesForUser(ctx.userId, ctx.notebookId);
+  return sources.filter((s) => s.status === "ready").map((s) => s.id);
 }
 
 function buildContext(retrieved: RetrievableChunk[], maxExcerptChars = 900): { context: string; refs: Map<number, SourceRef> } {

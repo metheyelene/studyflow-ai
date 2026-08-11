@@ -8,6 +8,8 @@ import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
 import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
+import 'package:studyflow_mobile/features/flashcards/flashcard_models.dart';
+import 'package:studyflow_mobile/features/flashcards/flashcards_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
@@ -164,6 +166,65 @@ class FakeNotebooksRepository implements NotebooksRepository {
   }
 }
 
+/// In-memory flashcards repository: decks and cards the tests control
+/// directly, plus a record of review ratings posted.
+class FakeFlashcardsRepository implements FlashcardsRepository {
+  FakeFlashcardsRepository({
+    this.decks = const [],
+    this.cards = const [],
+    this.failGenerate = false,
+    this.failList = false,
+  });
+
+  List<FlashcardDeck> decks;
+  List<Flashcard> cards;
+  bool failGenerate;
+  bool failList;
+  final List<(String deckId, String cardId, int rating)> reviews = [];
+  int generateCalls = 0;
+
+  @override
+  Future<List<FlashcardDeck>> list() async {
+    if (failList) throw const FlashcardsException('Could not load your decks.');
+    return List.of(decks);
+  }
+
+  @override
+  Future<FlashcardDeckDetail> generate(String notebookId, {String? title}) async {
+    generateCalls++;
+    if (failGenerate) {
+      throw const FlashcardsException('This notebook has no indexed sources yet. Add a source first.');
+    }
+    final deck = FlashcardDeck(
+      id: 'deck-${decks.length + 1}',
+      title: title ?? 'Generated deck',
+      cardCount: cards.length,
+      notebookId: notebookId,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    decks = [deck, ...decks];
+    return FlashcardDeckDetail(deck: deck, cards: List.of(cards));
+  }
+
+  @override
+  Future<FlashcardDeckDetail> deck(String deckId) async {
+    final deck = decks.where((d) => d.id == deckId).firstOrNull;
+    if (deck == null) throw const FlashcardsException('Could not load that deck.');
+    return FlashcardDeckDetail(deck: deck, cards: List.of(cards));
+  }
+
+  @override
+  Future<void> delete(String deckId) async {
+    decks = decks.where((d) => d.id != deckId).toList();
+  }
+
+  @override
+  Future<void> review(String deckId, {required String cardId, required int rating}) async {
+    reviews.add((deckId, cardId, rating));
+  }
+}
+
 /// In-memory dashboard repository: real-looking usage + exams the tests
 /// control directly.
 class FakeDashboardRepository implements DashboardRepository {
@@ -204,6 +265,7 @@ Future<FakeAuthRepository> pumpApp(
   NotebooksRepository? notebooks,
   OnboardingRepository? onboarding,
   FakeDashboardRepository? dashboard,
+  FlashcardsRepository? flashcards,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -227,6 +289,7 @@ Future<FakeAuthRepository> pumpApp(
         onboardingRepositoryProvider.overrideWithValue(onboarding ?? FakeOnboardingRepository()),
         dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
         notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
+        flashcardsRepositoryProvider.overrideWithValue(flashcards ?? FakeFlashcardsRepository()),
       ],
       child: MaterialApp.router(
         routerConfig: router ?? buildAppRouter(),

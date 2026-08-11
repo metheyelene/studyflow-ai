@@ -43,6 +43,13 @@
       "when": 1786470576794,
       "tag": "0005_add_account_issuer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786471260399,
+      "tag": "0006_flashcard_deck_notebook",
+      "breakpoints": true
     }
   ]
 }
