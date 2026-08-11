@@ -7,8 +7,10 @@ import 'package:studyflow_mobile/core/theme/app_theme.dart';
 import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
+import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
@@ -136,6 +138,60 @@ class FakeNotebooksRepository implements NotebooksRepository {
       ],
     );
   }
+
+  final List<NotebookSource> sources = [];
+  int _sourceCounter = 0;
+
+  @override
+  Future<List<NotebookSource>> listSources(String notebookId) async => List.of(sources);
+
+  @override
+  Future<NotebookSource> addPastedSource(
+    String notebookId, {
+    required String title,
+    required String text,
+  }) async {
+    final s = NotebookSource(
+      id: 'src-${++_sourceCounter}',
+      title: title,
+      kind: 'pasted',
+      status: SourceStatus.processing,
+      wordCount: text.split(' ').length,
+      createdAt: DateTime.now(),
+    );
+    sources.insert(0, s);
+    return s;
+  }
+}
+
+/// In-memory dashboard repository: real-looking usage + exams the tests
+/// control directly.
+class FakeDashboardRepository implements DashboardRepository {
+  FakeDashboardRepository({
+    this.currentUsage = const AiUsage(
+      used: 3,
+      limit: 20,
+      remaining: 17,
+      percent: 15,
+      resetsAt: '',
+      plan: 'free',
+    ),
+    this.currentExams = const [],
+    this.failUsage = false,
+  });
+
+  AiUsage currentUsage;
+  List<UpcomingExam> currentExams;
+  bool failUsage;
+
+  @override
+  Future<AiUsage> usage() async {
+    if (failUsage) throw const DashboardException('Could not load your usage.');
+    return currentUsage;
+  }
+
+  @override
+  Future<List<UpcomingExam>> exams() async => List.of(currentExams);
 }
 
 /// Pump the app router with fake repositories. When [signedIn] is true
@@ -147,6 +203,7 @@ Future<FakeAuthRepository> pumpApp(
   FakeAuthRepository? auth,
   NotebooksRepository? notebooks,
   OnboardingRepository? onboarding,
+  FakeDashboardRepository? dashboard,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -168,6 +225,7 @@ Future<FakeAuthRepository> pumpApp(
       overrides: [
         authRepositoryProvider.overrideWithValue(authFake),
         onboardingRepositoryProvider.overrideWithValue(onboarding ?? FakeOnboardingRepository()),
+        dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
         notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
       ],
       child: MaterialApp.router(

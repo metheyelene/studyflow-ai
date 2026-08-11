@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
+import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
@@ -28,6 +29,7 @@ void main() {
         overrides: [
           authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
           onboardingRepositoryProvider.overrideWithValue(FakeOnboardingRepository()),
+          dashboardRepositoryProvider.overrideWithValue(FakeDashboardRepository()),
           notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
         ],
         child: const StudyFlowApp(),
@@ -85,7 +87,7 @@ void main() {
     await tester.tap(find.text('Study plan'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('Flashcards, quizzes, and your study plan'),
+      find.text('STUDY MATERIAL'),
       findsOneWidget,
       reason: 'Study plan should open the Study tab (web: /planner)',
     );

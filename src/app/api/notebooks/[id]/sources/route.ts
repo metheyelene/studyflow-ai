@@ -2,9 +2,41 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { LimitError, NotFoundError, addPastedSource, addUploadedSource } from "@/lib/ai/sources";
+import { LimitError, NotFoundError, addPastedSource, addUploadedSource, listSources } from "@/lib/ai/sources";
 import { SourceExtractionError } from "@/lib/ai/extract";
 import { getPlanForSession } from "@/lib/premium";
+
+/**
+ * GET /api/notebooks/[id]/sources — the notebook's sources, oldest first.
+ * The mobile Sources tab renders this list (title, kind, status, size).
+ */
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  try {
+    const sources = await listSources(session.user.id, id);
+    return NextResponse.json({
+      sources: sources.map((s) => ({
+        id: s.id,
+        title: s.title,
+        kind: s.sourceType,
+        status: s.status,
+        wordCount: s.wordCount,
+        pageCount: s.pageCount,
+        createdAt: s.createdAt.toISOString(),
+        updatedAt: s.updatedAt.toISOString(),
+      })),
+    });
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return NextResponse.json({ error: "Notebook not found." }, { status: 404 });
+    }
+    console.error("[sources:list]", err);
+    return NextResponse.json({ error: "Failed to load sources." }, { status: 500 });
+  }
+}
 
 /**
  * POST /api/notebooks/[id]/sources

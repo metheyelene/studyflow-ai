@@ -13,11 +13,11 @@ import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
+import 'notebook_sources.dart';
 import 'notebooks_controller.dart';
+import 'notebooks_repository.dart';
 
-/// The notebook workspace — sources, AI chat, and study tools. Structure
-/// mirrors the web app; the backend wiring (upload, chat, actions) lands
-/// in Phases 8–10. Until then every action is honest about what is coming.
+/// The notebook workspace — sources, AI chat, and study tools.
 class NotebookDetailPane extends StatefulWidget {
   const NotebookDetailPane({super.key, required this.notebook, this.showBack = false});
 
@@ -78,9 +78,9 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
           const SizedBox(height: 12),
           Expanded(
             child: switch (_tab) {
-              0 => const _SourcesTab(),
+              0 => _SourcesTab(notebookId: notebook.id),
               1 => _AskAiTab(notebookId: notebook.id),
-              _ => const _StudyToolsTab(),
+              _ => _StudyToolsTab(onAskAi: () => setState(() => _tab = 1)),
             },
           ),
         ],
@@ -89,12 +89,13 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
   }
 }
 
+/// Shared empty-state scaffold for the tab panes.
 class _TabScaffold extends StatelessWidget {
   const _TabScaffold({
     required this.icon,
     required this.title,
     required this.description,
-    required this.actions,
+    this.actions = const [],
   });
 
   final IconData icon;
@@ -106,7 +107,7 @@ class _TabScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final g = context.glass;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 40),
       child: GlassCard(
         child: Column(
           children: [
@@ -138,43 +139,323 @@ class _TabScaffold extends StatelessWidget {
   }
 }
 
-class _SourcesTab extends StatelessWidget {
-  const _SourcesTab();
+// ─────────────────────────── Sources ───────────────────────────
 
-  void _notReady(BuildContext context, String feature) {
-    showGlassToast(
-      context,
-      '$feature arrives with sign-in and the backend (next phases).',
+class _SourcesTab extends ConsumerStatefulWidget {
+  const _SourcesTab({required this.notebookId});
+
+  final String notebookId;
+
+  @override
+  ConsumerState<_SourcesTab> createState() => _SourcesTabState();
+}
+
+class _SourcesTabState extends ConsumerState<_SourcesTab> {
+  late Future<List<NotebookSource>> _sourcesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sourcesFuture = _load();
+  }
+
+  Future<List<NotebookSource>> _load() =>
+      ref.read(notebooksRepositoryProvider).listSources(widget.notebookId);
+
+  void _reload() {
+    setState(() {
+      _sourcesFuture = _load();
+    });
+  }
+
+  Future<void> _openPasteSheet() async {
+    final added = await showGlassSheet<bool>(
+      context: context,
+      builder: (sheetContext) => _PasteSourceSheet(
+        onSubmit: (title, text) =>
+            ref.read(notebooksRepositoryProvider).addPastedSource(
+                  widget.notebookId,
+                  title: title,
+                  text: text,
+                ),
+      ),
     );
+    if (added == true && mounted) {
+      _reload();
+      // Keep the header source-count badge in sync with the server. The
+      // list updating is the success feedback — no toast needed.
+      ref.read(notebooksControllerProvider.notifier).refresh();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return _TabScaffold(
-      icon: Icons.description_outlined,
-      title: 'No sources yet',
-      description:
-          'Paste text or upload a PDF and StudyFlow AI will index it — then '
-          'answers, flashcards, and quizzes come straight from your material, '
-          'with citations back to the source.',
-      actions: [
-        GlassButton(
-          label: 'Paste text',
-          icon: Icons.content_paste,
-          variant: GlassButtonVariant.glass,
-          onPressed: () => _notReady(context, 'Adding sources'),
-        ),
-        const SizedBox(height: 8),
-        GlassButton(
-          label: 'Upload PDF',
-          icon: Icons.upload_file,
-          variant: GlassButtonVariant.glass,
-          onPressed: () => _notReady(context, 'Uploading documents'),
-        ),
-      ],
+    return FutureBuilder<List<NotebookSource>>(
+      future: _sourcesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _SourcesLoading();
+        }
+        if (snapshot.hasError) {
+          return _TabScaffold(
+            icon: Icons.cloud_off_outlined,
+            title: 'Could not load sources',
+            description: 'Check your connection and try again.',
+            actions: [
+              GlassButton(
+                label: 'Try again',
+                icon: Icons.refresh,
+                variant: GlassButtonVariant.glass,
+                onPressed: _reload,
+              ),
+            ],
+          );
+        }
+        final sources = snapshot.data ?? const <NotebookSource>[];
+        if (sources.isEmpty) {
+          return _TabScaffold(
+            icon: Icons.description_outlined,
+            title: 'No sources yet',
+            description:
+                'Paste your notes and StudyFlow AI will index them — then answers, '
+                'flashcards, and quizzes come straight from your material, with '
+                'citations back to the source.',
+            actions: [
+              GlassButton(
+                label: 'Paste text',
+                icon: Icons.content_paste,
+                onPressed: _openPasteSheet,
+              ),
+            ],
+          );
+        }
+        return ListView.separated(
+          padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 24),
+          itemCount: sources.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, i) => _SourceCard(
+            source: sources[i],
+            onAddAnother: i == sources.length - 1 ? _openPasteSheet : null,
+          ),
+        );
+      },
     );
   }
 }
+
+class _SourcesLoading extends StatelessWidget {
+  const _SourcesLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 24),
+      itemCount: 3,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => GlassCard(
+        child: Row(
+          children: [
+            const GlassSkeleton(width: 40, height: 40, radius: 12),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  GlassSkeleton(width: 160, height: 15),
+                  SizedBox(height: 8),
+                  GlassSkeleton(width: 110, height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SourceCard extends StatelessWidget {
+  const _SourceCard({required this.source, this.onAddAnother});
+
+  final NotebookSource source;
+  final VoidCallback? onAddAnother;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final (statusLabel, statusColor) = switch (source.status) {
+      SourceStatus.ready => ('Ready', g.success),
+      SourceStatus.processing => ('Indexing', g.warning),
+      SourceStatus.failed => ('Failed', g.danger),
+      SourceStatus.unknown => ('—', g.textMuted),
+    };
+    return GlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: g.primarySoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    source.kind == 'pasted' ? Icons.notes : Icons.picture_as_pdf_outlined,
+                    size: 20,
+                    color: g.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    source.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: g.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                GlassBadge(label: statusLabel, color: statusColor),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    source.sizeLabel,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: g.textMuted, fontSize: 12.5),
+                  ),
+                ),
+                if (onAddAnother != null)
+                  TextButton.icon(
+                    onPressed: onAddAnother,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Paste another'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: g.primary,
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet: title + pasted text → POST source. Returns true when the
+/// source was added so the tab can refresh.
+class _PasteSourceSheet extends StatefulWidget {
+  const _PasteSourceSheet({required this.onSubmit});
+
+  final Future<NotebookSource> Function(String title, String text) onSubmit;
+
+  @override
+  State<_PasteSourceSheet> createState() => _PasteSourceSheetState();
+}
+
+class _PasteSourceSheetState extends State<_PasteSourceSheet> {
+  final _title = TextEditingController();
+  final _text = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final title = _title.text.trim();
+    final text = _text.text.trim();
+    if (title.isEmpty || text.isEmpty) {
+      setState(() => _error = 'Add a title and the text you want to study.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit(title, text);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e is NotebooksException ? e.message : 'Something went wrong. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 8,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Paste text', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            'StudyFlow AI indexes it and answers, flashcards, and quizzes come '
+            'from this material.',
+            style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          GlassInput(
+            controller: _title,
+            label: 'Title',
+            hintText: 'e.g. Lecture 4 — Photosynthesis',
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          GlassInput(
+            controller: _text,
+            label: 'Text',
+            hintText: 'Paste your notes here…',
+            maxLines: 8,
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!, style: TextStyle(color: g.danger, fontSize: 13)),
+          ],
+          const SizedBox(height: 16),
+          GlassButton(
+            label: _busy ? 'Adding…' : 'Add source',
+            icon: Icons.add,
+            expand: true,
+            onPressed: _busy ? null : _add,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────── Ask AI ───────────────────────────
 
 class _AskAiTab extends ConsumerStatefulWidget {
   const _AskAiTab({required this.notebookId});
@@ -187,12 +468,10 @@ class _AskAiTab extends ConsumerStatefulWidget {
 
 class _AskAiTabState extends ConsumerState<_AskAiTab> {
   final _controller = TextEditingController();
-  final _scroll = ScrollController();
 
   @override
   void dispose() {
     _controller.dispose();
-    _scroll.dispose();
     super.dispose();
   }
 
@@ -215,11 +494,15 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
           child: chat.messages.isEmpty
               ? const _ChatEmptyState()
               : ListView.builder(
-                  controller: _scroll,
                   reverse: true,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  itemCount: messages.length,
-                  itemBuilder: (context, i) => _MessageBubble(message: messages[i]),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, context.isPhone ? 96 : 12),
+                  itemCount: messages.length + (chat.busy ? 1 : 0),
+                  itemBuilder: (context, i) {
+                    if (i == messages.length && chat.busy) {
+                      return const _ThinkingBubble();
+                    }
+                    return _MessageBubble(message: messages[i]);
+                  },
                 ),
         ),
         if (chat.error != null) ...[
@@ -280,7 +563,7 @@ class _ChatEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final g = context.glass;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 96 : 12),
       child: GlassCard(
         child: Column(
           children: [
@@ -309,6 +592,46 @@ class _ChatEmptyState extends StatelessWidget {
   }
 }
 
+class _ThinkingBubble extends StatelessWidget {
+  const _ThinkingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          color: g.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: g.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(g.primary),
+                backgroundColor: g.primary.withValues(alpha: 0.15),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Reading your sources…',
+              style: TextStyle(color: g.textMuted, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MessageBubble extends StatelessWidget {
   const _MessageBubble({required this.message});
 
@@ -328,9 +651,7 @@ class _MessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: isUser ? g.primary : g.surface,
           borderRadius: BorderRadius.circular(16),
-          border: isUser
-              ? null
-              : Border.all(color: g.border),
+          border: isUser ? null : Border.all(color: g.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,26 +780,49 @@ class _CitationChip extends StatelessWidget {
   }
 }
 
-class _StudyToolsTab extends StatelessWidget {
-  const _StudyToolsTab();
+// ─────────────────────────── Study tools ───────────────────────────
 
-  void _notReady(BuildContext context) {
-    showGlassToast(context, 'Study tools arrive with the backend (next phases).');
-  }
+/// Honest study-tools tab: no fake actions. Tools are generated from a
+/// notebook's sources via the AI; the real next step today is asking the
+/// notebook (or adding sources), so that's the CTA.
+class _StudyToolsTab extends StatelessWidget {
+  const _StudyToolsTab({required this.onAskAi});
+
+  final VoidCallback onAskAi;
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
     const tools = [
-      (Icons.summarize_outlined, 'Summarize', 'Short, detailed, or exam-focused summaries'),
-      (Icons.style_outlined, 'Flashcards', 'Source-grounded front/back cards'),
-      (Icons.quiz_outlined, 'Quiz', 'MCQs generated from your material'),
-      (Icons.menu_book_outlined, 'Study guide', 'Key concepts, definitions, and formulas'),
-      (Icons.account_tree_outlined, 'Mind map', 'A concept map linked back to sources'),
+      (Icons.summarize_outlined, 'Summaries', 'Short, detailed, or exam-focused summaries of your material'),
+      (Icons.style_outlined, 'Flashcards', 'Source-grounded front/back cards from your notes'),
+      (Icons.quiz_outlined, 'Quizzes', 'MCQs generated from your material'),
+      (Icons.menu_book_outlined, 'Study guides', 'Key concepts, definitions, and formulas'),
     ];
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 24),
       children: [
+        GlassCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Generate from your sources', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(
+                'Every tool builds on the material in this notebook — paste text '
+                'under Sources, then ask the notebook or generate study material.',
+                style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 14),
+              GlassButton(
+                label: 'Ask your notebook',
+                icon: Icons.auto_awesome,
+                onPressed: onAskAi,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         GlassCard(
           padding: EdgeInsets.zero,
           child: Column(
@@ -489,8 +833,6 @@ class _StudyToolsTab extends StatelessWidget {
                   title: tools[i].$2,
                   subtitle: tools[i].$3,
                   leading: Icon(tools[i].$1, size: 22, color: g.primary),
-                  trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                  onTap: () => _notReady(context),
                 ),
               ],
             ],

@@ -1,5 +1,31 @@
 import 'package:flutter/material.dart';
 
+/// Spacing scale — the single source for layout gaps. New screens use
+/// these tokens instead of arbitrary paddings (docs/design-quality-audit.md).
+abstract final class AppSpacing {
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 16;
+  static const double lg = 20;
+  static const double xl = 24;
+  static const double xxl = 32;
+  static const double xxxl = 40;
+  static const double huge = 48;
+}
+
+/// Typography scale — the one place font sizes/weights/letter-spacing are
+/// defined. Screens should reference these instead of inline `fontSize:`.
+abstract final class AppText {
+  static const TextStyle caption = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w500);
+  static const TextStyle captionMuted = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w500);
+  static const TextStyle body = TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w400);
+  static const TextStyle bodyMedium = TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600);
+  static const TextStyle eyebrow = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w600, letterSpacing: 0.8);
+  static const TextStyle small = TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w400);
+  static const TextStyle smallMuted = TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w400);
+}
+
 /// StudyFlow glass design tokens — the single source for the translucent
 /// material system (docs/glass-ui-overhaul.md, docs/mobile-flutter-plan.md).
 ///

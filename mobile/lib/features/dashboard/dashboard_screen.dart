@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
+import '../../shared/widgets/exam_countdown_card.dart';
 import '../../shared/widgets/glass/glass_card.dart';
+import '../../shared/widgets/glass/glass_misc.dart';
+import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_progress.dart';
+import 'dashboard_controller.dart';
+import 'dashboard_repository.dart';
 
 /// Home tab. Greeting, Today's Focus hero, quick actions, progress, and
-/// upcoming exams. Live numbers wire up with the API client (Phase 6 of
-/// the mobile plan) — until then every section is an honest empty state.
-class DashboardScreen extends StatelessWidget {
+/// upcoming exams. The live widgets (AI usage, exams) come from the API
+/// with skeleton/error states; nothing here is hardcoded data.
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   String _greeting() {
@@ -21,11 +27,13 @@ class DashboardScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
+    final dashboard = ref.watch(dashboardControllerProvider);
+
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+        padding: EdgeInsets.fromLTRB(20, AppSpacing.xl, 20, context.isPhone ? 120 : 40),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
@@ -34,131 +42,271 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 Text(
                   _greeting(),
-                  style: TextStyle(color: g.textMuted, fontSize: 15),
+                  style: AppText.small.copyWith(color: g.textMuted),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Ready to study?',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: 20),
-                GlassCard(
-                  tone: GlassTone.floating,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "TODAY'S FOCUS",
-                        style: TextStyle(
-                          color: g.textMuted,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Upload your first note to start building a study system.',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const GlassRing(value: 0, label: '0/20'),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'AI actions',
-                                  style: TextStyle(color: g.textMuted, fontSize: 13),
-                                ),
-                                Text(
-                                  'resets on the 1st',
-                                  style: TextStyle(
-                                    color: g.textPrimary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _SectionTitle(title: 'QUICK ACTIONS'),
+                const SizedBox(height: AppSpacing.lg),
+                _UsageHero(dashboard: dashboard),
+                const SizedBox(height: AppSpacing.lg),
+                const _SectionTitle(title: 'QUICK ACTIONS'),
                 const SizedBox(height: 10),
-                _QuickActionsGrid(),
-                const SizedBox(height: 20),
-                _SectionTitle(title: 'YOUR PROGRESS'),
+                const _QuickActionsGrid(),
+                const SizedBox(height: AppSpacing.lg),
+                const _SectionTitle(title: 'YOUR PROGRESS'),
                 const SizedBox(height: 10),
                 GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      _StatRow(
+                      const _StatRow(
                         icon: Icons.local_fire_department,
                         label: 'Study streak',
                         value: '0 days',
                       ),
                       Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
-                      _StatRow(
+                      const _StatRow(
                         icon: Icons.quiz_outlined,
                         label: 'Quizzes completed',
-                        value: '—',
+                        value: '0',
                       ),
                       Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
-                      _StatRow(
+                      const _StatRow(
                         icon: Icons.notes,
                         label: 'Notes created',
-                        value: '—',
+                        value: '0',
                       ),
                       const SizedBox(height: 4),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                _SectionTitle(title: 'UPCOMING'),
+                const SizedBox(height: AppSpacing.lg),
+                const _SectionTitle(title: 'UPCOMING'),
                 const SizedBox(height: 10),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      Icon(
-                        Icons.event_outlined,
-                        size: 26,
-                        color: g.textMuted.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No upcoming exams',
-                        style: TextStyle(
-                          color: g.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Add an exam and see a countdown here as it approaches.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: g.textMuted, fontSize: 13),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                ),
+                _UpcomingExams(dashboard: dashboard),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Today's Focus hero with the real AI-usage meter.
+class _UsageHero extends ConsumerWidget {
+  const _UsageHero({required this.dashboard});
+
+  final AsyncValue<DashboardSnapshot> dashboard;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GlassCard(
+      tone: GlassTone.floating,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(title: "TODAY'S FOCUS"),
+          const SizedBox(height: 8),
+          Text(
+            'Upload your first note to start building a study system.',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 16),
+          dashboard.when(
+            loading: () => const _UsageSkeleton(),
+            error: (_, _) => _UsageError(
+              onRetry: () => ref.read(dashboardControllerProvider.notifier).refresh(),
+            ),
+            data: (snapshot) => _UsageMeter(usage: snapshot.usage),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UsageMeter extends StatelessWidget {
+  const _UsageMeter({required this.usage});
+
+  final AiUsage usage;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final planLabel = switch (usage.plan) {
+      'premium' => 'Premium',
+      'founding_member' => 'Founding member',
+      _ => 'Free',
+    };
+    return Row(
+      children: [
+        GlassRing(
+          value: usage.limit > 0 ? usage.percent / 100 : 0,
+          label: '${usage.used}/${usage.limit}',
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'AI actions',
+                      style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GlassBadge(label: planLabel, icon: Icons.workspace_premium_outlined),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                usage.remaining > 0
+                    ? '${usage.remaining} left · resets on the 1st'
+                    : 'Allowance used · resets on the 1st',
+                style: AppText.small.copyWith(color: g.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UsageSkeleton extends StatelessWidget {
+  const _UsageSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const GlassSkeleton(width: 84, height: 84, radius: 42),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              GlassSkeleton(width: 120, height: 15),
+              SizedBox(height: 8),
+              GlassSkeleton(width: 160, height: 12),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UsageError extends ConsumerWidget {
+  const _UsageError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = context.glass;
+    return Row(
+      children: [
+        Icon(Icons.cloud_off_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.7)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Could not load your usage.',
+            style: AppText.small.copyWith(color: g.textMuted),
+          ),
+        ),
+        TextButton(
+          onPressed: onRetry,
+          style: TextButton.styleFrom(foregroundColor: g.primary),
+          child: const Text('Retry'),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingExams extends ConsumerWidget {
+  const _UpcomingExams({required this.dashboard});
+
+  final AsyncValue<DashboardSnapshot> dashboard;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = context.glass;
+    return dashboard.when(
+      loading: () => GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            GlassSkeleton(width: 180, height: 15),
+            SizedBox(height: 10),
+            GlassSkeleton(width: 260, height: 12),
+          ],
+        ),
+      ),
+      error: (_, _) => GlassCard(
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.7)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Could not load your exams.',
+                style: AppText.small.copyWith(color: g.textMuted),
+              ),
+            ),
+            TextButton(
+              onPressed: () => ref.read(dashboardControllerProvider.notifier).refresh(),
+              style: TextButton.styleFrom(foregroundColor: g.primary),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (snapshot) {
+        if (snapshot.exams.isEmpty) {
+          return GlassCard(
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                Icon(Icons.event_outlined, size: 26, color: g.textMuted.withValues(alpha: 0.6)),
+                const SizedBox(height: 8),
+                Text(
+                  'No upcoming exams',
+                  style: TextStyle(
+                    color: g.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Exams from your study setup appear here with a countdown as they approach.',
+                  textAlign: TextAlign.center,
+                  style: AppText.small.copyWith(color: g.textMuted),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final exam in snapshot.exams) ...[
+              ExamCountdownCard(exam: exam),
+              const SizedBox(height: 10),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -172,17 +320,46 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: TextStyle(
-        color: context.glass.textMuted,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.8,
+      style: AppText.eyebrow.copyWith(color: context.glass.textMuted),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: g.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: AppText.small.copyWith(color: g.textPrimary),
+            ),
+          ),
+          Text(
+            value,
+            style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
+
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
@@ -238,39 +415,6 @@ class _QuickActionsGrid extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  const _StatRow({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: g.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: TextStyle(color: g.textMuted, fontSize: 14)),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: g.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

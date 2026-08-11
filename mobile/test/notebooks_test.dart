@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_controller.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 
@@ -148,5 +149,17 @@ class _FailingNotebooksRepository implements NotebooksRepository {
     List<ChatMessage> history = const [],
   }) async {
     throw const NotebooksException('Could not reach the AI.');
+  }
+
+  @override
+  Future<List<NotebookSource>> listSources(String notebookId) async => [];
+
+  @override
+  Future<NotebookSource> addPastedSource(
+    String notebookId, {
+    required String title,
+    required String text,
+  }) {
+    throw const NotebooksException('Could not add the source.');
   }
 }

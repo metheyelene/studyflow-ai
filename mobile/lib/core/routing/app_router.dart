@@ -13,8 +13,9 @@ import '../../features/notebooks/notebooks_screen.dart';
 import '../../features/onboarding/onboarding_controller.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_screen.dart';
-import '../../features/placeholders.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/progress/progress_screen.dart';
+import '../../features/study/study_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/shell/home_shell.dart';
 

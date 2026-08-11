@@ -15,6 +15,7 @@ import '../../features/authentication/auth_models.dart';
 import '../../features/authentication/auth_repository.dart';
 import '../../features/notebooks/notebook.dart';
 import '../../features/notebooks/notebook_chat.dart';
+import '../../features/notebooks/notebook_sources.dart';
 import '../../features/notebooks/notebooks_repository.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_repository.dart';
@@ -102,6 +103,36 @@ class CaptureNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> delete(String id) async {
     _notebooks.removeWhere((n) => n.id == id);
+  }
+
+  @override
+  Future<List<NotebookSource>> listSources(String notebookId) async {
+    return [
+      NotebookSource(
+        id: 'src-1',
+        title: 'Sample: Photosynthesis notes',
+        kind: 'pasted',
+        status: SourceStatus.ready,
+        wordCount: 240,
+        createdAt: DateTime(2026),
+      ),
+    ];
+  }
+
+  @override
+  Future<NotebookSource> addPastedSource(
+    String notebookId, {
+    required String title,
+    required String text,
+  }) async {
+    return NotebookSource(
+      id: 'src-new',
+      title: title,
+      kind: 'pasted',
+      status: SourceStatus.processing,
+      wordCount: text.split(' ').length,
+      createdAt: DateTime.now(),
+    );
   }
 
   @override
