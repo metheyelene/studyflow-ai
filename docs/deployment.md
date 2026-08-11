@@ -7,6 +7,21 @@ account/credentials — do them yourself, never send secrets through chat.**
 Everything below was verified against the current code (Next 16, better-auth
 1.7, Drizzle + Neon, Flutter client).
 
+> **Quickstart:** once you have the two Neon URLs and a Vercel login, the whole
+> pipeline (§2–§7) runs as one script:
+>
+> ```bash
+> cd ~/studyflow-ai
+> bash scripts/deploy-production.sh   # or: NEON_POOLED_URL=... NEON_DIRECT_URL=... bash scripts/deploy-production.sh
+> ```
+>
+> It validates the URLs, writes local `.env`, runs `npm run db:migrate`, pushes
+> the Vercel env vars (Production + Preview), deploys twice (first for the URL,
+> then with `BETTER_AUTH_URL`), runs the verification curls, and points the
+> mobile `API_BASE_URL` GitHub variable at the result — then asks before
+> pushing the release tag. Read §3 below for what the script sets and what it
+> intentionally leaves to you.
+
 ---
 
 ## 0. The one-time requirements (you, in a browser)
