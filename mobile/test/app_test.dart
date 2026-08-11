@@ -5,6 +5,8 @@ import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
 import 'package:studyflow_mobile/main.dart';
 
 import 'helpers.dart';
@@ -19,11 +21,13 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     authEvents.reset();
+    onboardingEvents.reset();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+          onboardingRepositoryProvider.overrideWithValue(FakeOnboardingRepository()),
           notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
         ],
         child: const StudyFlowApp(),

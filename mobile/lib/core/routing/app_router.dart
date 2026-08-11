@@ -10,6 +10,9 @@ import '../../features/authentication/signup_screen.dart';
 import '../../features/authentication/splash_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/notebooks/notebooks_screen.dart';
+import '../../features/onboarding/onboarding_controller.dart';
+import '../../features/onboarding/onboarding_models.dart';
+import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/placeholders.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -24,6 +27,7 @@ abstract final class AppRoutes {
   static const splash = '/splash';
   static const login = '/login';
   static const signup = '/signup';
+  static const onboarding = '/onboarding';
   static const home = '/home';
   static const notebooks = '/notebooks';
   static const notebookDetail = '/notebooks/:id';
@@ -43,13 +47,14 @@ abstract final class AppRoutes {
 /// registration that makes the OS deliver those URLs (iOS Universal Links /
 /// Android App Links) lands in the release-prep phases.
 ///
-/// Auth gating: the router listens to [authEvents] and redirects — splash
-/// while the session restores, `/login` when logged out, and back into the
-/// app when logged in.
+/// Auth + onboarding gating: the router listens to [authEvents] and
+/// [onboardingEvents] and redirects — splash while the session restores,
+/// `/login` when logged out, `/onboarding` while a fresh account hasn't
+/// completed setup, and back into the app shell once it has.
 GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
   return GoRouter(
     initialLocation: initialLocation,
-    refreshListenable: authEvents,
+    refreshListenable: Listenable.merge([authEvents, onboardingEvents]),
     redirect: (context, state) {
       final auth = authEvents.state;
       final loc = state.matchedLocation;
@@ -59,13 +64,17 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
         AuthInitializing() => loc == AppRoutes.splash ? null : AppRoutes.splash,
         // Splash is transient — never a resting place once auth resolves.
         AuthUnauthenticated() => onAuthPage ? null : AppRoutes.login,
-        AuthAuthenticated() => (onAuthPage || loc == AppRoutes.splash) ? AppRoutes.home : null,
+        AuthAuthenticated() => _authenticatedRedirect(loc, onAuthPage),
       };
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupScreen()),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       // Capture builds: the driver sets the signed-in flag in localStorage
       // directly (see mobile/tool/capture-screenshots.js), which the seeded
       // auth repository reads on the next full page load. No special route
@@ -109,9 +118,23 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
       ),
       GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
       GoRoute(path: AppRoutes.aboutCreator, builder: (context, state) => const CreatorScreen()),
-      // Onboarding routes register in Phase 5.
     ],
   );
+}
+
+/// Where a signed-in user may rest, depending on their onboarding state.
+String? _authenticatedRedirect(String loc, bool onAuthPage) {
+  final ob = onboardingEvents.status;
+
+  // Auth pages and the splash are never resting places once signed in.
+  if (onAuthPage || loc == AppRoutes.splash) {
+    return ob == OnboardingStatus.needed ? AppRoutes.onboarding : AppRoutes.home;
+  }
+  // The onboarding screen is the only place a `needed` user may rest.
+  if (loc == AppRoutes.onboarding) {
+    return ob == OnboardingStatus.done ? AppRoutes.home : null;
+  }
+  return ob == OnboardingStatus.needed ? AppRoutes.onboarding : null;
 }
 
 /// The app's router instance.

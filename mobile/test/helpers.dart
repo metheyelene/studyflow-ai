@@ -9,6 +9,9 @@ import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
 
 const testUser = AuthUser(id: 'user_1', name: 'Test User', email: 'test@example.com');
 
@@ -58,6 +61,26 @@ class FakeAuthRepository implements AuthRepository {
   }
 }
 
+/// In-memory onboarding repository. [completed] controls what the router
+/// gate sees via `isCompleted`; tests that want a deterministic gate state
+/// set `onboardingEvents.debugSet(...)` directly instead.
+class FakeOnboardingRepository implements OnboardingRepository {
+  FakeOnboardingRepository({this.completed = true});
+
+  bool completed;
+  int submitCalls = 0;
+  OnboardingPayload? lastPayload;
+
+  @override
+  Future<bool> isCompleted() async => completed;
+
+  @override
+  Future<void> submit(OnboardingPayload payload) async {
+    submitCalls++;
+    lastPayload = payload;
+  }
+}
+
 /// In-memory notebooks repository.
 class FakeNotebooksRepository implements NotebooksRepository {
   final List<Notebook> notebooks = [];
@@ -93,10 +116,16 @@ Future<FakeAuthRepository> pumpApp(
   GoRouter? router,
   FakeAuthRepository? auth,
   NotebooksRepository? notebooks,
+  OnboardingRepository? onboarding,
+  OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
 }) async {
   authEvents.reset();
+  onboardingEvents.reset();
+  if (onboardingStatus != null) {
+    onboardingEvents.debugSet(onboardingStatus);
+  }
   final authFake = auth ?? FakeAuthRepository(current: signedIn ? testUser : null);
   authEvents.debugSet(signedIn ? const AuthAuthenticated(testUser) : const AuthUnauthenticated());
 
@@ -108,6 +137,7 @@ Future<FakeAuthRepository> pumpApp(
     ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(authFake),
+        onboardingRepositoryProvider.overrideWithValue(onboarding ?? FakeOnboardingRepository()),
         notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
       ],
       child: MaterialApp.router(

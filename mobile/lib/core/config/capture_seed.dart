@@ -8,38 +8,21 @@
 /// reloads the app).
 library;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:web/web.dart' as web;
 
+import 'capture_storage.dart';
 import '../../features/authentication/auth_models.dart';
 import '../../features/authentication/auth_repository.dart';
 import '../../features/notebooks/notebook.dart';
 import '../../features/notebooks/notebooks_repository.dart';
+import '../../features/onboarding/onboarding_models.dart';
+import '../../features/onboarding/onboarding_repository.dart';
 
 final captureUser = AuthUser(
   id: 'capture-user',
   name: 'Aarav Sharma',
   email: 'aarav@example.com',
 );
-
-const _signedInKey = 'studyflow.capture_signed_in';
-
-bool captureSignedIn() {
-  if (!kIsWeb) return false;
-  try {
-    return web.window.localStorage.getItem(_signedInKey) == '1';
-  } catch (_) {
-    return false;
-  }
-}
-
-void captureSetSignedIn(bool value) {
-  if (!kIsWeb) return;
-  try {
-    web.window.localStorage.setItem(_signedInKey, value ? '1' : '0');
-  } catch (_) {}
-}
 
 class _CaptureAuthRepository implements AuthRepository {
   @override
@@ -62,6 +45,16 @@ class _CaptureAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+}
+
+/// Capture builds are signed in but must not gate on onboarding — the
+/// backend isn't reachable and the screenshots target the app shell.
+class _CaptureOnboardingRepository implements OnboardingRepository {
+  @override
+  Future<bool> isCompleted() async => true;
+
+  @override
+  Future<void> submit(OnboardingPayload payload) async {}
 }
 
 class CaptureNotebooksRepository implements NotebooksRepository {
@@ -114,5 +107,6 @@ class CaptureNotebooksRepository implements NotebooksRepository {
 /// Riverpod overrides that make a capture build fully self-contained.
 final captureOverrides = <Override>[
   authRepositoryProvider.overrideWithValue(_CaptureAuthRepository()),
+  onboardingRepositoryProvider.overrideWithValue(_CaptureOnboardingRepository()),
   notebooksRepositoryProvider.overrideWithValue(CaptureNotebooksRepository()),
 ];

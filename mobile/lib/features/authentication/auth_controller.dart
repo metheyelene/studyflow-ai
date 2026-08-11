@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../onboarding/onboarding_controller.dart';
+import '../onboarding/onboarding_models.dart';
 import 'auth_models.dart';
 import 'auth_repository.dart';
 
@@ -58,12 +60,14 @@ class AuthController extends Notifier<AuthState> {
     authEvents.set(
       user == null ? const AuthUnauthenticated() : AuthAuthenticated(user),
     );
+    if (user != null) await _refreshOnboarding();
   }
 
   Future<String?> signIn({required String email, required String password}) async {
     try {
       final user = await _repo.signIn(email: email, password: password);
       authEvents.set(AuthAuthenticated(user));
+      await _refreshOnboarding();
       return null;
     } on AuthException catch (e) {
       return e.message;
@@ -78,6 +82,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       final user = await _repo.signUp(name: name, email: email, password: password);
       authEvents.set(AuthAuthenticated(user));
+      await _refreshOnboarding();
       return null;
     } on AuthException catch (e) {
       return e.message;
@@ -86,7 +91,15 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _repo.signOut();
+    onboardingEvents.set(OnboardingStatus.unknown);
     authEvents.set(const AuthUnauthenticated());
+  }
+
+  /// Fetch the onboarding gate state for the newly authenticated user. The
+  /// router redirects to /onboarding until this resolves; on failure the
+  /// status stays `unknown` and the user enters the app normally.
+  Future<void> _refreshOnboarding() async {
+    await ref.read(onboardingControllerProvider.notifier).refresh();
   }
 }
 
