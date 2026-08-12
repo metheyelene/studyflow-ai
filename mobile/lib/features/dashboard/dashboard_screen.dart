@@ -369,7 +369,7 @@ class _QuickActionsGrid extends StatelessWidget {
       (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
       (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
       (Icons.style_outlined, 'Flashcards', AppRoutes.flashcards, true),
-      (Icons.quiz_outlined, 'Quiz', AppRoutes.notebooks, false),
+      (Icons.quiz_outlined, 'Quiz', AppRoutes.quizzes, true),
       (Icons.event_available_outlined, 'Study plan', AppRoutes.study, false),
     ];
     return LayoutBuilder(

@@ -12,6 +12,8 @@ import 'package:studyflow_mobile/features/flashcards/flashcard_models.dart';
 import 'package:studyflow_mobile/features/flashcards/flashcards_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
+import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
+import 'package:studyflow_mobile/features/quizzes/quizzes_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
@@ -166,6 +168,87 @@ class FakeNotebooksRepository implements NotebooksRepository {
   }
 }
 
+/// In-memory quizzes repository: quizzes, questions, and a controllable
+/// scoring result.
+class FakeQuizzesRepository implements QuizzesRepository {
+  FakeQuizzesRepository({
+    this.quizzes = const [],
+    this.questions = const [],
+    this.failGenerate = false,
+    this.failList = false,
+    this.failSubmit = false,
+  });
+
+  List<QuizSummary> quizzes;
+  List<QuizQuestion> questions;
+  bool failGenerate;
+  bool failList;
+  bool failSubmit;
+  int generateCalls = 0;
+  int submitCalls = 0;
+  List<int>? lastAnswers;
+
+  @override
+  Future<List<QuizSummary>> list() async {
+    if (failList) throw const QuizzesException('Could not load your quizzes.');
+    return List.of(quizzes);
+  }
+
+  @override
+  Future<QuizDetail> generate(String notebookId, {String? difficulty, int? count}) async {
+    generateCalls++;
+    if (failGenerate) {
+      throw const QuizzesException('This notebook has no indexed sources yet. Add a source first.');
+    }
+    final quiz = QuizSummary(
+      id: 'quiz-${quizzes.length + 1}',
+      title: 'Generated quiz',
+      questionCount: questions.length,
+      difficulty: difficulty ?? 'medium',
+      notebookId: notebookId,
+      createdAt: DateTime.now(),
+    );
+    quizzes = [quiz, ...quizzes];
+    return QuizDetail(quiz: quiz, questions: List.of(questions));
+  }
+
+  @override
+  Future<QuizDetail> quiz(String quizId) async {
+    final quiz = quizzes.where((q) => q.id == quizId).firstOrNull;
+    if (quiz == null) throw const QuizzesException('Could not load that quiz.');
+    return QuizDetail(quiz: quiz, questions: List.of(questions));
+  }
+
+  @override
+  Future<void> delete(String quizId) async {
+    quizzes = quizzes.where((q) => q.id != quizId).toList();
+  }
+
+  @override
+  Future<QuizResult> submit(String quizId, {required List<int> answers}) async {
+    submitCalls++;
+    lastAnswers = answers;
+    if (failSubmit) throw const QuizzesException('Could not score your answers.');
+    return QuizResult(
+      score: 2,
+      total: questions.length,
+      percent: questions.isEmpty ? 0 : (2 / questions.length * 100).round(),
+      perQuestion: [
+        for (var i = 0; i < questions.length; i++)
+          QuizAnswerResult(
+            questionId: questions[i].id,
+            question: questions[i].question,
+            options: questions[i].options,
+            selectedIndex: i < answers.length ? answers[i] : 0,
+            correctIndex: questions[i].correctIndex,
+            correct: i < answers.length ? answers[i] == questions[i].correctIndex : false,
+            explanation: questions[i].explanation,
+          ),
+      ],
+    );
+  }
+}
+
 /// In-memory flashcards repository: decks and cards the tests control
 /// directly, plus a record of review ratings posted.
 class FakeFlashcardsRepository implements FlashcardsRepository {
@@ -266,6 +349,7 @@ Future<FakeAuthRepository> pumpApp(
   OnboardingRepository? onboarding,
   FakeDashboardRepository? dashboard,
   FlashcardsRepository? flashcards,
+  QuizzesRepository? quizzes,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -290,6 +374,7 @@ Future<FakeAuthRepository> pumpApp(
         dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
         notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
         flashcardsRepositoryProvider.overrideWithValue(flashcards ?? FakeFlashcardsRepository()),
+        quizzesRepositoryProvider.overrideWithValue(quizzes ?? FakeQuizzesRepository()),
       ],
       child: MaterialApp.router(
         routerConfig: router ?? buildAppRouter(),

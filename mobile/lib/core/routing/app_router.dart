@@ -16,6 +16,8 @@ import '../../features/onboarding/onboarding_controller.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/quizzes/quiz_session_screen.dart';
+import '../../features/quizzes/quizzes_screen.dart';
 import '../../features/progress/progress_screen.dart';
 import '../../features/study/study_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -36,6 +38,8 @@ abstract final class AppRoutes {
   static const notebookDetail = '/notebooks/:id';
   static const flashcards = '/flashcards';
   static const flashcardDeck = '/flashcards/:deckId';
+  static const quizzes = '/quizzes';
+  static const quizDetail = '/quizzes/:quizId';
   static const study = '/study';
   static const progress = '/progress';
   static const profile = '/profile';
@@ -128,6 +132,13 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
         path: AppRoutes.flashcardDeck,
         builder: (context, state) => FlashcardSessionScreen(
           deckId: state.pathParameters['deckId'] ?? '',
+        ),
+      ),
+      GoRoute(path: AppRoutes.quizzes, builder: (context, state) => const QuizzesScreen()),
+      GoRoute(
+        path: AppRoutes.quizDetail,
+        builder: (context, state) => QuizSessionScreen(
+          quizId: state.pathParameters['quizId'] ?? '',
         ),
       ),
     ],

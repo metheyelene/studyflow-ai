@@ -63,10 +63,10 @@ void main() {
       (tester) async {
     await pumpApp(tester);
 
-    // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes, Create Summary,
-    // and Generate Quiz all link to /notebooks; Flashcards links to the
-    // flashcards screen; Study Plan links to /planner (mobile: /study).
-    const notebookActions = ['Upload notes', 'Summarize', 'Quiz'];
+    // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes and Create
+    // Summary link to /notebooks; Flashcards and Quiz have their own real
+    // screens; Study Plan links to /planner (mobile: /study).
+    const notebookActions = ['Upload notes', 'Summarize'];
     for (final label in notebookActions) {
       await tester.ensureVisible(find.text(label));
       await tester.tap(find.text(label));
@@ -88,6 +88,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No decks yet'), findsOneWidget,
         reason: 'Flashcards should open the flashcards screen');
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+
+    // Quiz now has its own real screen (quiz history).
+    await tester.ensureVisible(find.text('Quiz'));
+    await tester.tap(find.text('Quiz'));
+    await tester.pumpAndSettle();
+    expect(find.text('No quizzes yet'), findsOneWidget,
+        reason: 'Quiz should open the quizzes screen');
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
 

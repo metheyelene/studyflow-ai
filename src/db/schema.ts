@@ -242,6 +242,9 @@ export const quizzes = pgTable(
     noteId: text("note_id").references(() => notes.id, {
       onDelete: "set null",
     }),
+    notebookId: text("notebook_id").references(() => notebooks.id, {
+      onDelete: "set null",
+    }),
     title: text("title").notNull(),
     difficulty: difficultyEnum("difficulty").notNull().default("medium"),
     questionCount: integer("question_count").notNull().default(10),

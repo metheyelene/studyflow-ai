@@ -14,6 +14,8 @@ import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
 import '../flashcards/flashcards_controller.dart';
 import '../flashcards/flashcards_repository.dart';
+import '../quizzes/quizzes_controller.dart';
+import '../quizzes/quizzes_repository.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
@@ -803,6 +805,7 @@ class _StudyToolsTab extends ConsumerStatefulWidget {
 
 class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
   bool _flashcardBusy = false;
+  bool _quizBusy = false;
 
   Future<void> _generateFlashcards() async {
     setState(() => _flashcardBusy = true);
@@ -820,6 +823,25 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _flashcardBusy = false);
+    }
+  }
+
+  Future<void> _generateQuiz() async {
+    setState(() => _quizBusy = true);
+    try {
+      final detail = await ref
+          .read(quizzesControllerProvider.notifier)
+          .generate(widget.notebookId);
+      if (!mounted) return;
+      context.push('${AppRoutes.quizzes}/${detail.quiz.id}');
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is QuizzesException
+          ? e.message
+          : 'Could not generate that quiz. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _quizBusy = false);
     }
   }
 
@@ -878,9 +900,24 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
               Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
               GlassListTile(
                 title: 'Quizzes',
-                subtitle: 'MCQs generated from your material',
-                leading: Icon(Icons.quiz_outlined, size: 22, color: g.primary),
-                onTap: widget.onAskAi,
+                subtitle: _quizBusy
+                    ? 'Reading your sources…'
+                    : 'MCQs generated from your material',
+                leading: _quizBusy
+                    ? Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(g.primary),
+                          ),
+                        ),
+                      )
+                    : Icon(Icons.quiz_outlined, size: 22, color: g.primary),
+                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                onTap: _quizBusy ? null : _generateQuiz,
               ),
               Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
               GlassListTile(
