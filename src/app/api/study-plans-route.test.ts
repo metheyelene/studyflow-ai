@@ -1,0 +1,222 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// ── module mocks ────────────────────────────────────────────────────
+vi.mock("next/headers", () => ({
+  headers: () => new Headers(),
+}));
+
+const dbMock = {
+  query: {
+    studyPlans: { findMany: vi.fn(), findFirst: vi.fn() },
+    exams: { findMany: vi.fn(), findFirst: vi.fn() },
+  },
+  update: vi.fn(() => ({
+    set: vi.fn(() => ({
+      where: vi.fn(() => ({
+        returning: vi.fn(async () => []),
+      })),
+    })),
+  })),
+  insert: vi.fn(() => ({
+    values: vi.fn(() => ({
+      returning: vi.fn(async () => []),
+    })),
+  })),
+};
+
+vi.mock("@/db", () => ({
+  getDb: () => dbMock,
+  schema: {
+    studyPlans: { userId: "user_id", examId: "exam_id", id: "id", createdAt: "created_at" },
+    exams: { id: "id", userId: "user_id", examDate: "exam_date" },
+  },
+}));
+
+const authMock = vi.hoisted(() => {
+  const session = { user: { id: "user_1" } };
+  const getSession = vi.fn(async (): Promise<{ user: { id: string } } | null> => session);
+  return { session, getSession };
+});
+vi.mock("@/lib/auth", () => ({
+  auth: { api: { getSession: authMock.getSession } },
+}));
+
+// ── imports (after mocks) ───────────────────────────────────────────
+import { GET, POST } from "@/app/api/study-plans/route";
+import { PATCH } from "@/app/api/study-plans/[planId]/route";
+
+const examRow = {
+  id: "exam_1",
+  userId: "user_1",
+  subjectId: null,
+  title: "Physics Midterm",
+  examDate: new Date("2026-08-22T00:00:00Z"),
+  createdAt: new Date(),
+};
+
+function planRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "plan_1",
+    userId: "user_1",
+    examId: "exam_1",
+    planJson: {
+      version: 1,
+      generatedForDate: "2026-08-12",
+      tasks: [
+        { id: "2026-08-12-0", date: "2026-08-12", title: "Review core concepts", detail: "d", durationMin: 45, status: "pending" },
+      ],
+    },
+    version: 1,
+    createdAt: new Date(),
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+  (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+  (dbMock.query.exams.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([examRow]);
+  (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(examRow);
+});
+
+describe("GET /api/study-plans", () => {
+  it("lists the user's plans with exam info", async () => {
+    const plan = planRow();
+    (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.plans).toHaveLength(1);
+    expect(body.plans[0]).toMatchObject({
+      id: "plan_1",
+      examId: "exam_1",
+      examTitle: "Physics Midterm",
+      version: 1,
+    });
+    expect(body.plans[0].tasks).toHaveLength(1);
+  });
+
+  it("returns an empty list when the user has no plans", async () => {
+    const res = await GET();
+    const body = await res.json();
+    expect(body.plans).toEqual([]);
+  });
+});
+
+describe("POST /api/study-plans", () => {
+  it("generates a plan for an owned exam", async () => {
+    const inserted = planRow({
+      planJson: {
+        version: 1,
+        generatedForDate: "2026-08-12",
+        tasks: [
+          { id: "2026-08-12-0", date: "2026-08-12", title: "Review core concepts", detail: "d", durationMin: 45, status: "pending" },
+        ],
+      },
+    });
+    (dbMock.insert as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      values: vi.fn(() => ({
+        returning: vi.fn(async () => [inserted]),
+      })),
+    }));
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.plan.examTitle).toBe("Physics Midterm");
+    expect(body.plan.tasks).toHaveLength(1);
+  });
+
+  it("rejects an exam the user does not own", async () => {
+    (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ ...examRow, userId: "other" });
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("rejects an exam that has already passed", async () => {
+    (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...examRow,
+      examDate: new Date("2026-01-01T00:00:00Z"),
+    });
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    expect(res.status).toBe(422);
+  });
+
+  it("regenerates an existing plan, bumping the version", async () => {
+    const existing = planRow({
+      planJson: {
+        version: 1,
+        generatedForDate: "2026-08-11",
+        tasks: [
+          { id: "a", date: "2026-08-12", title: "Review core concepts", detail: "d", durationMin: 45, status: "done" },
+        ],
+      },
+    });
+    (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(existing);
+    // `.returning()` yields the UPDATED row (version bumped by the route).
+    const updated = planRow({
+      planJson: { ...(existing.planJson as object), version: 2 } as typeof existing.planJson,
+    });
+    (dbMock.update as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn(async () => [updated]),
+        })),
+      })),
+    }));
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.plan.version).toBe(2);
+    // The completed task survives regeneration.
+    const carried = body.plan.tasks.find((t: { title: string }) => t.title === "Review core concepts");
+    expect(carried?.status).toBe("done");
+  });
+});
+
+describe("PATCH /api/study-plans/[planId]", () => {
+  it("updates a task status and returns the plan", async () => {
+    const plan = planRow();
+    (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(plan);
+    (dbMock.update as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn(async () => [plan]),
+        })),
+      })),
+    }));
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ taskId: "2026-08-12-0", status: "done" }) }),
+      { params: Promise.resolve({ planId: "plan_1" }) },
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.plan.tasks[0].status).toBe("done");
+  });
+
+  it("rejects an invalid status", async () => {
+    (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(planRow());
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ taskId: "t1", status: "banana" }) }),
+      { params: Promise.resolve({ planId: "plan_1" }) },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for a plan the user does not own", async () => {
+    (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ taskId: "t1", status: "done" }) }),
+      { params: Promise.resolve({ planId: "plan_x" }) },
+    );
+    expect(res.status).toBe(404);
+  });
+});

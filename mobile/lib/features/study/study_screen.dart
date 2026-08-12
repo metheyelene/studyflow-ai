@@ -10,6 +10,7 @@ import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
 import '../dashboard/dashboard_controller.dart';
+import 'today_plan_section.dart';
 
 /// Study tab — exam countdowns and the study-material entry point. Live
 /// data only: exams come from the user's study setup; the material section
@@ -44,6 +45,10 @@ class StudyScreen extends ConsumerWidget {
                 const _SectionTitle(title: 'UPCOMING EXAMS'),
                 const SizedBox(height: 10),
                 _ExamsSection(dashboard: dashboard),
+                const SizedBox(height: AppSpacing.lg),
+                const _SectionTitle(title: "TODAY'S PLAN"),
+                const SizedBox(height: 10),
+                TodayPlanSection(dashboard: dashboard),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle(title: 'STUDY MATERIAL'),
                 const SizedBox(height: 10),

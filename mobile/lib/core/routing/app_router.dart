@@ -21,6 +21,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/quizzes/quiz_session_screen.dart';
 import '../../features/quizzes/quizzes_screen.dart';
 import '../../features/progress/progress_screen.dart';
+import '../../features/study/study_plan_screen.dart';
 import '../../features/study/study_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/shell/home_shell.dart';
@@ -45,6 +46,8 @@ abstract final class AppRoutes {
   static const audio = '/audio';
   static const audioEpisode = '/audio/:episodeId';
   static const study = '/study';
+  static const studyPlans = '/study/plans';
+  static const studyPlanDetail = '/study/plans/:examId';
   static const progress = '/progress';
   static const profile = '/profile';
   static const settings = '/settings';
@@ -120,6 +123,12 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: AppRoutes.study, builder: (context, state) => const StudyScreen()),
+            GoRoute(
+              path: AppRoutes.studyPlanDetail,
+              builder: (context, state) => StudyPlanScreen(
+                examId: state.pathParameters['examId'] ?? '',
+              ),
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: AppRoutes.progress, builder: (context, state) => const ProgressScreen()),

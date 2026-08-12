@@ -23,6 +23,7 @@ import 'package:studyflow_mobile/features/quizzes/quizzes_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
+import 'package:studyflow_mobile/features/study/study_planner.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
 
@@ -456,6 +457,70 @@ class FakePodcastPlayer implements PodcastPlayer {
   }
 }
 
+/// In-memory study-planner repository: plans the tests control directly.
+class FakeStudyPlannerRepository implements StudyPlannerRepository {
+  FakeStudyPlannerRepository({this.plans = const []});
+
+  List<StudyPlan> plans;
+  bool failGenerate = false;
+  int generateCalls = 0;
+  String? lastGeneratedExamId;
+
+  @override
+  Future<List<StudyPlan>> list() async => List.of(plans);
+
+  @override
+  Future<StudyPlan> generate(String examId) async {
+    generateCalls++;
+    lastGeneratedExamId = examId;
+    if (failGenerate) throw const StudyPlannerException('Could not build that plan.');
+    final plan = StudyPlan(
+      id: 'plan-$examId',
+      examId: examId,
+      examTitle: 'Physics Midterm',
+      version: 1,
+      generatedForDate: todayKey(),
+      tasks: [
+        StudyPlanTask(
+          id: 't-today',
+          date: todayKey(),
+          title: 'Review core concepts',
+          detail: 'Work through your notes.',
+          durationMin: 45,
+          status: 'pending',
+        ),
+      ],
+    );
+    plans = [plan, ...plans.where((p) => p.examId != examId)];
+    return plan;
+  }
+
+  @override
+  Future<StudyPlan> updateTask(String planId, {required String taskId, required String status}) async {
+    final plan = plans.firstWhere((p) => p.id == planId);
+    final updated = StudyPlan(
+      id: plan.id,
+      examId: plan.examId,
+      examTitle: plan.examTitle,
+      version: plan.version,
+      generatedForDate: plan.generatedForDate,
+      examDate: plan.examDate,
+      tasks: [
+        for (final t in plan.tasks)
+          if (t.id == taskId) t.copyWith(status: status) else t,
+      ],
+    );
+    plans = [for (final p in plans) if (p.id == planId) updated else p];
+    return updated;
+  }
+}
+
+/// yyyy-MM-dd for today in UTC (matches the backend's plan calendar).
+String todayKey() {
+  final d = DateTime.now().toUtc();
+  return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+}
+
 /// In-memory dashboard repository: real-looking usage + exams the tests
 /// control directly.
 class FakeDashboardRepository implements DashboardRepository {
@@ -500,6 +565,7 @@ Future<FakeAuthRepository> pumpApp(
   QuizzesRepository? quizzes,
   FakeAudioRepository? audio,
   FakePodcastPlayer? podcastPlayer,
+  FakeStudyPlannerRepository? planner,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -527,6 +593,7 @@ Future<FakeAuthRepository> pumpApp(
         quizzesRepositoryProvider.overrideWithValue(quizzes ?? FakeQuizzesRepository()),
         audioRepositoryProvider.overrideWithValue(audio ?? FakeAudioRepository()),
         podcastPlayerProvider.overrideWithValue(podcastPlayer ?? FakePodcastPlayer()),
+        studyPlannerRepositoryProvider.overrideWithValue(planner ?? FakeStudyPlannerRepository()),
       ],
       child: MaterialApp.router(
         routerConfig: router ?? buildAppRouter(),
