@@ -142,10 +142,12 @@ void main() {
       dashboard: dashboard,
     );
 
-    // First visit builds the provider (initial fetch = 1 list call).
+    // The dashboard's exam cards build the planner provider at startup
+    // (initial fetch = 1 list call); the first Study visit then runs the
+    // silent refresh so today's tasks are fetched fresh (2nd call).
     router.go('/study');
     await tester.pumpAndSettle();
-    expect(planner.listCalls, 1);
+    expect(planner.listCalls, 2);
     expect(find.text('Review core concepts'), findsOneWidget);
 
     // Leaving and returning must trigger a background refresh so the
@@ -154,7 +156,7 @@ void main() {
     await tester.pumpAndSettle();
     router.go('/study');
     await tester.pumpAndSettle();
-    expect(planner.listCalls, 2);
+    expect(planner.listCalls, 3);
     expect(find.text('Review core concepts'), findsOneWidget);
   });
 

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
+import 'package:studyflow_mobile/features/study/study_planner.dart';
 
 import 'helpers.dart';
 
@@ -87,5 +88,88 @@ void main() {
 
     expect(find.text('3/20'), findsOneWidget);
     expect(find.text('Could not load your usage.'), findsNothing);
+  });
+
+  testWidgets('exam card shows real plan progress and opens the plan screen', (
+    tester,
+  ) async {
+    final examDate = DateTime.now().add(const Duration(days: 12));
+    final dashboard = FakeDashboardRepository(
+      currentExams: [
+        UpcomingExam(id: 'ex-1', title: 'Physics', date: _fmt(examDate)),
+      ],
+    );
+    final planner = FakeStudyPlannerRepository(
+      plans: [
+        StudyPlan(
+          id: 'plan-1',
+          examId: 'ex-1',
+          examTitle: 'Physics Midterm',
+          version: 2,
+          generatedForDate: todayKey(),
+          tasks: [
+            StudyPlanTask(
+              id: 't-1',
+              date: todayKey(),
+              title: 'Review circuits',
+              detail: 'Work through the practice set.',
+              durationMin: 45,
+              status: 'done',
+            ),
+            StudyPlanTask(
+              id: 't-2',
+              date: todayKey(),
+              title: 'Practice problems',
+              detail: 'Mixed problem set.',
+              durationMin: 30,
+              status: 'pending',
+            ),
+          ],
+        ),
+      ],
+    );
+    await pumpApp(tester, dashboard: dashboard, planner: planner);
+
+    // Countdown plus the real plan summary (1 of 2 tasks done).
+    expect(find.text('Physics'), findsOneWidget);
+    expect(find.text('12 days'), findsOneWidget);
+    expect(find.text('1/2 tasks · 50%'), findsOneWidget);
+    expect(find.text('View Study Plan'), findsOneWidget);
+
+    // The action opens the full plan screen for this exam.
+    await tester.ensureVisible(find.text('View Study Plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('View Study Plan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Physics Midterm'), findsWidgets);
+    expect(find.text('Review circuits'), findsOneWidget);
+  });
+
+  testWidgets('unplanned upcoming exam offers Build plan and generates', (
+    tester,
+  ) async {
+    final examDate = DateTime.now().add(const Duration(days: 12));
+    final dashboard = FakeDashboardRepository(
+      currentExams: [
+        UpcomingExam(id: 'ex-1', title: 'Physics', date: _fmt(examDate)),
+      ],
+    );
+    final planner = FakeStudyPlannerRepository();
+    await pumpApp(tester, dashboard: dashboard, planner: planner);
+
+    expect(find.text('Build study plan'), findsOneWidget);
+    expect(find.text('View Study Plan'), findsNothing);
+
+    await tester.ensureVisible(find.text('Build study plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Build study plan'));
+    await tester.pumpAndSettle();
+
+    // The fake generated a real plan for this exam and the card switched
+    // to the plan footer.
+    expect(planner.generateCalls, 1);
+    expect(planner.lastGeneratedExamId, 'ex-1');
+    expect(find.text('View Study Plan'), findsOneWidget);
+    expect(find.text('Build study plan'), findsNothing);
   });
 }
