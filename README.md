@@ -74,6 +74,33 @@ gitignored. Full reference with per-environment guidance:
 Later phases add: Stripe keys, Cloudflare R2 keys, Upstash URL/token, Sentry
 DSN (placeholders are in `.env.example`).
 
+### Turning on AI generation (OpenAI key)
+
+All AI (chat, summaries, flashcards, quizzes, podcasts) reads **one** variable:
+`OPENAI_API_KEY` (plus `AI_PROVIDER_ORDER=openai` — already set in `.env`).
+
+**Local:**
+
+1. Get a key at https://platform.openai.com/api-keys (add a few dollars of
+   credit — `gpt-4o-mini` + `tts-1` are cheap).
+2. In `.env` (gitignored), replace the empty placeholder:
+   `OPENAI_API_KEY="sk-…"`
+3. **Restart the dev server** — Next.js reads env at process start, so the
+   running server won't see the change:
+   `kill <pid of next dev -p 3100>` then `npx next dev -p 3100`
+   (the mobile app + web preview talk to port **3100**).
+4. Verify:
+   `curl -s -b <session-cookie> -X POST http://127.0.0.1:3100/api/flashcards -H 'Content-Type: application/json' -d '{"notebookId":"<id>"}'`
+   → 200 with a deck. With the key missing/wrong the same call returns a
+   friendly 502/503 instead of a 200.
+
+**Production (Vercel):**
+
+- Automated: `bash scripts/deploy-production.sh` prompts for the OpenAI key
+  and pushes it to **Production + Preview** env before deploying.
+- Manual: Vercel → project → **Settings → Environment Variables** → add
+  `OPENAI_API_KEY` (Production, Preview, Development) → Redeploy.
+
 ## Project structure
 
 ```
