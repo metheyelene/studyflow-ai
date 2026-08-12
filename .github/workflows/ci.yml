@@ -40,6 +40,35 @@ jobs:
           DATABASE_URL_DIRECT: postgres://ci:ci@localhost:5432/studyflow
           BETTER_AUTH_SECRET: ci-placeholder-secret-not-a-real-secret
 
+  flutter:
+    name: Flutter · format · analyze · test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Format check
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Test
+        working-directory: mobile
+        run: flutter test
+
   security:
     name: Security scan
     runs-on: ubuntu-latest
