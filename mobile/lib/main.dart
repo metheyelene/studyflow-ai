@@ -8,6 +8,7 @@ import 'core/config/app_config.dart';
 import 'core/config/capture_seed.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'features/authentication/auth_controller.dart';
 
 void main() {
@@ -52,6 +53,9 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
   Widget build(BuildContext context) {
     // Android 12+ supplies a dynamic color scheme from the wallpaper; iOS and
     // older Android fall back to the branded seed palette in buildAppTheme.
+    // The theme mode (light / dark / system) is user-controlled from
+    // Settings → Appearance and persisted locally.
+    final themeMode = ref.watch(themeModeProvider);
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
         return MaterialApp.router(
@@ -59,7 +63,7 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
           darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
-          themeMode: ThemeMode.system,
+          themeMode: themeMode,
           routerConfig: appRouter,
         );
       },

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
+import 'package:studyflow_mobile/core/theme/theme_controller.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
 import 'package:studyflow_mobile/features/audio/audio_playback_service.dart';
 import 'package:studyflow_mobile/features/audio/audio_repository.dart';
@@ -682,12 +683,27 @@ Future<FakeAuthRepository> pumpApp(
           planner ?? FakeStudyPlannerRepository(),
         ),
       ],
-      child: MaterialApp.router(
-        routerConfig: router ?? buildAppRouter(),
-        theme: buildAppTheme(Brightness.light),
-      ),
+      child: _TestApp(router: router ?? buildAppRouter()),
     ),
   );
   await tester.pumpAndSettle();
   return authFake;
+}
+
+/// Mirrors production's MaterialApp (light + dark themes, user theme mode
+/// from Settings → Appearance) so theme behavior is exercised in tests.
+class _TestApp extends ConsumerWidget {
+  const _TestApp({required this.router});
+
+  final GoRouter router;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: buildAppTheme(Brightness.light),
+      darkTheme: buildAppTheme(Brightness.dark),
+      themeMode: ref.watch(themeModeProvider),
+    );
+  }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/routing/app_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_info.dart';
@@ -61,7 +61,7 @@ class _CreatorScreenState extends State<CreatorScreen> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () => context.pop(),
+                        onPressed: () => context.popOrHome(),
                         icon: const Icon(Icons.arrow_back),
                         tooltip: 'Back',
                       ),

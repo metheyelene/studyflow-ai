@@ -56,7 +56,7 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
               children: [
                 if (widget.showBack) ...[
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.popOrHome(),
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Back',
                   ),

@@ -54,6 +54,20 @@ abstract final class AppRoutes {
   static const aboutCreator = '/about/creator';
 }
 
+/// Pops the current pushed route when there is one; otherwise falls back to
+/// the app home shell. Back buttons must use this instead of a bare
+/// `context.pop()`, which throws when the page was reached via a deep link
+/// (no history to pop) — e.g. a web URL landing directly on `/about/creator`.
+extension AppBack on BuildContext {
+  void popOrHome() {
+    if (canPop()) {
+      pop();
+    } else {
+      go(AppRoutes.home);
+    }
+  }
+}
+
 /// Builds the app router. `initialLocation` exists so deep-link launches
 /// are testable.
 ///

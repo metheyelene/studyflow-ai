@@ -170,15 +170,20 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     floating: Color(0xE0FFFFFF),
     border: Color(0x1A6B7280),
     highlight: Color(0x66FFFFFF),
-    primary: Color(0xFF6366F1),
-    primarySoft: Color(0x146366F1),
+    // Light-mode tokens are tuned for WCAG 4.5:1 on the painted surfaces
+    // (see the contrast audit in docs/design-quality-audit.md): the brand
+    // indigo sits a touch deeper (#5B5FE0) so white button labels and
+    // indigo links both clear AA, and success/warning/muted are darkened
+    // accordingly. Dark mode already passes every pair.
+    primary: Color(0xFF5B5FE0),
+    primarySoft: Color(0x145B5FE0),
     textPrimary: Color(0xFF17171C),
-    textMuted: Color(0xFF6B7280),
+    textMuted: Color(0xFF52525B),
     textOnPrimary: Color(0xFFFFFFFF),
-    danger: Color(0xFFDC2626),
-    success: Color(0xFF10B981),
-    warning: Color(0xFFF59E0B),
-    amber: Color(0xFFF59E0B),
+    danger: Color(0xFFB91C1C),
+    success: Color(0xFF047857),
+    warning: Color(0xFFB45309),
+    amber: Color(0xFFB45309),
     blurRadius: 24,
     blurEnabled: true,
   );
@@ -298,7 +303,9 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
     brightness: brightness,
   );
   return (dynamicScheme ?? seed).copyWith(
-    primary: isDark ? AppColors.indigoLight : AppColors.indigo,
+    // Light-mode primary is the AA-tuned indigo (4.5:1+ on white); dark
+    // mode uses the lighter indigo so it reads against near-black.
+    primary: isDark ? AppColors.indigoLight : const Color(0xFF5B5FE0),
     onPrimary: isDark ? const Color(0xFF111114) : Colors.white,
     primaryContainer: isDark
         ? const Color(0xFF2A2B5C)
@@ -314,7 +321,7 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
         ? const Color(0xFF9DA0AA)
         : const Color(0xFF52525B),
     outlineVariant: isDark ? const Color(0xFF3E3E47) : const Color(0xFFCAC4D0),
-    error: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+    error: isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C),
     onError: Colors.white,
     errorContainer: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
     onErrorContainer: isDark

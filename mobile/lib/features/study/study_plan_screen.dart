@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/routing/app_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
@@ -28,7 +28,7 @@ class StudyPlanScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => context.popOrHome(),
                   icon: const Icon(Icons.arrow_back),
                   tooltip: 'Back',
                 ),

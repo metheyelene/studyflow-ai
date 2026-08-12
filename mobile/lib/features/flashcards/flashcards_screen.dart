@@ -34,7 +34,7 @@ class FlashcardsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => context.popOrHome(),
                   icon: const Icon(Icons.arrow_back),
                   tooltip: 'Back',
                 ),
