@@ -7,10 +7,14 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
+import '../../shared/widgets/glass/glass_misc.dart';
 import '../dashboard/dashboard_controller.dart';
+import '../flashcards/flashcard_models.dart';
 import '../notebooks/notebooks_controller.dart';
+import 'flashcard_progress.dart';
 
-/// Progress tab — live stats only (notebooks, sources, AI actions used).
+/// Progress tab — live stats only (notebooks, sources, AI actions used),
+/// plus real flashcard review history (cards reviewed, per-deck accuracy).
 /// Learning insights (quiz trends, weak topics) render as an honest state
 /// until there is real study history to show.
 class ProgressScreen extends ConsumerWidget {
@@ -69,6 +73,13 @@ class ProgressScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const _SectionTitle(title: 'FLASHCARD REVIEWS'),
+                const SizedBox(height: 10),
+                _FlashcardProgressSection(
+                  progress: ref.watch(flashcardProgressControllerProvider),
+                  onRetry: () => ref.read(flashcardProgressControllerProvider.notifier).refresh(),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle(title: 'LEARNING INSIGHTS'),
@@ -163,6 +174,160 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: AppText.eyebrow.copyWith(color: context.glass.textMuted),
+    );
+  }
+}
+
+/// Flashcard review history from the backend: totals + per-deck accuracy.
+/// Renders an honest empty state until real reviews exist.
+class _FlashcardProgressSection extends StatelessWidget {
+  const _FlashcardProgressSection({required this.progress, required this.onRetry});
+
+  final AsyncValue<FlashcardProgress> progress;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return progress.when(
+      loading: () => const GlassSkeleton(height: 96, radius: 20),
+      error: (err, _) => GlassCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, size: 20, color: g.danger),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Could not load your flashcard history.',
+                  style: AppText.small.copyWith(color: g.textMuted),
+                ),
+              ),
+              TextButton(onPressed: onRetry, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      ),
+      data: (p) {
+        if (p.totalReviews == 0) {
+          return GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.style_outlined, size: 22, color: g.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No flashcard reviews yet. Review a deck and your accuracy history will appear here.',
+                      style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                    ),
+                  ),
+                  GlassButton(
+                    label: 'Review',
+                    icon: Icons.style_outlined,
+                    variant: GlassButtonVariant.glass,
+                    size: GlassButtonSize.small,
+                    onPressed: () => context.go(AppRoutes.flashcards),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return GlassCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.style_outlined, size: 20, color: g.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Cards reviewed',
+                        style: TextStyle(
+                          color: g.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${p.totalReviews}',
+                      style: TextStyle(
+                        color: g.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Padding(
+                  padding: const EdgeInsets.only(left: 30),
+                  child: Text(
+                    '${p.uniqueCards} card${p.uniqueCards == 1 ? '' : 's'} · accuracy from your review history',
+                    style: AppText.small.copyWith(color: g.textMuted),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                for (final deck in p.decks) ...[_DeckAccuracyRow(deck: deck), const SizedBox(height: 10)],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DeckAccuracyRow extends StatelessWidget {
+  const _DeckAccuracyRow({required this.deck});
+
+  final DeckAccuracy deck;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                deck.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: g.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              '${deck.accuracy}%',
+              style: TextStyle(color: g.primary, fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '· ${deck.reviews} rev${deck.reviews == 1 ? '' : 's'}',
+              style: AppText.small.copyWith(color: g.textMuted),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: LinearProgressIndicator(
+            value: deck.reviews == 0 ? 0 : deck.accuracy / 100,
+            minHeight: 5,
+            backgroundColor: g.surfaceSubtle,
+            color: g.primary,
+          ),
+        ),
+      ],
     );
   }
 }

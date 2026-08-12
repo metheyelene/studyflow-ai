@@ -77,7 +77,10 @@ void main() {
     expect(find.text('AI actions'), findsOneWidget);
     expect(find.text('Your insights appear as you study'), findsOneWidget);
 
-    // CTA goes somewhere real.
+    // CTA goes somewhere real. The insights card sits below the new
+    // flashcard-history section, so scroll it into view first.
+    await tester.ensureVisible(find.text('Open notebooks'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Open notebooks'));
     await tester.pumpAndSettle();
     expect(find.text('Cell Biology'), findsOneWidget);

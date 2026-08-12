@@ -312,6 +312,11 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   Future<void> review(String deckId, {required String cardId, required int rating}) async {
     reviews.add((deckId, cardId, rating));
   }
+
+  FlashcardProgress progressData = const FlashcardProgress(totalReviews: 0, uniqueCards: 0, decks: []);
+
+  @override
+  Future<FlashcardProgress> progress() async => progressData;
 }
 
 /// In-memory audio repository: episodes the tests control directly, with

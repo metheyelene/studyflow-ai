@@ -12,6 +12,10 @@ abstract class FlashcardsRepository {
 
   /// Best-effort: records one rating; throws only so the caller can decide.
   Future<void> review(String deckId, {required String cardId, required int rating});
+
+  /// Review-history aggregates for the Progress screen (cards reviewed,
+  /// per-deck accuracy from the backend's flashcard_reviews table).
+  Future<FlashcardProgress> progress();
 }
 
 class ApiFlashcardsRepository implements FlashcardsRepository {
@@ -81,6 +85,14 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
       '/api/flashcards/$deckId/review',
       data: {'cardId': cardId, 'rating': rating},
     );
+  }
+
+  @override
+  Future<FlashcardProgress> progress() async {
+    final res = await _client.get<dynamic>('/api/progress/flashcards');
+    final data = res.data;
+    if (data is! Map) throw const FlashcardsException('Could not load your flashcard history.');
+    return FlashcardProgress.fromJson(Map<String, dynamic>.from(data));
   }
 }
 
