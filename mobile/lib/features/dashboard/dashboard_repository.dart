@@ -102,8 +102,9 @@ class ApiDashboardRepository implements DashboardRepository {
   Future<AiUsage> usage() async {
     final res = await _client.get<dynamic>('/api/usage');
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const DashboardException('Could not load your usage.');
+    }
     return AiUsage.fromJson(Map<String, dynamic>.from(data));
   }
 

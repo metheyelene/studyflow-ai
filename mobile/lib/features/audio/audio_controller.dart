@@ -38,8 +38,9 @@ class AudioController extends AsyncNotifier<AudioLibraryState> {
   }) async {
     var episode = await _repo.create(notebookId, style: style, length: length);
     if (episode.isReady) return episode;
-    if (episode.isFailed)
+    if (episode.isFailed) {
       throw AudioException(episode.errorMessage ?? 'Generation failed.');
+    }
 
     // Poll the job. The POST returns immediately (202) and the pipeline
     // runs server-side — never keep the request open client-side.

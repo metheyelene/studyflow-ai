@@ -459,8 +459,9 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
             style: _style,
             length: _length,
             onStage: (stage) {
-              if (mounted)
+              if (mounted) {
                 setState(() => _stage = kPipelineStageLabels[stage] ?? stage);
+              }
             },
           );
       if (!mounted) return;

@@ -32,8 +32,9 @@ class ApiAudioRepository implements AudioRepository {
     final res = await _client.get<dynamic>('/api/audio');
     final data = res.data;
     final list = data is Map ? data['episodes'] : null;
-    if (list is! List)
+    if (list is! List) {
       throw const AudioException('Could not load your audio library.');
+    }
     return [
       for (final e in list)
         if (e is Map) AudioEpisode.fromJson(Map<String, dynamic>.from(e)),
@@ -51,11 +52,13 @@ class ApiAudioRepository implements AudioRepository {
       data: {'notebookId': notebookId, 'style': style, 'length': length},
     );
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const AudioException('Could not start that podcast.');
+    }
     final episode = data['episode'];
-    if (episode is! Map)
+    if (episode is! Map) {
       throw const AudioException('Could not start that podcast.');
+    }
     return AudioEpisode.fromJson(Map<String, dynamic>.from(episode));
   }
 
@@ -63,11 +66,13 @@ class ApiAudioRepository implements AudioRepository {
   Future<AudioEpisode> episode(String episodeId) async {
     final res = await _client.get<dynamic>('/api/audio/$episodeId');
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const AudioException('Could not load that episode.');
+    }
     final episode = data['episode'];
-    if (episode is! Map)
+    if (episode is! Map) {
       throw const AudioException('Could not load that episode.');
+    }
     return AudioEpisode.fromJson(Map<String, dynamic>.from(episode));
   }
 
@@ -93,8 +98,9 @@ class ApiAudioRepository implements AudioRepository {
       asBytes: true,
     );
     final body = res.data;
-    if (body is! Uint8List)
+    if (body is! Uint8List) {
       throw const AudioException('Could not download that episode.');
+    }
     return body;
   }
 }

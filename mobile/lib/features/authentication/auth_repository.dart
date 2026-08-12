@@ -94,8 +94,9 @@ class ApiAuthRepository implements AuthRepository {
       );
       await _client.saveSessionToken(res);
       final user = _userFromBody(res.data);
-      if (user == null)
+      if (user == null) {
         throw const AuthException('We could not start your session.');
+      }
       return user;
     } on DioException catch (e) {
       throw AuthException(_friendlyError(e));
@@ -115,8 +116,9 @@ class ApiAuthRepository implements AuthRepository {
       );
       await _client.saveSessionToken(res);
       final user = _userFromBody(res.data);
-      if (user == null)
+      if (user == null) {
         throw const AuthException('We could not create your account.');
+      }
       return user;
     } on DioException catch (e) {
       throw AuthException(_friendlyError(e));

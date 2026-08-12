@@ -26,8 +26,9 @@ class ApiQuizzesRepository implements QuizzesRepository {
     final res = await _client.get<dynamic>('/api/quizzes');
     final data = res.data;
     final list = data is Map ? data['quizzes'] : null;
-    if (list is! List)
+    if (list is! List) {
       throw const QuizzesException('Could not load your quizzes.');
+    }
     return [
       for (final q in list)
         if (q is Map) QuizSummary.fromJson(Map<String, dynamic>.from(q)),
@@ -44,13 +45,14 @@ class ApiQuizzesRepository implements QuizzesRepository {
       '/api/quizzes',
       data: {
         'notebookId': notebookId,
-        if (difficulty != null) 'difficulty': difficulty,
-        if (count != null) 'count': count,
+        'difficulty': ?difficulty,
+        'count': ?count,
       },
     );
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const QuizzesException('Could not generate that quiz.');
+    }
     final quizJson = data['quiz'];
     final questions = data['questions'];
     if (quizJson is! Map || questions is! List) {
@@ -95,8 +97,9 @@ class ApiQuizzesRepository implements QuizzesRepository {
       data: {'answers': answers},
     );
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const QuizzesException('Could not score your answers.');
+    }
     return QuizResult.fromJson(Map<String, dynamic>.from(data));
   }
 }

@@ -115,8 +115,9 @@ class ApiStudyPlannerRepository implements StudyPlannerRepository {
     final res = await _client.get<dynamic>('/api/study-plans');
     final data = res.data;
     final list = data is Map ? data['plans'] : null;
-    if (list is! List)
+    if (list is! List) {
       throw const StudyPlannerException('Could not load your study plans.');
+    }
     return [
       for (final p in list)
         if (p is Map) StudyPlan.fromJson(Map<String, dynamic>.from(p)),
@@ -130,11 +131,13 @@ class ApiStudyPlannerRepository implements StudyPlannerRepository {
       data: {'examId': examId},
     );
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const StudyPlannerException('Could not build that plan.');
+    }
     final plan = data['plan'];
-    if (plan is! Map)
+    if (plan is! Map) {
       throw const StudyPlannerException('Could not build that plan.');
+    }
     return StudyPlan.fromJson(Map<String, dynamic>.from(plan));
   }
 
@@ -149,11 +152,13 @@ class ApiStudyPlannerRepository implements StudyPlannerRepository {
       data: {'taskId': taskId, 'status': status},
     );
     final data = res.data;
-    if (data is! Map)
+    if (data is! Map) {
       throw const StudyPlannerException('Could not update that task.');
+    }
     final plan = data['plan'];
-    if (plan is! Map)
+    if (plan is! Map) {
       throw const StudyPlannerException('Could not update that task.');
+    }
     return StudyPlan.fromJson(Map<String, dynamic>.from(plan));
   }
 }

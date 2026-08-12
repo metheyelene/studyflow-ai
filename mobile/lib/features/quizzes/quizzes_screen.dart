@@ -309,7 +309,7 @@ class _QuizCard extends StatelessWidget {
   String get _meta {
     final parts = [
       '${quiz.questionCount} questions',
-      '${quiz.difficulty}',
+      (quiz.difficulty),
       if (quiz.bestScore != null && quiz.bestTotal != null)
         'best ${quiz.bestScore}/${quiz.bestTotal}',
       '${quiz.attempts} attempt${quiz.attempts == 1 ? '' : 's'}',

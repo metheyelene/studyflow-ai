@@ -48,8 +48,9 @@ class ApiNotebooksRepository implements NotebooksRepository {
     final res = await _client.get<dynamic>('/api/notebooks');
     final data = res.data;
     final list = data is Map ? data['notebooks'] : null;
-    if (list is! List)
+    if (list is! List) {
       throw const NotebooksException('Could not load notebooks.');
+    }
     return [
       for (final n in list)
         if (n is Map) Notebook.fromJson(Map<String, dynamic>.from(n)),
@@ -64,8 +65,9 @@ class ApiNotebooksRepository implements NotebooksRepository {
     );
     final data = res.data;
     final nb = data is Map ? data['notebook'] : null;
-    if (nb is! Map)
+    if (nb is! Map) {
       throw const NotebooksException('Could not create the notebook.');
+    }
     return Notebook.fromJson(Map<String, dynamic>.from(nb));
   }
 
@@ -82,8 +84,9 @@ class ApiNotebooksRepository implements NotebooksRepository {
       );
       final data = res.data;
       final list = data is Map ? data['sources'] : null;
-      if (list is! List)
+      if (list is! List) {
         throw const NotebooksException('Could not load sources.');
+      }
       return [
         for (final s in list)
           if (s is Map) NotebookSource.fromJson(Map<String, dynamic>.from(s)),

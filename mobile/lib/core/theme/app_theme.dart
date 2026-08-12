@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Spacing scale — the single source for layout gaps. New screens use
@@ -14,8 +15,57 @@ abstract final class AppSpacing {
   static const double huge = 48;
 }
 
-/// Typography scale — the one place font sizes/weights/letter-spacing are
-/// defined. Screens should reference these instead of inline `fontSize:`.
+/// Motion tokens — the single source for animation curves and durations
+/// (Material 3 Expressive motion language). Components animate with these
+/// instead of ad-hoc `Duration(milliseconds: …)` values.
+abstract final class AppMotion {
+  /// Standard in-out motion for state changes and reordering.
+  static const Curve standard = Curves.easeOutCubic;
+
+  /// Emphasized motion for large surfaces appearing (sheets, dialogs).
+  static const Curve emphasized = Curves.easeInOutCubic;
+
+  /// Spring-like entrance for objects scaling into place (cards, FABs).
+  static const Curve entrance = Curves.easeOutBack;
+
+  /// Fast feedback — presses, toggles, micro-interactions.
+  static const Duration fast = Duration(milliseconds: 150);
+
+  /// Standard transitions — navigation, expansion, appearance.
+  static const Duration medium = Duration(milliseconds: 250);
+
+  /// Long, expressive transitions — sheets, hero-style morphs.
+  static const Duration slow = Duration(milliseconds: 400);
+}
+
+/// Shape tokens — the single source for corner radii. Shape communicates
+/// hierarchy: small radii for dense inputs, larger radii for surfaces that
+/// float above content, pills for actions.
+abstract final class AppShapes {
+  /// Inputs, chips' inner details, small affordances.
+  static const double input = 12;
+
+  /// Buttons.
+  static const double button = 14;
+
+  /// Standard cards and list tiles.
+  static const double card = 20;
+
+  /// Dialogs and modals.
+  static const double dialog = 24;
+
+  /// Bottom sheets and the navigation bar indicator.
+  static const double sheet = 28;
+
+  /// Hero surfaces — featured cards, the player, the paywall.
+  static const double hero = 28;
+
+  /// Fully rounded pills.
+  static const double pill = 999;
+}
+
+/// StudyFlow typography scale — the one place font sizes/weights/letter-spacing
+/// are defined. Screens should reference these instead of inline `fontSize:`.
 abstract final class AppText {
   static const TextStyle caption = TextStyle(
     fontSize: 12,
@@ -227,57 +277,342 @@ extension GlassBuildContext on BuildContext {
   GlassTheme get glass => Theme.of(this).extension<GlassTheme>()!;
 }
 
-ThemeData buildAppTheme(Brightness brightness) {
-  final isDark = brightness == Brightness.dark;
-  final scheme =
-      ColorScheme.fromSeed(
-        seedColor: const Color(0xFF6366F1),
-        brightness: brightness,
-      ).copyWith(
-        primary: isDark ? const Color(0xFF818CF8) : const Color(0xFF6366F1),
-        surface: isDark ? const Color(0xFF1A1A22) : const Color(0xFFFFFFFF),
-        error: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
-      );
+/// StudyFlow brand palette. The indigo is the product signature; it stays
+/// the primary even when the platform supplies a dynamic color scheme.
+abstract final class AppColors {
+  static const indigo = Color(0xFF6366F1);
+  static const indigoLight = Color(0xFF818CF8);
+  static const ink = Color(0xFF17171C);
+  static const paper = Color(0xFFFCFCFF);
+}
 
-  final base = ThemeData(
+/// Build the full Material 3 Expressive [ColorScheme]: a branded seed-based
+/// palette as the fallback, optionally harmonized with the platform's dynamic
+/// color scheme (Android 12+) for the neutral/system roles. StudyFlow's
+/// signature indigo always remains the primary so the product keeps its
+/// identity on every platform.
+ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
+  final isDark = brightness == Brightness.dark;
+  final seed = ColorScheme.fromSeed(
+    seedColor: AppColors.indigo,
+    brightness: brightness,
+  );
+  return (dynamicScheme ?? seed).copyWith(
+    primary: isDark ? AppColors.indigoLight : AppColors.indigo,
+    onPrimary: isDark ? const Color(0xFF111114) : Colors.white,
+    primaryContainer: isDark
+        ? const Color(0xFF2A2B5C)
+        : const Color(0xFFE0E7FF),
+    onPrimaryContainer: isDark
+        ? const Color(0xFFE0E7FF)
+        : const Color(0xFF1E1B4B),
+    inversePrimary: isDark ? AppColors.indigo : AppColors.indigoLight,
+    surfaceTint: isDark ? AppColors.indigoLight : AppColors.indigo,
+    surface: isDark ? const Color(0xFF1A1A22) : AppColors.paper,
+    onSurface: isDark ? const Color(0xFFF2F2F5) : AppColors.ink,
+    onSurfaceVariant: isDark
+        ? const Color(0xFF9DA0AA)
+        : const Color(0xFF52525B),
+    outlineVariant: isDark ? const Color(0xFF3E3E47) : const Color(0xFFCAC4D0),
+    error: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+    onError: Colors.white,
+    errorContainer: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
+    onErrorContainer: isDark
+        ? const Color(0xFFFEE2E2)
+        : const Color(0xFF7F1D1D),
+  );
+}
+
+/// Complete Material 3 type scale with StudyFlow's expressive weights.
+TextTheme _buildTextTheme(ColorScheme scheme) {
+  final display = scheme.onSurface;
+  final muted = scheme.onSurfaceVariant;
+  TextStyle t(
+    double size,
+    double height,
+    FontWeight weight,
+    double spacing,
+    Color color,
+  ) => TextStyle(
+    fontSize: size,
+    height: height,
+    fontWeight: weight,
+    letterSpacing: spacing,
+    color: color,
+  );
+
+  return TextTheme(
+    displayLarge: t(57, 1.12, FontWeight.w700, -0.25, display),
+    displayMedium: t(45, 1.16, FontWeight.w700, -0.2, display),
+    displaySmall: t(36, 1.22, FontWeight.w700, -0.1, display),
+    headlineLarge: t(32, 1.25, FontWeight.w600, -0.1, display),
+    headlineMedium: t(28, 1.29, FontWeight.w600, 0, display),
+    headlineSmall: t(24, 1.33, FontWeight.w600, 0, display),
+    titleLarge: t(22, 1.27, FontWeight.w600, 0, display),
+    titleMedium: t(16, 1.5, FontWeight.w600, 0.15, display),
+    titleSmall: t(14, 1.43, FontWeight.w600, 0.1, display),
+    bodyLarge: t(16, 1.5, FontWeight.w400, 0.5, display),
+    bodyMedium: t(14, 1.43, FontWeight.w400, 0.25, muted),
+    bodySmall: t(12, 1.33, FontWeight.w400, 0.4, muted),
+    labelLarge: t(14, 1.43, FontWeight.w600, 0.1, scheme.primary),
+    labelMedium: t(12, 1.33, FontWeight.w600, 0.5, muted),
+    labelSmall: t(11, 1.45, FontWeight.w600, 0.5, muted),
+  );
+}
+
+/// Build the StudyFlow theme: Material 3 Expressive design tokens, component
+/// themes for every M3 widget the app uses, and the glass extension.
+///
+/// [dynamicScheme] is the platform dynamic color scheme (Android 12+ via
+/// `DynamicColorBuilder`); when null the branded seed palette is used.
+ThemeData buildAppTheme(Brightness brightness, {ColorScheme? dynamicScheme}) {
+  final isDark = brightness == Brightness.dark;
+  final scheme = _buildScheme(brightness, dynamicScheme);
+  final text = _buildTextTheme(scheme);
+
+  WidgetStateProperty<Color?> stateColor(Color selected, Color unselected) {
+    return WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? selected : unselected,
+    );
+  }
+
+  return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
-    scaffoldBackgroundColor: isDark
-        ? const Color(0xFF121216)
-        : const Color(0xFFF4F4F8),
-  );
-
-  return base.copyWith(
-    extensions: [isDark ? GlassTheme.dark : GlassTheme.light],
-    textTheme: base.textTheme.copyWith(
-      displaySmall: base.textTheme.displaySmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-        color: isDark ? const Color(0xFFF2F2F5) : const Color(0xFF17171C),
-      ),
-      headlineSmall: base.textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.3,
-        color: isDark ? const Color(0xFFF2F2F5) : const Color(0xFF17171C),
-      ),
-      titleLarge: base.textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: isDark ? const Color(0xFFF2F2F5) : const Color(0xFF17171C),
-      ),
-      titleMedium: base.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: isDark ? const Color(0xFFF2F2F5) : const Color(0xFF17171C),
-      ),
-      bodyLarge: base.textTheme.bodyLarge?.copyWith(
-        color: isDark ? const Color(0xFFF2F2F5) : const Color(0xFF17171C),
-      ),
-      bodyMedium: base.textTheme.bodyMedium?.copyWith(
-        color: isDark ? const Color(0xFF9DA0AA) : const Color(0xFF6B7280),
-      ),
-    ),
+    scaffoldBackgroundColor: scheme.surface,
+    // M3 Expressive motion: ripple + page transitions carry the easing;
+    // InkSparkle gives the M3 sparkle ink response on press.
     splashFactory: InkSparkle.splashFactory,
     splashColor: Colors.transparent,
     highlightColor: Colors.transparent,
+    hoverColor: scheme.primary.withValues(alpha: 0.06),
+    focusColor: scheme.primary.withValues(alpha: 0.12),
+    textTheme: text,
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      },
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleTextStyle: text.titleLarge,
+      iconTheme: IconThemeData(color: scheme.onSurface),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      height: 68,
+      indicatorColor: scheme.primaryContainer,
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.sheet),
+      ),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurfaceVariant,
+        ),
+      ),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: Colors.transparent,
+      indicatorColor: scheme.primaryContainer,
+      selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
+      unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+      labelType: NavigationRailLabelType.all,
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.transparent,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.card),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: scheme.surfaceContainerHigh,
+      surfaceTintColor: Colors.transparent,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.dialog),
+      ),
+      titleTextStyle: text.headlineSmall,
+      contentTextStyle: text.bodyLarge,
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: scheme.surfaceContainerLow,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppShapes.sheet),
+        ),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+        disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
+        disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: 14,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppShapes.button),
+        ),
+        textStyle: text.labelLarge,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: scheme.primary,
+        minimumSize: const Size(44, 44),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppShapes.button),
+        ),
+        textStyle: text.labelLarge,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: scheme.primary,
+        side: BorderSide(color: scheme.outlineVariant),
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppShapes.button),
+        ),
+        textStyle: text.labelLarge,
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        foregroundColor: scheme.onSurfaceVariant,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppShapes.input),
+        ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationThemeData(
+      filled: true,
+      fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+      hintStyle: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 14,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+        borderSide: BorderSide(color: scheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+        borderSide: BorderSide(color: scheme.primary, width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+        borderSide: BorderSide(color: scheme.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+        borderSide: BorderSide(color: scheme.error, width: 1.6),
+      ),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: scheme.primary,
+      linearTrackColor: scheme.surfaceContainerHighest,
+      circularTrackColor: scheme.surfaceContainerHighest,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: stateColor(scheme.onPrimary, scheme.onSurfaceVariant),
+      trackColor: stateColor(scheme.primary, scheme.surfaceContainerHighest),
+      trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: scheme.surfaceContainer,
+      selectedColor: scheme.primaryContainer,
+      labelStyle: text.labelMedium,
+      secondaryLabelStyle: text.labelMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.pill),
+      ),
+      side: BorderSide(color: scheme.outlineVariant),
+    ),
+    listTileTheme: ListTileThemeData(
+      iconColor: scheme.onSurfaceVariant,
+      textColor: scheme.onSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.card),
+      ),
+    ),
+    dividerTheme: DividerThemeData(
+      color: scheme.outlineVariant,
+      thickness: 1,
+      space: 1,
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: scheme.surfaceContainer,
+        selectedBackgroundColor: scheme.primaryContainer,
+        selectedForegroundColor: scheme.onPrimaryContainer,
+        foregroundColor: scheme.onSurfaceVariant,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppShapes.button),
+        ),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: scheme.inverseSurface,
+      contentTextStyle: text.bodyMedium?.copyWith(
+        color: scheme.onInverseSurface,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.input),
+      ),
+    ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: scheme.inverseSurface,
+        borderRadius: BorderRadius.circular(AppShapes.input),
+      ),
+      textStyle: text.labelMedium?.copyWith(color: scheme.onInverseSurface),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: scheme.surfaceContainer,
+      surfaceTintColor: Colors.transparent,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppShapes.card),
+      ),
+      textStyle: text.bodyLarge,
+    ),
+    extensions: [isDark ? GlassTheme.dark : GlassTheme.light],
   );
 }

@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -49,13 +50,19 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'StudyFlow AI',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(Brightness.light),
-      darkTheme: buildAppTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
-      routerConfig: appRouter,
+    // Android 12+ supplies a dynamic color scheme from the wallpaper; iOS and
+    // older Android fall back to the branded seed palette in buildAppTheme.
+    return DynamicColorBuilder(
+      builder: (lightDynamic, darkDynamic) {
+        return MaterialApp.router(
+          title: 'StudyFlow AI',
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
+          darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
+          themeMode: ThemeMode.system,
+          routerConfig: appRouter,
+        );
+      },
     );
   }
 }

@@ -94,8 +94,9 @@ class _FailingProgressRepository extends FakeFlashcardsRepository {
 
   @override
   Future<FlashcardProgress> progress() async {
-    if (_shouldFail())
+    if (_shouldFail()) {
       throw const FlashcardsException('Could not load your flashcard history.');
+    }
     return _inner.progressData;
   }
 }

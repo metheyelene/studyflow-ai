@@ -252,8 +252,9 @@ class FakeQuizzesRepository implements QuizzesRepository {
   Future<QuizResult> submit(String quizId, {required List<int> answers}) async {
     submitCalls++;
     lastAnswers = answers;
-    if (failSubmit)
+    if (failSubmit) {
       throw const QuizzesException('Could not score your answers.');
+    }
     return QuizResult(
       score: 2,
       total: questions.length,
@@ -325,8 +326,9 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   @override
   Future<FlashcardDeckDetail> deck(String deckId) async {
     final deck = decks.where((d) => d.id == deckId).firstOrNull;
-    if (deck == null)
+    if (deck == null) {
       throw const FlashcardsException('Could not load that deck.');
+    }
     return FlashcardDeckDetail(deck: deck, cards: List.of(cards));
   }
 
@@ -386,10 +388,11 @@ class FakeAudioRepository implements AudioRepository {
     createCalls++;
     lastStyle = style;
     lastLength = length;
-    if (failCreate)
+    if (failCreate) {
       throw const AudioException(
         'This notebook has no indexed sources yet. Add a source first.',
       );
+    }
     final ready = pollsUntilReady <= 0;
     final episode = AudioEpisode(
       id: 'ep-${episodes.length + 1}',
@@ -529,8 +532,9 @@ class FakeStudyPlannerRepository implements StudyPlannerRepository {
   Future<StudyPlan> generate(String examId) async {
     generateCalls++;
     lastGeneratedExamId = examId;
-    if (failGenerate)
+    if (failGenerate) {
       throw const StudyPlannerException('Could not build that plan.');
+    }
     final plan = StudyPlan(
       id: 'plan-$examId',
       examId: examId,
