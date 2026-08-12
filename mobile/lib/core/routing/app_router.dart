@@ -8,6 +8,8 @@ import '../../features/authentication/auth_models.dart';
 import '../../features/authentication/login_screen.dart';
 import '../../features/authentication/signup_screen.dart';
 import '../../features/authentication/splash_screen.dart';
+import '../../features/audio/podcast_library_screen.dart';
+import '../../features/audio/podcast_player_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/flashcards/flashcard_session_screen.dart';
 import '../../features/flashcards/flashcards_screen.dart';
@@ -40,6 +42,8 @@ abstract final class AppRoutes {
   static const flashcardDeck = '/flashcards/:deckId';
   static const quizzes = '/quizzes';
   static const quizDetail = '/quizzes/:quizId';
+  static const audio = '/audio';
+  static const audioEpisode = '/audio/:episodeId';
   static const study = '/study';
   static const progress = '/progress';
   static const profile = '/profile';
@@ -139,6 +143,13 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
         path: AppRoutes.quizDetail,
         builder: (context, state) => QuizSessionScreen(
           quizId: state.pathParameters['quizId'] ?? '',
+        ),
+      ),
+      GoRoute(path: AppRoutes.audio, builder: (context, state) => const PodcastLibraryScreen()),
+      GoRoute(
+        path: AppRoutes.audioEpisode,
+        builder: (context, state) => PodcastPlayerScreen(
+          episodeId: state.pathParameters['episodeId'] ?? '',
         ),
       ),
     ],

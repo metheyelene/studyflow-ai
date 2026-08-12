@@ -12,6 +12,8 @@ import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
+import '../audio/audio_controller.dart';
+import '../audio/audio_repository.dart';
 import '../flashcards/flashcards_controller.dart';
 import '../flashcards/flashcards_repository.dart';
 import '../quizzes/quizzes_controller.dart';
@@ -806,6 +808,7 @@ class _StudyToolsTab extends ConsumerStatefulWidget {
 class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
   bool _flashcardBusy = false;
   bool _quizBusy = false;
+  bool _podcastBusy = false;
 
   Future<void> _generateFlashcards() async {
     setState(() => _flashcardBusy = true);
@@ -842,6 +845,28 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _quizBusy = false);
+    }
+  }
+
+  Future<void> _createPodcast() async {
+    setState(() => _podcastBusy = true);
+    try {
+      final episode = await ref.read(audioControllerProvider.notifier).createPodcast(
+            widget.notebookId,
+            style: 'focused',
+            length: 'standard',
+          );
+      if (!mounted) return;
+      if (episode.isReady) {
+        context.push('${AppRoutes.audio}/${episode.id}');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message =
+          e is AudioException ? e.message : 'Could not create that podcast. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _podcastBusy = false);
     }
   }
 
@@ -918,6 +943,28 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                     : Icon(Icons.quiz_outlined, size: 22, color: g.primary),
                 trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
                 onTap: _quizBusy ? null : _generateQuiz,
+              ),
+              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              GlassListTile(
+                title: 'Study Podcast',
+                subtitle: _podcastBusy
+                    ? 'Organizing your notes…'
+                    : 'Turn this notebook into a narrated audio episode',
+                leading: _podcastBusy
+                    ? Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(g.primary),
+                          ),
+                        ),
+                      )
+                    : Icon(Icons.mic_none, size: 22, color: g.primary),
+                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                onTap: _podcastBusy ? null : _createPodcast,
               ),
               Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
               GlassListTile(

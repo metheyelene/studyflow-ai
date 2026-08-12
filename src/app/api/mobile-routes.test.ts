@@ -11,6 +11,7 @@ vi.mock("@/db", () => ({
     profiles: { userId: "user_id" },
     subjects: { userId: "user_id" },
     exams: { userId: "user_id" },
+    usage: { userId: "user_id", feature: "feature", period: "period" },
   },
 }));
 
@@ -19,6 +20,7 @@ const dbMock = {
     profiles: { findFirst: vi.fn() },
     subjects: { findMany: vi.fn() },
     exams: { findMany: vi.fn() },
+    usage: { findFirst: vi.fn() },
   },
 };
 
@@ -39,7 +41,12 @@ vi.mock("@/lib/profile", () => ({ updateProfile: vi.fn() }));
 
 vi.mock("@/lib/premium", () => ({ getPlanForSession: vi.fn() }));
 
-vi.mock("@/lib/usage", () => ({ getAiUsage: vi.fn() }));
+vi.mock("@/lib/usage", () => ({
+  getAiUsage: vi.fn(),
+  periodKey: () => "2026-08",
+  percentUsed: (used: number, limit: number) => (limit <= 0 ? 100 : Math.min(100, Math.round((used / limit) * 100))),
+  usageState: () => "ok",
+}));
 
 // ── imports (after mocks) ───────────────────────────────────────────
 import { POST as analyticsPOST } from "@/app/api/analytics/route";

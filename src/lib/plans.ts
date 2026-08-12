@@ -26,6 +26,9 @@ export interface PlanLimits {
    *  cards-per-generation). Enforced for free; a monitoring ceiling for
    *  premium, never shown as a hard wall. */
   flashcardCardsPerMonth: number;
+  /** Podcast episodes per month (each ≈ one script generation + TTS for
+   *  a few minutes of audio; cost-controlled by design). */
+  audioEpisodesPerMonth: number;
   /** Hard caps enforced at the API layer. */
   maxQuizQuestions: number;
   maxFlashcardsPerGeneration: number;
@@ -43,6 +46,7 @@ export const PLANS: Record<Plan, PlanLimits> = {
     notebooksLifetime: 3,
     sourcesPerNotebook: 10,
     flashcardCardsPerMonth: 100,
+    audioEpisodesPerMonth: 2,
     maxQuizQuestions: 10,
     maxFlashcardsPerGeneration: 20,
     maxInputTokensPerGeneration: 4_000,
@@ -56,6 +60,7 @@ export const PLANS: Record<Plan, PlanLimits> = {
     notebooksLifetime: 20,
     sourcesPerNotebook: 50,
     flashcardCardsPerMonth: 1_000,
+    audioEpisodesPerMonth: 10,
     maxQuizQuestions: 20,
     maxFlashcardsPerGeneration: 30,
     maxInputTokensPerGeneration: 4_000,

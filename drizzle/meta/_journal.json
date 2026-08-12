@@ -57,6 +57,13 @@
       "when": 1786472679958,
       "tag": "0007_quiz_notebook",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786543236116,
+      "tag": "0008_late_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

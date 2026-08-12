@@ -17,7 +17,10 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   go_router: ^17.5.0
+  just_audio: ^0.10.6
   package_info_plus: ^10.2.1
+  path_provider: ^2.1.6
+  share_plus: ^13.3.0
   url_launcher: ^6.3.2
   web: ^1.1.0
 

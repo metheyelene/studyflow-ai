@@ -1,9 +1,15 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
+import 'package:studyflow_mobile/features/audio/audio_models.dart';
+import 'package:studyflow_mobile/features/audio/audio_playback_service.dart';
+import 'package:studyflow_mobile/features/audio/audio_repository.dart';
 import 'package:studyflow_mobile/features/authentication/auth_controller.dart';
 import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
@@ -308,6 +314,143 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   }
 }
 
+/// In-memory audio repository: episodes the tests control directly, with
+/// an optional simulated background generation (create returns a
+/// processing episode that flips to ready after [pollsUntilReady] polls).
+class FakeAudioRepository implements AudioRepository {
+  FakeAudioRepository({
+    this.episodes = const [],
+    this.pollsUntilReady = 0,
+    this.failCreate = false,
+  });
+
+  List<AudioEpisode> episodes;
+  int pollsUntilReady;
+  bool failCreate;
+  int createCalls = 0;
+  int savePositionCalls = 0;
+  List<int> savedPositions = [];
+  String? lastStyle;
+  String? lastLength;
+  bool _createdProcessing = false;
+
+  @override
+  Future<List<AudioEpisode>> list() async => List.of(episodes);
+
+  @override
+  Future<AudioEpisode> create(String notebookId, {String style = 'focused', String length = 'standard'}) async {
+    createCalls++;
+    lastStyle = style;
+    lastLength = length;
+    if (failCreate) throw const AudioException('This notebook has no indexed sources yet. Add a source first.');
+    final ready = pollsUntilReady <= 0;
+    final episode = AudioEpisode(
+      id: 'ep-${episodes.length + 1}',
+      title: 'Generated podcast',
+      style: style,
+      length: length,
+      status: ready ? 'ready' : 'processing',
+      pipelineStage: ready ? 'ready' : 'organizing',
+      audioUrl: '/api/audio/ep-${episodes.length + 1}/stream',
+      createdAt: DateTime.now(),
+      durationSec: 300,
+      wordCount: 900,
+      transcript: const [
+        TranscriptSection(heading: 'Introduction', text: 'Welcome to your study session.', startSec: 0),
+        TranscriptSection(
+          heading: 'Core concepts',
+          text: 'The key ideas are covered here.',
+          startSec: 30,
+          sources: ['Biology Notes'],
+        ),
+      ],
+    );
+    _createdProcessing = !ready;
+    episodes = [episode, ...episodes];
+    return episode;
+  }
+
+  @override
+  Future<AudioEpisode> episode(String episodeId) async {
+    final index = episodes.indexWhere((e) => e.id == episodeId);
+    if (index < 0) throw const AudioException('Could not load that episode.');
+    var e = episodes[index];
+    if (e.isProcessing && _createdProcessing && pollsUntilReady > 0) {
+      pollsUntilReady--;
+      if (pollsUntilReady == 0) {
+        e = e.copyWith(status: 'ready', pipelineStage: 'ready', durationSec: 300);
+        episodes[index] = e;
+      }
+    }
+    return e;
+  }
+
+  @override
+  Future<void> savePosition(String episodeId, int positionSec) async {
+    savePositionCalls++;
+    savedPositions.add(positionSec);
+  }
+
+  @override
+  Future<void> delete(String episodeId) async {
+    episodes = episodes.where((e) => e.id != episodeId).toList();
+  }
+
+  @override
+  Future<Uint8List> download(String episodeId, {void Function(int, int?)? onProgress}) async {
+    return Uint8List.fromList(List.filled(64, 1)); // fake MP3 bytes
+  }
+}
+
+/// Controllable podcast player fake.
+class FakePodcastPlayer implements PodcastPlayer {
+  Uint8List? loadedBytes;
+  @override
+  bool playing = false;
+  @override
+  double speed = 1.0;
+  Duration? lastSeek;
+  final _position = StreamController<Duration>.broadcast();
+  final _duration = StreamController<Duration?>.broadcast();
+  final _completed = StreamController<void>.broadcast();
+
+  void emitPosition(Duration d) => _position.add(d);
+
+  @override
+  Future<void> load(Uint8List bytes) async {
+    loadedBytes = bytes;
+    _duration.add(const Duration(seconds: 300));
+  }
+
+  @override
+  Future<void> play() async => playing = true;
+
+  @override
+  Future<void> pause() async => playing = false;
+
+  @override
+  Future<void> seek(Duration position) async => lastSeek = position;
+
+  @override
+  Future<void> setSpeed(double value) async => speed = value;
+
+  @override
+  Stream<Duration> get positionStream => _position.stream;
+
+  @override
+  Stream<Duration?> get durationStream => _duration.stream;
+
+  @override
+  Stream<void> get completedStream => _completed.stream;
+
+  @override
+  Future<void> dispose() async {
+    await _position.close();
+    await _duration.close();
+    await _completed.close();
+  }
+}
+
 /// In-memory dashboard repository: real-looking usage + exams the tests
 /// control directly.
 class FakeDashboardRepository implements DashboardRepository {
@@ -350,6 +493,8 @@ Future<FakeAuthRepository> pumpApp(
   FakeDashboardRepository? dashboard,
   FlashcardsRepository? flashcards,
   QuizzesRepository? quizzes,
+  FakeAudioRepository? audio,
+  FakePodcastPlayer? podcastPlayer,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -375,6 +520,8 @@ Future<FakeAuthRepository> pumpApp(
         notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
         flashcardsRepositoryProvider.overrideWithValue(flashcards ?? FakeFlashcardsRepository()),
         quizzesRepositoryProvider.overrideWithValue(quizzes ?? FakeQuizzesRepository()),
+        audioRepositoryProvider.overrideWithValue(audio ?? FakeAudioRepository()),
+        podcastPlayerProvider.overrideWithValue(podcastPlayer ?? FakePodcastPlayer()),
       ],
       child: MaterialApp.router(
         routerConfig: router ?? buildAppRouter(),

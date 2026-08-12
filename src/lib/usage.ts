@@ -110,6 +110,61 @@ export async function consumeLifetime(
   return { allowed: used <= limit, used };
 }
 
+/**
+ * Atomically consume one unit of a monthly bucket (e.g. audio episodes).
+ * Same race-safe pattern as consumeAiAction; the caller passes the
+ * feature name and limit so it stays generic.
+ */
+export async function consumeMonthly(
+  userId: string,
+  feature: string,
+  limit: number,
+): Promise<{ allowed: boolean; used: number }> {
+  const db = getDb();
+  const key = periodKey();
+  const result = await db
+    .insert(schema.usage)
+    .values({
+      userId,
+      feature,
+      period: key,
+      count: 1,
+      limit,
+    })
+    .onConflictDoUpdate({
+      target: [schema.usage.userId, schema.usage.feature, schema.usage.period],
+      set: {
+        count: sql`${schema.usage.count} + 1`,
+        limit,
+      },
+      setWhere: sql`${schema.usage.count} < ${limit}`,
+    })
+    .returning({ count: schema.usage.count });
+
+  const used = result[0]?.count ?? limit;
+  return { allowed: used <= limit, used };
+}
+
+/**
+ * Best-effort refund of one unit of a monthly bucket (used when a
+ * generation job fails after reserving its slot, so a failed generation
+ * doesn't silently eat the user's quota). The decrement can never go
+ * below 0.
+ */
+export async function refundMonthly(userId: string, feature: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(schema.usage)
+    .set({ count: sql`greatest(${schema.usage.count} - 1, 0)` })
+    .where(
+      and(
+        eq(schema.usage.userId, userId),
+        eq(schema.usage.feature, feature),
+        eq(schema.usage.period, periodKey()),
+      ),
+    );
+}
+
 /** Current count of a lifetime bucket (0 if never incremented). */
 export async function getLifetimeCount(userId: string, feature: string): Promise<number> {
   const db = getDb();

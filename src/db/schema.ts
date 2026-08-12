@@ -292,6 +292,66 @@ export const quizAttempts = pgTable(
   (t) => [index("attempts_user_completed_idx").on(t.userId, t.completedAt)],
 );
 
+// ── audio episodes (Study Podcasts) ──────────────────────────────────
+// A podcast episode is a source-grounded narration: the AI organizes the
+// notebook's material into a script (sections with source refs), TTS
+// renders it to MP3, and both the audio bytes and the transcript are
+// stored here. `audioData` holds the base64 MP3 so an episode can be
+// exported without external object storage; large episodes are a few MB.
+export const audioEpisodeStatusEnum = pgEnum("audio_episode_status", [
+  "processing",
+  "ready",
+  "failed",
+]);
+
+export interface AudioTranscriptSection {
+  heading: string;
+  text: string;
+  /** Estimated seconds from the start of the episode (from the script's
+   *  char counts — used for transcript→audio seeking). */
+  startSec: number;
+  /** Source titles this section is grounded in, when known. */
+  sources: string[];
+}
+
+export const audioEpisodes = pgTable(
+  "audio_episodes",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    notebookId: text("notebook_id")
+      .notNull()
+      .references(() => notebooks.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    style: text("style").notNull().default("focused"), // focused | friendly | quick | deep | podcast
+    length: text("length").notNull().default("standard"), // quick | standard | deep
+    status: audioEpisodeStatusEnum("status").notNull().default("processing"),
+    /** Real generation stage the backend is currently performing (drives the UI progress text). */
+    pipelineStage: text("pipeline_stage").notNull().default("queued"),
+    errorMessage: text("error_message"),
+    script: text("script"), // the narration the AI wrote (plain text)
+    transcript: jsonb("transcript").$type<AudioTranscriptSection[]>(),
+    audioData: text("audio_data"), // base64 MP3 (drizzle 0.45 lacks bytea)
+    mimeType: text("mime_type").notNull().default("audio/mpeg"),
+    durationSec: integer("duration_sec"),
+    wordCount: integer("word_count"),
+    playbackPositionSec: integer("playback_position_sec").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => now()),
+  },
+  (t) => [
+    index("audio_user_created_idx").on(t.userId, t.createdAt),
+    index("audio_notebook_idx").on(t.notebookId),
+  ],
+);
+
 // ── exams & study plans ──────────────────────────────────────────────
 export const exams = pgTable(
   "exams",
