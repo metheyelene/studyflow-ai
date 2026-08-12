@@ -32,7 +32,10 @@ class SettingsScreen extends StatelessWidget {
                         tooltip: 'Back',
                       ),
                       const SizedBox(width: 4),
-                      Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
+                      Text(
+                        'Settings',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -43,17 +46,43 @@ class SettingsScreen extends StatelessWidget {
                         GlassListTile(
                           title: 'Profile',
                           subtitle: 'Name, study level, preferences',
-                          leading: Icon(Icons.person_outline, size: 22, color: g.primary),
-                          trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                          onTap: () => showGlassToast(context, 'Profile editing arrives with sign-in.'),
+                          leading: Icon(
+                            Icons.person_outline,
+                            size: 22,
+                            color: g.primary,
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            size: 20,
+                            color: g.textMuted,
+                          ),
+                          onTap: () => showGlassToast(
+                            context,
+                            'Profile editing arrives with sign-in.',
+                          ),
                         ),
-                        const Divider(color: Color(0x14000000), height: 1, indent: 50),
+                        const Divider(
+                          color: Color(0x14000000),
+                          height: 1,
+                          indent: 50,
+                        ),
                         GlassListTile(
                           title: 'Appearance',
                           subtitle: 'Light / dark / system',
-                          leading: Icon(Icons.palette_outlined, size: 22, color: g.primary),
-                          trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-                          onTap: () => showGlassToast(context, 'Theme switching arrives soon.'),
+                          leading: Icon(
+                            Icons.palette_outlined,
+                            size: 22,
+                            color: g.primary,
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            size: 20,
+                            color: g.textMuted,
+                          ),
+                          onTap: () => showGlassToast(
+                            context,
+                            'Theme switching arrives soon.',
+                          ),
                         ),
                       ],
                     ),
@@ -66,8 +95,16 @@ class SettingsScreen extends StatelessWidget {
                         GlassListTile(
                           title: 'About StudyFlow',
                           subtitle: 'About the app and its creator',
-                          leading: Icon(Icons.info_outline, size: 22, color: g.primary),
-                          trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                          leading: Icon(
+                            Icons.info_outline,
+                            size: 22,
+                            color: g.primary,
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            size: 20,
+                            color: g.textMuted,
+                          ),
                           onTap: () => context.go(AppRoutes.aboutCreator),
                         ),
                       ],

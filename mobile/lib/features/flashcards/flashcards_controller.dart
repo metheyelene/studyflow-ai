@@ -11,7 +11,12 @@ class FlashcardsState {
   final bool busy;
   final String? error;
 
-  FlashcardsState copyWith({List<FlashcardDeck>? decks, bool? busy, String? error, bool clearError = false}) {
+  FlashcardsState copyWith({
+    List<FlashcardDeck>? decks,
+    bool? busy,
+    String? error,
+    bool clearError = false,
+  }) {
     return FlashcardsState(
       decks: decks ?? this.decks,
       busy: busy ?? this.busy,
@@ -36,10 +41,11 @@ class FlashcardsController extends AsyncNotifier<FlashcardsState> {
     final detail = await _repo.generate(notebookId);
     try {
       final decks = await _repo.list();
-      state = AsyncData(FlashcardsState(decks: [
-        detail.deck,
-        ...decks.where((d) => d.id != detail.deck.id),
-      ]));
+      state = AsyncData(
+        FlashcardsState(
+          decks: [detail.deck, ...decks.where((d) => d.id != detail.deck.id)],
+        ),
+      );
     } catch (_) {
       state = AsyncData(FlashcardsState(decks: [detail.deck]));
     }
@@ -50,7 +56,9 @@ class FlashcardsController extends AsyncNotifier<FlashcardsState> {
     await _repo.delete(deckId);
     final current = await future;
     state = AsyncData(
-      current.copyWith(decks: current.decks.where((d) => d.id != deckId).toList()),
+      current.copyWith(
+        decks: current.decks.where((d) => d.id != deckId).toList(),
+      ),
     );
   }
 
@@ -62,4 +70,6 @@ class FlashcardsController extends AsyncNotifier<FlashcardsState> {
 }
 
 final flashcardsControllerProvider =
-    AsyncNotifierProvider<FlashcardsController, FlashcardsState>(FlashcardsController.new);
+    AsyncNotifierProvider<FlashcardsController, FlashcardsState>(
+      FlashcardsController.new,
+    );

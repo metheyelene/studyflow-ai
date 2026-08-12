@@ -49,11 +49,13 @@ class ApiOnboardingRepository implements OnboardingRepository {
           ? (e.response!.data as Map)['error']
           : null;
       final friendly = switch (status) {
-        400 || 422 => (message is String && message.isNotEmpty)
-            ? message
-            : 'Please fill in every field to continue.',
+        400 || 422 =>
+          (message is String && message.isNotEmpty)
+              ? message
+              : 'Please fill in every field to continue.',
         401 => 'Your session expired. Please log in again.',
-        null => 'Could not reach the server. Check your connection and try again.',
+        null =>
+          'Could not reach the server. Check your connection and try again.',
         _ => 'Something went wrong. Please try again.',
       };
       throw OnboardingException(friendly);

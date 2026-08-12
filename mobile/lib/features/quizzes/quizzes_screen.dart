@@ -38,10 +38,15 @@ class QuizzesScreen extends ConsumerWidget {
                   tooltip: 'Back',
                 ),
                 Expanded(
-                  child: Text('Quizzes', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    'Quizzes',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 GlassBadge(
-                  label: quizzes.valueOrNull == null ? '—' : '${quizzes.valueOrNull!.quizzes.length}',
+                  label: quizzes.valueOrNull == null
+                      ? '—'
+                      : '${quizzes.valueOrNull!.quizzes.length}',
                   icon: Icons.quiz_outlined,
                 ),
                 const SizedBox(width: 10),
@@ -59,8 +64,11 @@ class QuizzesScreen extends ConsumerWidget {
             child: quizzes.when(
               loading: () => const _QuizzesLoading(),
               error: (err, _) => _QuizzesError(
-                message: err is QuizzesException ? err.message : 'Could not load your quizzes.',
-                onRetry: () => ref.read(quizzesControllerProvider.notifier).refresh(),
+                message: err is QuizzesException
+                    ? err.message
+                    : 'Could not load your quizzes.',
+                onRetry: () =>
+                    ref.read(quizzesControllerProvider.notifier).refresh(),
               ),
               data: (state) {
                 if (state.quizzes.isEmpty) {
@@ -69,13 +77,21 @@ class QuizzesScreen extends ConsumerWidget {
                   );
                 }
                 return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 96 : 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    context.isPhone ? 96 : 24,
+                  ),
                   itemCount: state.quizzes.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => _QuizCard(
                     quiz: state.quizzes[i],
-                    onOpen: () => context.push('${AppRoutes.quizzes}/${state.quizzes[i].id}'),
-                    onDelete: () => _confirmDelete(context, ref, state.quizzes[i]),
+                    onOpen: () => context.push(
+                      '${AppRoutes.quizzes}/${state.quizzes[i].id}',
+                    ),
+                    onDelete: () =>
+                        _confirmDelete(context, ref, state.quizzes[i]),
                   ),
                 );
               },
@@ -95,18 +111,29 @@ class QuizzesScreen extends ConsumerWidget {
     context.push('${AppRoutes.quizzes}/${detail.quiz.id}');
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, QuizSummary quiz) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    QuizSummary quiz,
+  ) async {
     final confirmed = await showGlassModal<bool>(
       context: context,
       builder: (dialogContext) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Delete this quiz?', style: Theme.of(dialogContext).textTheme.titleLarge),
+          Text(
+            'Delete this quiz?',
+            style: Theme.of(dialogContext).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
             '“${quiz.title}” and its ${quiz.attempts} attempt${quiz.attempts == 1 ? '' : 's'} will be removed. This can\'t be undone.',
-            style: TextStyle(color: context.glass.textMuted, fontSize: 14, height: 1.45),
+            style: TextStyle(
+              color: context.glass.textMuted,
+              fontSize: 14,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
@@ -134,7 +161,9 @@ class QuizzesScreen extends ConsumerWidget {
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete the quiz. Please try again.')),
+        const SnackBar(
+          content: Text('Could not delete the quiz. Please try again.'),
+        ),
       );
     }
   }
@@ -189,12 +218,19 @@ class _QuizzesError extends StatelessWidget {
             children: [
               Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text('Could not load your quizzes', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Could not load your quizzes',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 16),
               GlassButton(
@@ -234,7 +270,10 @@ class _EmptyQuizzes extends StatelessWidget {
               child: Icon(Icons.quiz_outlined, size: 24, color: g.primary),
             ),
             const SizedBox(height: 14),
-            Text('No quizzes yet', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'No quizzes yet',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               'Generate a quiz from a notebook and StudyFlow AI writes '
@@ -257,7 +296,11 @@ class _EmptyQuizzes extends StatelessWidget {
 }
 
 class _QuizCard extends StatelessWidget {
-  const _QuizCard({required this.quiz, required this.onOpen, required this.onDelete});
+  const _QuizCard({
+    required this.quiz,
+    required this.onOpen,
+    required this.onDelete,
+  });
 
   final QuizSummary quiz;
   final VoidCallback onOpen;
@@ -321,7 +364,11 @@ class _QuizCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline, size: 20, color: g.textMuted),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: g.textMuted,
+                  ),
                   tooltip: 'Delete quiz',
                 ),
               ],
@@ -384,7 +431,10 @@ class _GenerateQuizSheetState extends ConsumerState<_GenerateQuizSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Generate a quiz', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Generate a quiz',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 4),
           Text(
             'StudyFlow AI reads the notebook\'s sources and writes '

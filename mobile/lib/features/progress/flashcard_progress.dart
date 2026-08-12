@@ -17,5 +17,5 @@ class FlashcardProgressController extends AsyncNotifier<FlashcardProgress> {
 
 final flashcardProgressControllerProvider =
     AsyncNotifierProvider<FlashcardProgressController, FlashcardProgress>(
-  FlashcardProgressController.new,
-);
+      FlashcardProgressController.new,
+    );

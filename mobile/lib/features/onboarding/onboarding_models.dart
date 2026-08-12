@@ -43,13 +43,12 @@ class OnboardingPayload {
   final List<String> goals;
 
   Map<String, dynamic> toJson() => {
-        'course': course,
-        'subjects': subjects,
-        'exams': [
-          for (final e in exams) {'name': e.name ?? '', 'date': e.date},
-        ],
-        'dailyMinutes': dailyMinutes,
-        'goals': goals,
-      };
+    'course': course,
+    'subjects': subjects,
+    'exams': [
+      for (final e in exams) {'name': e.name ?? '', 'date': e.date},
+    ],
+    'dailyMinutes': dailyMinutes,
+    'goals': goals,
+  };
 }
-

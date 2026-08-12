@@ -6,7 +6,11 @@ import 'quiz_models.dart';
 /// Quiz data access. [QuizzesException] carries a user-safe message.
 abstract class QuizzesRepository {
   Future<List<QuizSummary>> list();
-  Future<QuizDetail> generate(String notebookId, {String? difficulty, int? count});
+  Future<QuizDetail> generate(
+    String notebookId, {
+    String? difficulty,
+    int? count,
+  });
   Future<QuizDetail> quiz(String quizId);
   Future<void> delete(String quizId);
   Future<QuizResult> submit(String quizId, {required List<int> answers});
@@ -22,7 +26,8 @@ class ApiQuizzesRepository implements QuizzesRepository {
     final res = await _client.get<dynamic>('/api/quizzes');
     final data = res.data;
     final list = data is Map ? data['quizzes'] : null;
-    if (list is! List) throw const QuizzesException('Could not load your quizzes.');
+    if (list is! List)
+      throw const QuizzesException('Could not load your quizzes.');
     return [
       for (final q in list)
         if (q is Map) QuizSummary.fromJson(Map<String, dynamic>.from(q)),
@@ -30,14 +35,22 @@ class ApiQuizzesRepository implements QuizzesRepository {
   }
 
   @override
-  Future<QuizDetail> generate(String notebookId, {String? difficulty, int? count}) async {
-    final res = await _client.post<dynamic>('/api/quizzes', data: {
-      'notebookId': notebookId,
-      if (difficulty != null) 'difficulty': difficulty,
-      if (count != null) 'count': count,
-    });
+  Future<QuizDetail> generate(
+    String notebookId, {
+    String? difficulty,
+    int? count,
+  }) async {
+    final res = await _client.post<dynamic>(
+      '/api/quizzes',
+      data: {
+        'notebookId': notebookId,
+        if (difficulty != null) 'difficulty': difficulty,
+        if (count != null) 'count': count,
+      },
+    );
     final data = res.data;
-    if (data is! Map) throw const QuizzesException('Could not generate that quiz.');
+    if (data is! Map)
+      throw const QuizzesException('Could not generate that quiz.');
     final quizJson = data['quiz'];
     final questions = data['questions'];
     if (quizJson is! Map || questions is! List) {
@@ -72,15 +85,18 @@ class ApiQuizzesRepository implements QuizzesRepository {
   }
 
   @override
-  Future<void> delete(String quizId) => _client.delete<dynamic>('/api/quizzes/$quizId');
+  Future<void> delete(String quizId) =>
+      _client.delete<dynamic>('/api/quizzes/$quizId');
 
   @override
   Future<QuizResult> submit(String quizId, {required List<int> answers}) async {
-    final res = await _client.post<dynamic>('/api/quizzes/$quizId/answers', data: {
-      'answers': answers,
-    });
+    final res = await _client.post<dynamic>(
+      '/api/quizzes/$quizId/answers',
+      data: {'answers': answers},
+    );
     final data = res.data;
-    if (data is! Map) throw const QuizzesException('Could not score your answers.');
+    if (data is! Map)
+      throw const QuizzesException('Could not score your answers.');
     return QuizResult.fromJson(Map<String, dynamic>.from(data));
   }
 }

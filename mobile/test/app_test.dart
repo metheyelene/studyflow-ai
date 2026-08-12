@@ -17,7 +17,9 @@ void main() {
     expect(AppRoutes.aboutCreator, '/about/creator');
   });
 
-  testWidgets('app boots to the home dashboard after session restore', (tester) async {
+  testWidgets('app boots to the home dashboard after session restore', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -28,9 +30,15 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
-          onboardingRepositoryProvider.overrideWithValue(FakeOnboardingRepository()),
-          dashboardRepositoryProvider.overrideWithValue(FakeDashboardRepository()),
-          notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
+          onboardingRepositoryProvider.overrideWithValue(
+            FakeOnboardingRepository(),
+          ),
+          dashboardRepositoryProvider.overrideWithValue(
+            FakeDashboardRepository(),
+          ),
+          notebooksRepositoryProvider.overrideWithValue(
+            FakeNotebooksRepository(),
+          ),
         ],
         child: const StudyFlowApp(),
       ),
@@ -41,8 +49,9 @@ void main() {
     expect(find.text('Profile'), findsOneWidget); // bottom nav
   });
 
-  testWidgets('quick actions render and Upload notes navigates to notebooks',
-      (tester) async {
+  testWidgets('quick actions render and Upload notes navigates to notebooks', (
+    tester,
+  ) async {
     await pumpApp(tester);
 
     expect(find.text('QUICK ACTIONS'), findsOneWidget);
@@ -59,70 +68,84 @@ void main() {
     expect(find.text('No notebooks yet'), findsOneWidget);
   });
 
-  testWidgets('every quick action lands on the tab mirroring its web destination',
-      (tester) async {
-    await pumpApp(tester);
+  testWidgets(
+    'every quick action lands on the tab mirroring its web destination',
+    (tester) async {
+      await pumpApp(tester);
 
-    // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes and Create
-    // Summary link to /notebooks; Flashcards and Quiz have their own real
-    // screens; Study Plan links to /planner (mobile: /study).
-    const notebookActions = ['Upload notes', 'Summarize'];
-    for (final label in notebookActions) {
-      await tester.ensureVisible(find.text(label));
-      await tester.tap(find.text(label));
+      // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes and Create
+      // Summary link to /notebooks; Flashcards and Quiz have their own real
+      // screens; Study Plan links to /planner (mobile: /study).
+      const notebookActions = ['Upload notes', 'Summarize'];
+      for (final label in notebookActions) {
+        await tester.ensureVisible(find.text(label));
+        await tester.tap(find.text(label));
+        await tester.pumpAndSettle();
+
+        // Real navigation: the notebooks tab opens with its empty state.
+        expect(
+          find.text('No notebooks yet'),
+          findsOneWidget,
+          reason: '$label should open the notebooks tab (web: /notebooks)',
+        );
+
+        // Return to Home so the next action starts from the dashboard.
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+        expect(find.text('QUICK ACTIONS'), findsOneWidget);
+      }
+
+      // Flashcards now has its own real screen (deck list).
+      await tester.ensureVisible(find.text('Flashcards'));
+      await tester.tap(find.text('Flashcards'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('No decks yet'),
+        findsOneWidget,
+        reason: 'Flashcards should open the flashcards screen',
+      );
+      await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      // Real navigation: the notebooks tab opens with its empty state.
-      expect(find.text('No notebooks yet'), findsOneWidget,
-          reason: '$label should open the notebooks tab (web: /notebooks)');
-
-      // Return to Home so the next action starts from the dashboard.
-      await tester.tap(find.text('Home'));
+      // Quiz now has its own real screen (quiz history).
+      await tester.ensureVisible(find.text('Quiz'));
+      await tester.tap(find.text('Quiz'));
       await tester.pumpAndSettle();
-      expect(find.text('QUICK ACTIONS'), findsOneWidget);
-    }
+      expect(
+        find.text('No quizzes yet'),
+        findsOneWidget,
+        reason: 'Quiz should open the quizzes screen',
+      );
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
 
-    // Flashcards now has its own real screen (deck list).
-    await tester.ensureVisible(find.text('Flashcards'));
-    await tester.tap(find.text('Flashcards'));
-    await tester.pumpAndSettle();
-    expect(find.text('No decks yet'), findsOneWidget,
-        reason: 'Flashcards should open the flashcards screen');
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pumpAndSettle();
+      // Study plan mirrors the web's /planner destination → the Study tab.
+      await tester.ensureVisible(find.text('Study plan'));
+      await tester.tap(find.text('Study plan'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('STUDY MATERIAL'),
+        findsOneWidget,
+        reason: 'Study plan should open the Study tab (web: /planner)',
+      );
+    },
+  );
 
-    // Quiz now has its own real screen (quiz history).
-    await tester.ensureVisible(find.text('Quiz'));
-    await tester.tap(find.text('Quiz'));
-    await tester.pumpAndSettle();
-    expect(find.text('No quizzes yet'), findsOneWidget,
-        reason: 'Quiz should open the quizzes screen');
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'deep link to /about/creator opens the Creator screen on launch',
+    (tester) async {
+      final router = buildAppRouter(initialLocation: AppRoutes.aboutCreator);
+      await pumpApp(tester, router: router);
 
-    // Study plan mirrors the web's /planner destination → the Study tab.
-    await tester.ensureVisible(find.text('Study plan'));
-    await tester.tap(find.text('Study plan'));
-    await tester.pumpAndSettle();
-    expect(
-      find.text('STUDY MATERIAL'),
-      findsOneWidget,
-      reason: 'Study plan should open the Study tab (web: /planner)',
-    );
-  });
+      expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
+      expect(find.text('MV'), findsOneWidget);
+      expect(find.text('Contact Creator'), findsOneWidget);
+    },
+  );
 
-  testWidgets('deep link to /about/creator opens the Creator screen on launch',
-      (tester) async {
-    final router = buildAppRouter(initialLocation: AppRoutes.aboutCreator);
-    await pumpApp(tester, router: router);
-
-    expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
-    expect(find.text('MV'), findsOneWidget);
-    expect(find.text('Contact Creator'), findsOneWidget);
-  });
-
-  testWidgets('runtime deep link to /about/creator shows the Creator screen',
-      (tester) async {
+  testWidgets('runtime deep link to /about/creator shows the Creator screen', (
+    tester,
+  ) async {
     final router = buildAppRouter();
     await pumpApp(tester, router: router);
 

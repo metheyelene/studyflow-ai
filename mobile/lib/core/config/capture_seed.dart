@@ -32,7 +32,10 @@ class _CaptureAuthRepository implements AuthRepository {
       captureSignedIn() ? captureUser : null;
 
   @override
-  Future<AuthUser> signIn({required String email, required String password}) async {
+  Future<AuthUser> signIn({
+    required String email,
+    required String password,
+  }) async {
     captureSetSignedIn(true);
     return captureUser;
   }
@@ -42,8 +45,7 @@ class _CaptureAuthRepository implements AuthRepository {
     required String name,
     required String email,
     required String password,
-  }) async =>
-      captureUser;
+  }) async => captureUser;
 
   @override
   Future<void> signOut() async {}
@@ -61,26 +63,43 @@ class _CaptureOnboardingRepository implements OnboardingRepository {
 
 class CaptureNotebooksRepository implements NotebooksRepository {
   CaptureNotebooksRepository({List<Notebook>? seed})
-      : _notebooks = seed ?? _sampleNotebooks();
+    : _notebooks = seed ?? _sampleNotebooks();
 
   final List<Notebook> _notebooks;
   int _counter = 100;
 
   static List<Notebook> _sampleNotebooks() {
     final now = DateTime.now();
-    Notebook nb(String id, String title, String desc, int sources, int daysAgo) =>
-        Notebook(
-          id: id,
-          title: title,
-          description: desc,
-          createdAt: now.subtract(Duration(days: daysAgo + 7)),
-          updatedAt: now.subtract(Duration(days: daysAgo)),
-          sourceCount: sources,
-        );
+    Notebook nb(
+      String id,
+      String title,
+      String desc,
+      int sources,
+      int daysAgo,
+    ) => Notebook(
+      id: id,
+      title: title,
+      description: desc,
+      createdAt: now.subtract(Duration(days: daysAgo + 7)),
+      updatedAt: now.subtract(Duration(days: daysAgo)),
+      sourceCount: sources,
+    );
     return [
-      nb('nb-cell-bio', 'Sample: Cell Biology — Unit 2', 'Photosynthesis & respiration notes', 3, 0),
+      nb(
+        'nb-cell-bio',
+        'Sample: Cell Biology — Unit 2',
+        'Photosynthesis & respiration notes',
+        3,
+        0,
+      ),
       nb('nb-vlsi', 'Sample: VLSI Unit 3', 'CMOS design lecture notes', 5, 2),
-      nb('nb-chem', 'Sample: Organic Chemistry', 'Reaction mechanisms + named reactions', 2, 5),
+      nb(
+        'nb-chem',
+        'Sample: Organic Chemistry',
+        'Reaction mechanisms + named reactions',
+        2,
+        5,
+      ),
     ];
   }
 
@@ -143,7 +162,8 @@ class CaptureNotebooksRepository implements NotebooksRepository {
     List<ChatMessage> history = const [],
   }) async {
     return ChatReply(
-      answer: 'Sample answer: based on your sources, this is the key idea. '
+      answer:
+          'Sample answer: based on your sources, this is the key idea. '
           'It is stated in your lecture notes.',
       citations: const [
         ChatCitation(
@@ -161,6 +181,8 @@ class CaptureNotebooksRepository implements NotebooksRepository {
 /// Riverpod overrides that make a capture build fully self-contained.
 final captureOverrides = <Override>[
   authRepositoryProvider.overrideWithValue(_CaptureAuthRepository()),
-  onboardingRepositoryProvider.overrideWithValue(_CaptureOnboardingRepository()),
+  onboardingRepositoryProvider.overrideWithValue(
+    _CaptureOnboardingRepository(),
+  ),
   notebooksRepositoryProvider.overrideWithValue(CaptureNotebooksRepository()),
 ];

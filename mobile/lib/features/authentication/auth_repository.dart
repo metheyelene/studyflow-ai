@@ -52,11 +52,13 @@ class ApiAuthRepository implements AuthRepository {
         ? (e.response!.data as Map)['message']
         : null;
     return switch (status) {
-      400 || 422 => (message is String && message.isNotEmpty)
-          ? message
-          : 'Check your details and try again.',
+      400 || 422 =>
+        (message is String && message.isNotEmpty)
+            ? message
+            : 'Check your details and try again.',
       401 => 'Your session expired. Please log in again.',
-      null => 'Could not reach the server. Check your connection and try again.',
+      null =>
+        'Could not reach the server. Check your connection and try again.',
       _ => 'Something went wrong. Please try again.',
     };
   }
@@ -81,7 +83,10 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> signIn({required String email, required String password}) async {
+  Future<AuthUser> signIn({
+    required String email,
+    required String password,
+  }) async {
     try {
       final res = await _client.post<dynamic>(
         '/api/auth/sign-in/email',
@@ -89,7 +94,8 @@ class ApiAuthRepository implements AuthRepository {
       );
       await _client.saveSessionToken(res);
       final user = _userFromBody(res.data);
-      if (user == null) throw const AuthException('We could not start your session.');
+      if (user == null)
+        throw const AuthException('We could not start your session.');
       return user;
     } on DioException catch (e) {
       throw AuthException(_friendlyError(e));
@@ -109,7 +115,8 @@ class ApiAuthRepository implements AuthRepository {
       );
       await _client.saveSessionToken(res);
       final user = _userFromBody(res.data);
-      if (user == null) throw const AuthException('We could not create your account.');
+      if (user == null)
+        throw const AuthException('We could not create your account.');
       return user;
     } on DioException catch (e) {
       throw AuthException(_friendlyError(e));

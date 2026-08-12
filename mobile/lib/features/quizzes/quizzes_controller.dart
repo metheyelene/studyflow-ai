@@ -26,14 +26,21 @@ class QuizzesController extends AsyncNotifier<QuizzesState> {
   /// Generates a quiz from a notebook and returns it (the caller navigates
   /// to the take-quiz screen). The list is refreshed from the server; a
   /// refresh failure never hides the new quiz.
-  Future<QuizDetail> generate(String notebookId, {String difficulty = 'medium'}) async {
+  Future<QuizDetail> generate(
+    String notebookId, {
+    String difficulty = 'medium',
+  }) async {
     final detail = await _repo.generate(notebookId, difficulty: difficulty);
     try {
       final quizzes = await _repo.list();
-      state = AsyncData(QuizzesState(quizzes: [
-        detail.quiz,
-        ...quizzes.where((q) => q.id != detail.quiz.id),
-      ]));
+      state = AsyncData(
+        QuizzesState(
+          quizzes: [
+            detail.quiz,
+            ...quizzes.where((q) => q.id != detail.quiz.id),
+          ],
+        ),
+      );
     } catch (_) {
       state = AsyncData(QuizzesState(quizzes: [detail.quiz]));
     }
@@ -44,7 +51,9 @@ class QuizzesController extends AsyncNotifier<QuizzesState> {
     await _repo.delete(quizId);
     final current = await future;
     state = AsyncData(
-      current.copyWith(quizzes: current.quizzes.where((q) => q.id != quizId).toList()),
+      current.copyWith(
+        quizzes: current.quizzes.where((q) => q.id != quizId).toList(),
+      ),
     );
   }
 
@@ -56,4 +65,6 @@ class QuizzesController extends AsyncNotifier<QuizzesState> {
 }
 
 final quizzesControllerProvider =
-    AsyncNotifierProvider<QuizzesController, QuizzesState>(QuizzesController.new);
+    AsyncNotifierProvider<QuizzesController, QuizzesState>(
+      QuizzesController.new,
+    );

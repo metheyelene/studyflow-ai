@@ -26,7 +26,11 @@ import 'notebooks_repository.dart';
 
 /// The notebook workspace — sources, AI chat, and study tools.
 class NotebookDetailPane extends StatefulWidget {
-  const NotebookDetailPane({super.key, required this.notebook, this.showBack = false});
+  const NotebookDetailPane({
+    super.key,
+    required this.notebook,
+    this.showBack = false,
+  });
 
   final Notebook notebook;
   final bool showBack;
@@ -67,7 +71,9 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
                   ),
                 ),
                 GlassBadge(
-                  label: notebook.sourceCount == 0 ? '0 sources' : '${notebook.sourceCount} sources',
+                  label: notebook.sourceCount == 0
+                      ? '0 sources'
+                      : '${notebook.sourceCount} sources',
                   icon: Icons.description_outlined,
                 ),
               ],
@@ -88,9 +94,9 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
               0 => _SourcesTab(notebookId: notebook.id),
               1 => _AskAiTab(notebookId: notebook.id),
               _ => _StudyToolsTab(
-                    notebookId: notebook.id,
-                    onAskAi: () => setState(() => _tab = 1),
-                  ),
+                notebookId: notebook.id,
+                onAskAi: () => setState(() => _tab = 1),
+              ),
             },
           ),
         ],
@@ -138,10 +144,7 @@ class _TabScaffold extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
             ),
-            if (actions.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              ...actions,
-            ],
+            if (actions.isNotEmpty) ...[const SizedBox(height: 16), ...actions],
           ],
         ),
       ),
@@ -182,12 +185,9 @@ class _SourcesTabState extends ConsumerState<_SourcesTab> {
     final added = await showGlassSheet<bool>(
       context: context,
       builder: (sheetContext) => _PasteSourceSheet(
-        onSubmit: (title, text) =>
-            ref.read(notebooksRepositoryProvider).addPastedSource(
-                  widget.notebookId,
-                  title: title,
-                  text: text,
-                ),
+        onSubmit: (title, text) => ref
+            .read(notebooksRepositoryProvider)
+            .addPastedSource(widget.notebookId, title: title, text: text),
       ),
     );
     if (added == true && mounted) {
@@ -315,7 +315,9 @@ class _SourceCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    source.kind == 'pasted' ? Icons.notes : Icons.picture_as_pdf_outlined,
+                    source.kind == 'pasted'
+                        ? Icons.notes
+                        : Icons.picture_as_pdf_outlined,
                     size: 20,
                     color: g.primary,
                   ),
@@ -353,7 +355,10 @@ class _SourceCard extends StatelessWidget {
                     label: const Text('Paste another'),
                     style: TextButton.styleFrom(
                       foregroundColor: g.primary,
-                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
               ],
@@ -408,7 +413,9 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = e is NotebooksException ? e.message : 'Something went wrong. Please try again.';
+        _error = e is NotebooksException
+            ? e.message
+            : 'Something went wrong. Please try again.';
       });
     }
   }
@@ -489,7 +496,9 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
     final text = _controller.text;
     if (text.trim().isEmpty) return;
     _controller.clear();
-    ref.read(notebookChatControllerProvider(widget.notebookId).notifier).send(text);
+    ref
+        .read(notebookChatControllerProvider(widget.notebookId).notifier)
+        .send(text);
   }
 
   @override
@@ -505,7 +514,12 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
               ? const _ChatEmptyState()
               : ListView.builder(
                   reverse: true,
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, context.isPhone ? 96 : 12),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    context.isPhone ? 96 : 12,
+                  ),
                   itemCount: messages.length + (chat.busy ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (i == messages.length && chat.busy) {
@@ -587,7 +601,10 @@ class _ChatEmptyState extends StatelessWidget {
               child: Icon(Icons.auto_awesome, size: 24, color: g.primary),
             ),
             const SizedBox(height: 14),
-            Text('Ask your notebook', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Ask your notebook',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               'Answers are grounded in your sources and come with citations '
@@ -674,7 +691,9 @@ class _MessageBubble extends StatelessWidget {
                 height: 1.45,
               ),
             ),
-            if (!isUser && message.citations.isNotEmpty) ...[getCitations(context, message.citations)],
+            if (!isUser && message.citations.isNotEmpty) ...[
+              getCitations(context, message.citations),
+            ],
           ],
         ),
       ),
@@ -702,7 +721,10 @@ class _MessageBubble extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (final c in citations)
-              _CitationChip(citation: c, onTap: () => _showCitation(context, c)),
+              _CitationChip(
+                citation: c,
+                onTap: () => _showCitation(context, c),
+              ),
           ],
         ),
       ],
@@ -720,7 +742,11 @@ class _MessageBubble extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.description_outlined, size: 18, color: context.glass.primary),
+                Icon(
+                  Icons.description_outlined,
+                  size: 18,
+                  color: context.glass.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -772,7 +798,11 @@ class _CitationChip extends StatelessWidget {
             children: [
               Text(
                 '[${citation.marker}] ',
-                style: TextStyle(color: g.primary, fontSize: 12, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: g.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Flexible(
                 child: Text(
@@ -823,7 +853,9 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
       final message = e is FlashcardsException
           ? e.message
           : 'Could not generate that deck. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _flashcardBusy = false);
     }
@@ -842,7 +874,9 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
       final message = e is QuizzesException
           ? e.message
           : 'Could not generate that quiz. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _quizBusy = false);
     }
@@ -851,7 +885,9 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
   Future<void> _createPodcast() async {
     setState(() => _podcastBusy = true);
     try {
-      final episode = await ref.read(audioControllerProvider.notifier).createPodcast(
+      final episode = await ref
+          .read(audioControllerProvider.notifier)
+          .createPodcast(
             widget.notebookId,
             style: 'focused',
             length: 'standard',
@@ -862,9 +898,12 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
       }
     } catch (e) {
       if (!mounted) return;
-      final message =
-          e is AudioException ? e.message : 'Could not create that podcast. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      final message = e is AudioException
+          ? e.message
+          : 'Could not create that podcast. Please try again.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _podcastBusy = false);
     }
@@ -880,7 +919,10 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Generate from your sources', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Generate from your sources',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 4),
               Text(
                 'Every tool builds on the material in this notebook — paste text '
@@ -919,10 +961,18 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                         ),
                       )
                     : Icon(Icons.style_outlined, size: 22, color: g.primary),
-                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: g.textMuted,
+                ),
                 onTap: _flashcardBusy ? null : _generateFlashcards,
               ),
-              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              Divider(
+                color: g.textPrimary.withValues(alpha: 0.06),
+                height: 1,
+                indent: 50,
+              ),
               GlassListTile(
                 title: 'Quizzes',
                 subtitle: _quizBusy
@@ -941,10 +991,18 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                         ),
                       )
                     : Icon(Icons.quiz_outlined, size: 22, color: g.primary),
-                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: g.textMuted,
+                ),
                 onTap: _quizBusy ? null : _generateQuiz,
               ),
-              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              Divider(
+                color: g.textPrimary.withValues(alpha: 0.06),
+                height: 1,
+                indent: 50,
+              ),
               GlassListTile(
                 title: 'Study Podcast',
                 subtitle: _podcastBusy
@@ -963,21 +1021,42 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                         ),
                       )
                     : Icon(Icons.mic_none, size: 22, color: g.primary),
-                trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: g.textMuted,
+                ),
                 onTap: _podcastBusy ? null : _createPodcast,
               ),
-              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              Divider(
+                color: g.textPrimary.withValues(alpha: 0.06),
+                height: 1,
+                indent: 50,
+              ),
               GlassListTile(
                 title: 'Summaries',
-                subtitle: 'Short, detailed, or exam-focused summaries of your material',
-                leading: Icon(Icons.summarize_outlined, size: 22, color: g.primary),
+                subtitle:
+                    'Short, detailed, or exam-focused summaries of your material',
+                leading: Icon(
+                  Icons.summarize_outlined,
+                  size: 22,
+                  color: g.primary,
+                ),
                 onTap: widget.onAskAi,
               ),
-              Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+              Divider(
+                color: g.textPrimary.withValues(alpha: 0.06),
+                height: 1,
+                indent: 50,
+              ),
               GlassListTile(
                 title: 'Study guides',
                 subtitle: 'Key concepts, definitions, and formulas',
-                leading: Icon(Icons.menu_book_outlined, size: 22, color: g.primary),
+                leading: Icon(
+                  Icons.menu_book_outlined,
+                  size: 22,
+                  color: g.primary,
+                ),
                 onTap: widget.onAskAi,
               ),
             ],

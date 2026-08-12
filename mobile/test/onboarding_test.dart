@@ -40,16 +40,19 @@ void main() {
     expect(AppRoutes.onboarding, '/onboarding');
   });
 
-  testWidgets('signed-in user who has not completed onboarding lands on onboarding',
-      (tester) async {
-    await pumpApp(tester, onboardingStatus: OnboardingStatus.needed);
+  testWidgets(
+    'signed-in user who has not completed onboarding lands on onboarding',
+    (tester) async {
+      await pumpApp(tester, onboardingStatus: OnboardingStatus.needed);
 
-    expect(find.text('Set up your study flow'), findsOneWidget);
-    expect(find.text('Step 1 of 5 — Your course'), findsOneWidget);
-  });
+      expect(find.text('Set up your study flow'), findsOneWidget);
+      expect(find.text('Step 1 of 5 — Your course'), findsOneWidget);
+    },
+  );
 
-  testWidgets('user who completed onboarding boots straight to the dashboard',
-      (tester) async {
+  testWidgets('user who completed onboarding boots straight to the dashboard', (
+    tester,
+  ) async {
     await pumpApp(tester, onboardingStatus: OnboardingStatus.done);
 
     expect(find.text('Ready to study?'), findsOneWidget);
@@ -67,29 +70,32 @@ void main() {
     expect(find.text('Set up your study flow'), findsNothing);
   });
 
-  testWidgets('completing onboarding posts the answers and unlocks the dashboard',
-      (tester) async {
-    final onboardingFake = FakeOnboardingRepository();
-    await pumpApp(
-      tester,
-      onboarding: onboardingFake,
-      onboardingStatus: OnboardingStatus.needed,
-    );
+  testWidgets(
+    'completing onboarding posts the answers and unlocks the dashboard',
+    (tester) async {
+      final onboardingFake = FakeOnboardingRepository();
+      await pumpApp(
+        tester,
+        onboarding: onboardingFake,
+        onboardingStatus: OnboardingStatus.needed,
+      );
 
-    await completeOnboardingFlow(tester);
+      await completeOnboardingFlow(tester);
 
-    expect(onboardingFake.submitCalls, 1);
-    final payload = onboardingFake.lastPayload!;
-    expect(payload.course, 'Medicine');
-    expect(payload.subjects, 'Anatomy, Physiology');
-    expect(payload.exams, isEmpty);
-    expect(payload.dailyMinutes, 60);
-    expect(payload.goals, ['flashcards']);
-    expect(find.text('Ready to study?'), findsOneWidget);
-  });
+      expect(onboardingFake.submitCalls, 1);
+      final payload = onboardingFake.lastPayload!;
+      expect(payload.course, 'Medicine');
+      expect(payload.subjects, 'Anatomy, Physiology');
+      expect(payload.exams, isEmpty);
+      expect(payload.dailyMinutes, 60);
+      expect(payload.goals, ['flashcards']);
+      expect(find.text('Ready to study?'), findsOneWidget);
+    },
+  );
 
-  testWidgets('failed onboarding submit shows a friendly error and stays put',
-      (tester) async {
+  testWidgets('failed onboarding submit shows a friendly error and stays put', (
+    tester,
+  ) async {
     final onboardingFake = _ThrowingOnboardingRepository();
     await pumpApp(
       tester,

@@ -72,17 +72,19 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, AppSpacing.xl, 20, context.isPhone ? 120 : 40),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          AppSpacing.xl,
+          20,
+          context.isPhone ? 120 : 40,
+        ),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Study',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+                Text('Study', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 4),
                 Text(
                   'Your exams and study material, in one place.',
@@ -103,13 +105,19 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Turn notes into study tools', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Turn notes into study tools',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         'Open a notebook, paste your notes, and StudyFlow AI will '
                         'answer questions, make flashcards and quizzes, and build '
                         'study guides from that material.',
-                        style: AppText.small.copyWith(color: g.textMuted, height: 1.45),
+                        style: AppText.small.copyWith(
+                          color: g.textMuted,
+                          height: 1.45,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       GlassButton(
@@ -151,7 +159,11 @@ class _ExamsSection extends ConsumerWidget {
       error: (_, _) => GlassCard(
         child: Row(
           children: [
-            Icon(Icons.cloud_off_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.7)),
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 22,
+              color: g.textMuted.withValues(alpha: 0.7),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -160,7 +172,8 @@ class _ExamsSection extends ConsumerWidget {
               ),
             ),
             TextButton(
-              onPressed: () => ref.read(dashboardControllerProvider.notifier).refresh(),
+              onPressed: () =>
+                  ref.read(dashboardControllerProvider.notifier).refresh(),
               style: TextButton.styleFrom(foregroundColor: g.primary),
               child: const Text('Retry'),
             ),
@@ -173,7 +186,11 @@ class _ExamsSection extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 8),
-                Icon(Icons.event_outlined, size: 26, color: g.textMuted.withValues(alpha: 0.6)),
+                Icon(
+                  Icons.event_outlined,
+                  size: 26,
+                  color: g.textMuted.withValues(alpha: 0.6),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'No upcoming exams',

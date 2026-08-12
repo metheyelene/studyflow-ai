@@ -35,12 +35,19 @@ class TodayPlanSection extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.event_busy_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.6)),
+              Icon(
+                Icons.event_busy_outlined,
+                size: 22,
+                color: g.textMuted.withValues(alpha: 0.6),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Set an exam date and StudyFlow will build an adaptive daily plan toward it.',
-                  style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                  style: AppText.small.copyWith(
+                    color: g.textMuted,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -65,7 +72,8 @@ class TodayPlanSection extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => ref.read(studyPlannerControllerProvider.notifier).refresh(),
+                onPressed: () =>
+                    ref.read(studyPlannerControllerProvider.notifier).refresh(),
                 style: TextButton.styleFrom(foregroundColor: g.primary),
                 child: const Text('Retry'),
               ),
@@ -85,19 +93,27 @@ class TodayPlanSection extends ConsumerWidget {
                 children: [
                   Text(
                     '${nearest.title} — no plan yet',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Generate a daily plan from today to your exam date. It adapts as the date approaches.',
-                    style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                    style: AppText.small.copyWith(
+                      color: g.textMuted,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   GlassButton(
                     label: 'Plan this exam',
                     icon: Icons.event_note_outlined,
                     onPressed: () async {
-                      await ref.read(studyPlannerControllerProvider.notifier).generate(nearest.id);
+                      await ref
+                          .read(studyPlannerControllerProvider.notifier)
+                          .generate(nearest.id);
                     },
                   ),
                 ],
@@ -124,7 +140,10 @@ class TodayPlanSection extends ConsumerWidget {
                         '${plan.examTitle} · v${plan.version}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     Text(
@@ -154,7 +173,10 @@ class TodayPlanSection extends ConsumerWidget {
                 if (todayTasks.isEmpty && overdue.isEmpty)
                   Text(
                     'Nothing scheduled today — take a lighter day or regenerate for a new plan.',
-                    style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                    style: AppText.small.copyWith(
+                      color: g.textMuted,
+                      height: 1.4,
+                    ),
                   )
                 else
                   for (final task in [...todayTasks, ...overdue]) ...[
@@ -162,7 +184,11 @@ class TodayPlanSection extends ConsumerWidget {
                       task: task,
                       onToggle: () => ref
                           .read(studyPlannerControllerProvider.notifier)
-                          .updateTask(plan, task, task.isDone ? 'pending' : 'done'),
+                          .updateTask(
+                            plan,
+                            task,
+                            task.isDone ? 'pending' : 'done',
+                          ),
                     ),
                     const SizedBox(height: 6),
                   ],
@@ -236,7 +262,9 @@ class _PlanTaskRow extends StatelessWidget {
                       color: g.textPrimary,
                       fontSize: 13.5,
                       fontWeight: FontWeight.w500,
-                      decoration: task.isDone ? TextDecoration.lineThrough : null,
+                      decoration: task.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: g.textMuted,
                     ),
                   ),
@@ -245,7 +273,11 @@ class _PlanTaskRow extends StatelessWidget {
                       task.detail,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: g.textMuted, fontSize: 12, height: 1.35),
+                      style: TextStyle(
+                        color: g.textMuted,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
                     ),
                 ],
               ),

@@ -17,12 +17,16 @@ Widget _wrap(Widget child) {
 
 void main() {
   testWidgets('GlassCard renders its child', (tester) async {
-    await tester.pumpWidget(_wrap(const GlassCard(child: Text('card content'))));
+    await tester.pumpWidget(
+      _wrap(const GlassCard(child: Text('card content'))),
+    );
     expect(find.text('card content'), findsOneWidget);
   });
 
   testWidgets('GlassPill shows selected state', (tester) async {
-    await tester.pumpWidget(_wrap(const GlassPill(label: 'Favorites', selected: true)));
+    await tester.pumpWidget(
+      _wrap(const GlassPill(label: 'Favorites', selected: true)),
+    );
     final semantics = tester.getSemantics(find.byType(GlassPill));
     expect(semantics.flagsCollection.isSelected, Tristate.isTrue);
   });
@@ -36,19 +40,22 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('GlassButton fires onPressed when enabled and renders when disabled', (tester) async {
-    var pressed = false;
-    await tester.pumpWidget(
-      _wrap(GlassButton(label: 'Run', onPressed: () => pressed = true)),
-    );
-    await tester.tap(find.text('Run'));
-    expect(pressed, isTrue);
+  testWidgets(
+    'GlassButton fires onPressed when enabled and renders when disabled',
+    (tester) async {
+      var pressed = false;
+      await tester.pumpWidget(
+        _wrap(GlassButton(label: 'Run', onPressed: () => pressed = true)),
+      );
+      await tester.tap(find.text('Run'));
+      expect(pressed, isTrue);
 
-    await tester.pumpWidget(
-      _wrap(const GlassButton(label: 'Busy', onPressed: null)),
-    );
-    expect(find.text('Busy'), findsOneWidget);
-  });
+      await tester.pumpWidget(
+        _wrap(const GlassButton(label: 'Busy', onPressed: null)),
+      );
+      expect(find.text('Busy'), findsOneWidget);
+    },
+  );
 
   testWidgets('GlassRing renders its label', (tester) async {
     await tester.pumpWidget(_wrap(const GlassRing(value: 0.5, label: '10/20')));

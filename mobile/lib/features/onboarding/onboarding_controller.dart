@@ -33,7 +33,9 @@ class OnboardingEvents extends ChangeNotifier {
 }
 
 /// The app's single onboarding store instance.
-final OnboardingEvents onboardingEvents = OnboardingEvents(OnboardingStatus.unknown);
+final OnboardingEvents onboardingEvents = OnboardingEvents(
+  OnboardingStatus.unknown,
+);
 
 /// Fetches the onboarding status whenever the user becomes authenticated
 /// (triggered by [AuthController]) and submits the completed form. The
@@ -80,5 +82,5 @@ class OnboardingController extends Notifier<OnboardingStatus> {
 
 final onboardingControllerProvider =
     NotifierProvider<OnboardingController, OnboardingStatus>(
-  OnboardingController.new,
-);
+      OnboardingController.new,
+    );

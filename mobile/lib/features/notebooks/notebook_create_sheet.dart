@@ -20,7 +20,8 @@ class _CreateNotebookSheet extends ConsumerStatefulWidget {
   const _CreateNotebookSheet();
 
   @override
-  ConsumerState<_CreateNotebookSheet> createState() => _CreateNotebookSheetState();
+  ConsumerState<_CreateNotebookSheet> createState() =>
+      _CreateNotebookSheetState();
 }
 
 class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
@@ -37,7 +38,9 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
     final title = _controller.text.trim();
     if (title.isEmpty || _busy) return;
     setState(() => _busy = true);
-    final error = await ref.read(notebooksControllerProvider.notifier).create(title);
+    final error = await ref
+        .read(notebooksControllerProvider.notifier)
+        .create(title);
     if (!mounted) return;
     if (error != null) {
       setState(() => _busy = false);
@@ -51,7 +54,12 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
   Widget build(BuildContext context) {
     final g = context.glass;
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -29,7 +29,10 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Profile', style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  'Profile',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 16),
                 if (auth is AuthAuthenticated)
                   _IdentityCard(user: auth.user)
@@ -42,7 +45,11 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.workspace_premium_outlined, size: 20, color: g.primary),
+                          Icon(
+                            Icons.workspace_premium_outlined,
+                            size: 20,
+                            color: g.primary,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -59,7 +66,10 @@ class ProfileScreen extends ConsumerWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   'Free · founding-member offer arrives with payments.',
-                                  style: TextStyle(color: g.textMuted, fontSize: 13),
+                                  style: TextStyle(
+                                    color: g.textMuted,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
@@ -81,16 +91,36 @@ class ProfileScreen extends ConsumerWidget {
                       GlassListTile(
                         title: 'Settings',
                         subtitle: 'Profile, preferences, account',
-                        leading: Icon(Icons.settings_outlined, size: 22, color: g.primary),
-                        trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                        leading: Icon(
+                          Icons.settings_outlined,
+                          size: 22,
+                          color: g.primary,
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: g.textMuted,
+                        ),
                         onTap: () => context.go(AppRoutes.settings),
                       ),
-                      Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 50),
+                      Divider(
+                        color: g.textPrimary.withValues(alpha: 0.06),
+                        height: 1,
+                        indent: 50,
+                      ),
                       GlassListTile(
                         title: 'About StudyFlow',
                         subtitle: 'About the app and its creator',
-                        leading: Icon(Icons.info_outline, size: 22, color: g.primary),
-                        trailing: Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+                        leading: Icon(
+                          Icons.info_outline,
+                          size: 22,
+                          color: g.primary,
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: g.textMuted,
+                        ),
                         onTap: () => context.go(AppRoutes.aboutCreator),
                       ),
                     ],
@@ -104,7 +134,8 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'Sign out',
                       subtitle: 'End this session on this device',
                       leading: Icon(Icons.logout, size: 22, color: g.danger),
-                      onTap: () => ref.read(authControllerProvider.notifier).signOut(),
+                      onTap: () =>
+                          ref.read(authControllerProvider.notifier).signOut(),
                     ),
                   ),
                 ],
@@ -127,7 +158,12 @@ class _IdentityCard extends StatelessWidget {
     final g = context.glass;
     final initials = user.name.trim().isEmpty
         ? '?'
-        : user.name.trim().split(RegExp(r'\s+')).take(2).map((p) => p[0].toUpperCase()).join();
+        : user.name
+              .trim()
+              .split(RegExp(r'\s+'))
+              .take(2)
+              .map((p) => p[0].toUpperCase())
+              .join();
     return GlassCard(
       child: Column(
         children: [
@@ -141,7 +177,11 @@ class _IdentityCard extends StatelessWidget {
             ),
             child: Text(
               initials,
-              style: TextStyle(color: g.primary, fontSize: 22, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: g.primary,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -173,7 +213,10 @@ class _SignedOutCard extends StatelessWidget {
             child: Icon(Icons.person, size: 32, color: g.primary),
           ),
           const SizedBox(height: 10),
-          Text('Sign in to get started', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Sign in to get started',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
           Text(
             'Your plan, preferences, and study data live here.',

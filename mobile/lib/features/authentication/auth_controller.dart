@@ -66,7 +66,10 @@ class AuthController extends Notifier<AuthState> {
     if (user != null) await _refreshOnboarding();
   }
 
-  Future<String?> signIn({required String email, required String password}) async {
+  Future<String?> signIn({
+    required String email,
+    required String password,
+  }) async {
     try {
       final user = await _repo.signIn(email: email, password: password);
       _resetUserScopedState();
@@ -84,7 +87,11 @@ class AuthController extends Notifier<AuthState> {
     required String password,
   }) async {
     try {
-      final user = await _repo.signUp(name: name, email: email, password: password);
+      final user = await _repo.signUp(
+        name: name,
+        email: email,
+        password: password,
+      );
       _resetUserScopedState();
       authEvents.set(AuthAuthenticated(user));
       await _refreshOnboarding();

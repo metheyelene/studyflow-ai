@@ -31,5 +31,5 @@ class DashboardSnapshot {
 
 final dashboardControllerProvider =
     AsyncNotifierProvider<DashboardController, DashboardSnapshot>(
-  DashboardController.new,
-);
+      DashboardController.new,
+    );

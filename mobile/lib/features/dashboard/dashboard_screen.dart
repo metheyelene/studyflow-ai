@@ -33,7 +33,12 @@ class DashboardScreen extends ConsumerWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, AppSpacing.xl, 20, context.isPhone ? 120 : 40),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          AppSpacing.xl,
+          20,
+          context.isPhone ? 120 : 40,
+        ),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
@@ -68,13 +73,19 @@ class DashboardScreen extends ConsumerWidget {
                         label: 'Study streak',
                         value: '0 days',
                       ),
-                      Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
+                      Divider(
+                        color: g.textPrimary.withValues(alpha: 0.06),
+                        height: 1,
+                      ),
                       const _StatRow(
                         icon: Icons.quiz_outlined,
                         label: 'Quizzes completed',
                         value: '0',
                       ),
-                      Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
+                      Divider(
+                        color: g.textPrimary.withValues(alpha: 0.06),
+                        height: 1,
+                      ),
                       const _StatRow(
                         icon: Icons.notes,
                         label: 'Notes created',
@@ -120,7 +131,8 @@ class _UsageHero extends ConsumerWidget {
           dashboard.when(
             loading: () => const _UsageSkeleton(),
             error: (_, _) => _UsageError(
-              onRetry: () => ref.read(dashboardControllerProvider.notifier).refresh(),
+              onRetry: () =>
+                  ref.read(dashboardControllerProvider.notifier).refresh(),
             ),
             data: (snapshot) => _UsageMeter(usage: snapshot.usage),
           ),
@@ -163,7 +175,10 @@ class _UsageMeter extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  GlassBadge(label: planLabel, icon: Icons.workspace_premium_outlined),
+                  GlassBadge(
+                    label: planLabel,
+                    icon: Icons.workspace_premium_outlined,
+                  ),
                 ],
               ),
               const SizedBox(height: 2),
@@ -215,7 +230,11 @@ class _UsageError extends ConsumerWidget {
     final g = context.glass;
     return Row(
       children: [
-        Icon(Icons.cloud_off_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.7)),
+        Icon(
+          Icons.cloud_off_outlined,
+          size: 22,
+          color: g.textMuted.withValues(alpha: 0.7),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -255,7 +274,11 @@ class _UpcomingExams extends ConsumerWidget {
       error: (_, _) => GlassCard(
         child: Row(
           children: [
-            Icon(Icons.cloud_off_outlined, size: 22, color: g.textMuted.withValues(alpha: 0.7)),
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 22,
+              color: g.textMuted.withValues(alpha: 0.7),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -264,7 +287,8 @@ class _UpcomingExams extends ConsumerWidget {
               ),
             ),
             TextButton(
-              onPressed: () => ref.read(dashboardControllerProvider.notifier).refresh(),
+              onPressed: () =>
+                  ref.read(dashboardControllerProvider.notifier).refresh(),
               style: TextButton.styleFrom(foregroundColor: g.primary),
               child: const Text('Retry'),
             ),
@@ -277,7 +301,11 @@ class _UpcomingExams extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 8),
-                Icon(Icons.event_outlined, size: 26, color: g.textMuted.withValues(alpha: 0.6)),
+                Icon(
+                  Icons.event_outlined,
+                  size: 26,
+                  color: g.textMuted.withValues(alpha: 0.6),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'No upcoming exams',
@@ -326,7 +354,11 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.icon, required this.label, required this.value});
+  const _StatRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -347,10 +379,7 @@ class _StatRow extends StatelessWidget {
               style: AppText.small.copyWith(color: g.textPrimary),
             ),
           ),
-          Text(
-            value,
-            style: AppText.bodyMedium.copyWith(color: g.textPrimary),
-          ),
+          Text(value, style: AppText.bodyMedium.copyWith(color: g.textPrimary)),
         ],
       ),
     );

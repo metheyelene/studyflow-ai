@@ -11,7 +11,11 @@ import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 
 import 'helpers.dart';
 
-Future<void> enterEmailPassword(WidgetTester tester, String email, String password) async {
+Future<void> enterEmailPassword(
+  WidgetTester tester,
+  String email,
+  String password,
+) async {
   await tester.enterText(find.byType(TextField).at(0), email);
   await tester.enterText(find.byType(TextField).at(1), password);
   await tester.pumpAndSettle();
@@ -37,7 +41,9 @@ void main() {
     expect(find.text('Ready to study?'), findsOneWidget);
   });
 
-  testWidgets('failed login shows a friendly error and stays on login', (tester) async {
+  testWidgets('failed login shows a friendly error and stays on login', (
+    tester,
+  ) async {
     await pumpApp(tester, signedIn: false);
 
     await enterEmailPassword(tester, 'fail@example.com', 'wrong');
@@ -48,7 +54,9 @@ void main() {
     expect(find.text('Welcome back'), findsOneWidget);
   });
 
-  testWidgets('login links to signup; signing up reaches the dashboard', (tester) async {
+  testWidgets('login links to signup; signing up reaches the dashboard', (
+    tester,
+  ) async {
     final auth = await pumpApp(tester, signedIn: false);
 
     await tester.tap(find.text('Create an account'));
@@ -67,7 +75,9 @@ void main() {
     expect(find.text('Ready to study?'), findsOneWidget);
   });
 
-  testWidgets('boot from splash: signed-out session restore lands on login', (tester) async {
+  testWidgets('boot from splash: signed-out session restore lands on login', (
+    tester,
+  ) async {
     // Mirrors production boot: state starts initializing, the router shows
     // the splash, then restore() resolves to signed-out (regression for the
     // redirect that stranded users on /splash once auth resolved).
@@ -82,7 +92,9 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(auth),
-          notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
+          notebooksRepositoryProvider.overrideWithValue(
+            FakeNotebooksRepository(),
+          ),
         ],
         child: MaterialApp.router(
           routerConfig: buildAppRouter(),
@@ -121,43 +133,45 @@ void main() {
     expect(find.text('Welcome back'), findsOneWidget);
   });
 
-  testWidgets('a different account never sees the previous user\'s cached dashboard data',
-      (tester) async {
-    // Regression: user-scoped providers were cached across sign-out/sign-in,
-    // so a second account on the same device saw the first account's exams.
-    final dashboard = FakeDashboardRepository(
-      currentExams: [
+  testWidgets(
+    'a different account never sees the previous user\'s cached dashboard data',
+    (tester) async {
+      // Regression: user-scoped providers were cached across sign-out/sign-in,
+      // so a second account on the same device saw the first account's exams.
+      final dashboard = FakeDashboardRepository(
+        currentExams: [
+          const UpcomingExam(
+            id: 'ex-a',
+            title: 'User A Exam',
+            date: '2026-09-15T00:00:00.000Z',
+          ),
+        ],
+      );
+      await pumpApp(tester, dashboard: dashboard);
+      expect(find.text('User A Exam'), findsOneWidget);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp).first),
+      );
+      await container.read(authControllerProvider.notifier).signOut();
+      await tester.pumpAndSettle();
+      expect(find.text('Welcome back'), findsOneWidget);
+
+      // The next account's data differs; the dashboard must refetch.
+      dashboard.currentExams = [
         const UpcomingExam(
-          id: 'ex-a',
-          title: 'User A Exam',
-          date: '2026-09-15T00:00:00.000Z',
+          id: 'ex-b',
+          title: 'User B Exam',
+          date: '2026-09-16T00:00:00.000Z',
         ),
-      ],
-    );
-    await pumpApp(tester, dashboard: dashboard);
-    expect(find.text('User A Exam'), findsOneWidget);
+      ];
+      await container
+          .read(authControllerProvider.notifier)
+          .signIn(email: 'b@example.com', password: 'password123');
+      await tester.pumpAndSettle();
 
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(MaterialApp).first),
-    );
-    await container.read(authControllerProvider.notifier).signOut();
-    await tester.pumpAndSettle();
-    expect(find.text('Welcome back'), findsOneWidget);
-
-    // The next account's data differs; the dashboard must refetch.
-    dashboard.currentExams = [
-      const UpcomingExam(
-        id: 'ex-b',
-        title: 'User B Exam',
-        date: '2026-09-16T00:00:00.000Z',
-      ),
-    ];
-    await container
-        .read(authControllerProvider.notifier)
-        .signIn(email: 'b@example.com', password: 'password123');
-    await tester.pumpAndSettle();
-
-    expect(find.text('User B Exam'), findsOneWidget);
-    expect(find.text('User A Exam'), findsNothing);
-  });
+      expect(find.text('User B Exam'), findsOneWidget);
+      expect(find.text('User A Exam'), findsNothing);
+    },
+  );
 }

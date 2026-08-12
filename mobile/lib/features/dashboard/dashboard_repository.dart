@@ -22,7 +22,9 @@ class AiUsage {
   final String plan; // "free" | "premium" | "founding_member"
 
   factory AiUsage.fromJson(Map<String, dynamic> json) {
-    final usage = json['usage'] is Map ? json['usage'] as Map : const <String, dynamic>{};
+    final usage = json['usage'] is Map
+        ? json['usage'] as Map
+        : const <String, dynamic>{};
     return AiUsage(
       used: (usage['used'] as num?)?.toInt() ?? 0,
       limit: (usage['limit'] as num?)?.toInt() ?? 0,
@@ -36,7 +38,11 @@ class AiUsage {
 
 /// An upcoming exam from the user's study setup (GET /api/onboarding).
 class UpcomingExam {
-  const UpcomingExam({required this.id, required this.title, required this.date});
+  const UpcomingExam({
+    required this.id,
+    required this.title,
+    required this.date,
+  });
 
   final String id;
   final String title;
@@ -64,8 +70,18 @@ class UpcomingExam {
     final d = DateTime.tryParse(date);
     if (d == null) return date;
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final m = months[d.month - 1];
     return '$m ${d.day}, ${d.year}';
@@ -86,7 +102,8 @@ class ApiDashboardRepository implements DashboardRepository {
   Future<AiUsage> usage() async {
     final res = await _client.get<dynamic>('/api/usage');
     final data = res.data;
-    if (data is! Map) throw const DashboardException('Could not load your usage.');
+    if (data is! Map)
+      throw const DashboardException('Could not load your usage.');
     return AiUsage.fromJson(Map<String, dynamic>.from(data));
   }
 

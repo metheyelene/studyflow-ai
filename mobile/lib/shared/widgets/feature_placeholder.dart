@@ -45,7 +45,11 @@ class FeaturePlaceholder extends StatelessWidget {
                 Text(
                   description,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
+                  style: TextStyle(
+                    color: g.textMuted,
+                    fontSize: 14,
+                    height: 1.45,
+                  ),
                 ),
                 if (note != null) ...[
                   const SizedBox(height: 12),

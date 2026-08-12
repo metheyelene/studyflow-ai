@@ -29,7 +29,9 @@ class FlashcardSessionScreen extends ConsumerWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return _SessionScaffold(
             title: 'Loading deck…',
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
           );
         }
         if (snapshot.hasError || snapshot.data == null) {
@@ -40,9 +42,16 @@ class FlashcardSessionScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 26,
+                      color: g.textMuted,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Could not load this deck', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Could not load this deck',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 14),
                     GlassButton(
                       label: 'Back',
@@ -143,10 +152,10 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
   }
 
   void _restart() => setState(() {
-        _index = 0;
-        _flipped = false;
-        _ratings.clear();
-      });
+    _index = 0;
+    _flipped = false;
+    _ratings.clear();
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -154,11 +163,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
       return const _EmptyDeck();
     }
     if (_done) {
-      return _Summary(
-        total: _total,
-        ratings: _ratings,
-        onReplay: _restart,
-      );
+      return _Summary(total: _total, ratings: _ratings, onReplay: _restart);
     }
 
     final card = detail.cards[_index];
@@ -183,7 +188,11 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
               const Spacer(),
               Text(
                 _flipped ? 'Answer' : 'Question',
-                style: TextStyle(color: g.primary, fontSize: 12.5, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: g.primary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -226,7 +235,12 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
           child: IgnorePointer(
             ignoring: !_flipped,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, context.isPhone ? 20 : 32),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                0,
+                20,
+                context.isPhone ? 20 : 32,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -238,7 +252,8 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
                   Row(
                     children: [
                       for (final r in FlashcardRating.values) ...[
-                        if (r != FlashcardRating.values.first) const SizedBox(width: 8),
+                        if (r != FlashcardRating.values.first)
+                          const SizedBox(width: 8),
                         Expanded(
                           child: GlassButton(
                             label: r.label,
@@ -336,12 +351,19 @@ class _EmptyDeck extends StatelessWidget {
             children: [
               Icon(Icons.style_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text('This deck is empty', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'This deck is empty',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 'Delete it and generate a new one from a notebook with sources.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -352,7 +374,11 @@ class _EmptyDeck extends StatelessWidget {
 }
 
 class _Summary extends StatelessWidget {
-  const _Summary({required this.total, required this.ratings, required this.onReplay});
+  const _Summary({
+    required this.total,
+    required this.ratings,
+    required this.onReplay,
+  });
 
   final int total;
   final List<int> ratings;
@@ -394,7 +420,11 @@ class _Summary extends StatelessWidget {
                   children: [
                     _SummaryStat(label: 'Easy', value: easy, color: g.success),
                     _SummaryStat(label: 'Good', value: good, color: g.primary),
-                    _SummaryStat(label: 'Again', value: again, color: g.warning),
+                    _SummaryStat(
+                      label: 'Again',
+                      value: again,
+                      color: g.warning,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 22),
@@ -414,7 +444,11 @@ class _Summary extends StatelessWidget {
 }
 
 class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({required this.label, required this.value, required this.color});
+  const _SummaryStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final int value;
@@ -428,7 +462,11 @@ class _SummaryStat extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: color,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(color: g.textMuted, fontSize: 12.5)),

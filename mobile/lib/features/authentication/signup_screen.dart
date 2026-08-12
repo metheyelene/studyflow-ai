@@ -36,18 +36,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final email = _email.text.trim();
     final password = _password.text;
     if (name.isEmpty || email.isEmpty || password.length < 8) {
-      setState(() => _error = 'Use your name, a valid email, and a password of at least 8 characters.');
+      setState(
+        () => _error =
+            'Use your name, a valid email, and a password of at least 8 characters.',
+      );
       return;
     }
     setState(() {
       _busy = true;
       _error = null;
     });
-    final error = await ref.read(authControllerProvider.notifier).signUp(
-          name: name,
-          email: email,
-          password: password,
-        );
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .signUp(name: name, email: email, password: password);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -79,7 +80,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         color: g.primarySoft,
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: Icon(Icons.auto_stories, size: 26, color: g.primary),
+                      child: Icon(
+                        Icons.auto_stories,
+                        size: 26,
+                        color: g.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -145,10 +150,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           style: TextStyle(color: g.textMuted, fontSize: 13),
                         ),
                         TextButton(
-                          onPressed: _busy ? null : () => context.go(AppRoutes.login),
+                          onPressed: _busy
+                              ? null
+                              : () => context.go(AppRoutes.login),
                           child: Text(
                             'Log in',
-                            style: TextStyle(color: g.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: g.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

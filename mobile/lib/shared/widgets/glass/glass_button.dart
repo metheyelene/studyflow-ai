@@ -43,9 +43,17 @@ class _GlassButtonState extends State<GlassButton> {
     final disabled = onPressed == null;
 
     final (fg, bg, border) = switch (widget.variant) {
-      GlassButtonVariant.primary => (g.textOnPrimary, g.primary, Colors.transparent),
+      GlassButtonVariant.primary => (
+        g.textOnPrimary,
+        g.primary,
+        Colors.transparent,
+      ),
       GlassButtonVariant.glass => (g.textPrimary, g.surface, g.border),
-      GlassButtonVariant.text => (g.primary, Colors.transparent, Colors.transparent),
+      GlassButtonVariant.text => (
+        g.primary,
+        Colors.transparent,
+        Colors.transparent,
+      ),
     };
 
     final (height, hPad, font) = switch (widget.size) {
@@ -68,57 +76,69 @@ class _GlassButtonState extends State<GlassButton> {
             child: Listener(
               // Keep the press feel even when the button is triggered
               // from elsewhere (e.g. keyboard submit).
-              onPointerDown: disabled ? null : (_) => setState(() => _pressed = true),
-              onPointerUp: disabled ? null : (_) => setState(() => _pressed = false),
-              onPointerCancel: disabled ? null : (_) => setState(() => _pressed = false),
+              onPointerDown: disabled
+                  ? null
+                  : (_) => setState(() => _pressed = true),
+              onPointerUp: disabled
+                  ? null
+                  : (_) => setState(() => _pressed = false),
+              onPointerCancel: disabled
+                  ? null
+                  : (_) => setState(() => _pressed = false),
               child: InkWell(
                 onTap: disabled ? null : onPressed,
                 borderRadius: BorderRadius.circular(14),
                 splashColor: g.primary.withValues(alpha: 0.12),
                 child: Ink(
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: border),
-                boxShadow: widget.variant == GlassButtonVariant.primary && !disabled
-                    ? [
-                        BoxShadow(
-                          color: g.primary.withValues(alpha: 0.25),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: border),
+                    boxShadow:
+                        widget.variant == GlassButtonVariant.primary &&
+                            !disabled
+                        ? [
+                            BoxShadow(
+                              color: g.primary.withValues(alpha: 0.25),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Container(
+                    height: height,
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    constraints: widget.expand
+                        ? const BoxConstraints(minWidth: double.infinity)
+                        : null,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: widget.expand
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.icon != null) ...[
+                          Icon(widget.icon, size: 18, color: fg),
+                          const SizedBox(width: 8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            widget.label,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: fg,
+                              fontSize: font,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ]
-                    : null,
-              ),
-              child: Container(
-                height: height,
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                constraints: widget.expand ? const BoxConstraints(minWidth: double.infinity) : null,
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.icon != null) ...[
-                      Icon(widget.icon, size: 18, color: fg),
-                      const SizedBox(width: 8),
-                    ],
-                    Flexible(
-                      child: Text(
-                        widget.label,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: fg,
-                          fontSize: font,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-              ),
-            ),
             ),
           ),
         ),

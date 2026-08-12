@@ -13,17 +13,24 @@ Widget _wrap() {
 }
 
 void main() {
-  testWidgets('renders the creator card with monogram, name, role, and quote', (tester) async {
+  testWidgets('renders the creator card with monogram, name, role, and quote', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
     expect(find.text('MV'), findsOneWidget);
     expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
     expect(find.text('Creator & Developer of StudyFlow AI'), findsOneWidget);
-    expect(find.textContaining('Built with the goal of making studying more'), findsOneWidget);
+    expect(
+      find.textContaining('Built with the goal of making studying more'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('shows the tappable email and Contact Creator button', (tester) async {
+  testWidgets('shows the tappable email and Contact Creator button', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
@@ -54,10 +61,15 @@ void main() {
     await tester.pumpAndSettle();
 
     // Read from the app config, never hard-coded in the widget.
-    expect(find.textContaining('StudyFlow AI · Version 1.0.0 · Build 1'), findsOneWidget);
+    expect(
+      find.textContaining('StudyFlow AI · Version 1.0.0 · Build 1'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('respects reduced motion by skipping the entrance animation', (tester) async {
+  testWidgets('respects reduced motion by skipping the entrance animation', (
+    tester,
+  ) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);

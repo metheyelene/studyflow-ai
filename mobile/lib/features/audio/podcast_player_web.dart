@@ -10,7 +10,8 @@ import 'podcast_player_interface.dart';
 /// browser's media element can't attach the session cookie to the
 /// cross-origin stream endpoint, so we play the authenticated download).
 class JustAudioPodcastPlayer implements PodcastPlayer {
-  JustAudioPodcastPlayer([AudioPlayer? player]) : _player = player ?? AudioPlayer();
+  JustAudioPodcastPlayer([AudioPlayer? player])
+    : _player = player ?? AudioPlayer();
 
   final AudioPlayer _player;
 

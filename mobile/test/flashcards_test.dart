@@ -7,17 +7,21 @@ import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'helpers.dart';
 
 FlashcardDeck deck(int n, {int cards = 2}) => FlashcardDeck(
-      id: 'deck-$n',
-      title: 'VLSI Unit 3 flashcards',
-      cardCount: cards,
-      createdAt: DateTime(2026, 8, 1),
-      updatedAt: DateTime(2026, 8, 10),
-    );
+  id: 'deck-$n',
+  title: 'VLSI Unit 3 flashcards',
+  cardCount: cards,
+  createdAt: DateTime(2026, 8, 1),
+  updatedAt: DateTime(2026, 8, 10),
+);
 
 List<Flashcard> sampleCards() => const [
-      Flashcard(id: 'c-1', front: 'What is threshold voltage?', back: 'The gate voltage where the channel conducts.'),
-      Flashcard(id: 'c-2', front: 'What is Vt?', back: 'Threshold voltage.'),
-    ];
+  Flashcard(
+    id: 'c-1',
+    front: 'What is threshold voltage?',
+    back: 'The gate voltage where the channel conducts.',
+  ),
+  Flashcard(id: 'c-2', front: 'What is Vt?', back: 'Threshold voltage.'),
+];
 
 /// Navigate from the dashboard to the flashcards screen.
 Future<void> openFlashcards(WidgetTester tester) async {
@@ -28,9 +32,7 @@ Future<void> openFlashcards(WidgetTester tester) async {
 
 void main() {
   testWidgets('deck list shows decks with counts', (tester) async {
-    final flashcards = FakeFlashcardsRepository(
-      decks: [deck(1, cards: 3)],
-    );
+    final flashcards = FakeFlashcardsRepository(decks: [deck(1, cards: 3)]);
     await pumpApp(tester, flashcards: flashcards);
     await openFlashcards(tester);
 
@@ -40,14 +42,19 @@ void main() {
   });
 
   testWidgets('no decks shows the honest empty state', (tester) async {
-    await pumpApp(tester, flashcards: FakeFlashcardsRepository(decks: const []));
+    await pumpApp(
+      tester,
+      flashcards: FakeFlashcardsRepository(decks: const []),
+    );
     await openFlashcards(tester);
 
     expect(find.text('No decks yet'), findsOneWidget);
     expect(find.text('Generate a deck'), findsOneWidget);
   });
 
-  testWidgets('deck list failure shows a friendly error with retry', (tester) async {
+  testWidgets('deck list failure shows a friendly error with retry', (
+    tester,
+  ) async {
     final flashcards = FakeFlashcardsRepository(failList: true);
     await pumpApp(tester, flashcards: flashcards);
     await openFlashcards(tester);
@@ -62,15 +69,19 @@ void main() {
     expect(find.text('VLSI Unit 3 flashcards'), findsOneWidget);
   });
 
-  testWidgets('generating a deck from a notebook navigates to the session', (tester) async {
+  testWidgets('generating a deck from a notebook navigates to the session', (
+    tester,
+  ) async {
     final flashcards = FakeFlashcardsRepository(cards: sampleCards());
     final notebooks = FakeNotebooksRepository();
-    notebooks.notebooks.add(Notebook(
-      id: 'nb-1',
-      title: 'VLSI Unit 3',
-      createdAt: DateTime(2026, 8, 1),
-      updatedAt: DateTime(2026, 8, 1),
-    ));
+    notebooks.notebooks.add(
+      Notebook(
+        id: 'nb-1',
+        title: 'VLSI Unit 3',
+        createdAt: DateTime(2026, 8, 1),
+        updatedAt: DateTime(2026, 8, 1),
+      ),
+    );
     await pumpApp(tester, flashcards: flashcards, notebooks: notebooks);
     await openFlashcards(tester);
 
@@ -90,15 +101,22 @@ void main() {
     expect(find.text('What is threshold voltage?'), findsOneWidget);
   });
 
-  testWidgets('generate failure shows a friendly message in the sheet', (tester) async {
-    final flashcards = FakeFlashcardsRepository(cards: sampleCards(), failGenerate: true);
+  testWidgets('generate failure shows a friendly message in the sheet', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository(
+      cards: sampleCards(),
+      failGenerate: true,
+    );
     final notebooks = FakeNotebooksRepository();
-    notebooks.notebooks.add(Notebook(
-      id: 'nb-1',
-      title: 'VLSI Unit 3',
-      createdAt: DateTime(2026, 8, 1),
-      updatedAt: DateTime(2026, 8, 1),
-    ));
+    notebooks.notebooks.add(
+      Notebook(
+        id: 'nb-1',
+        title: 'VLSI Unit 3',
+        createdAt: DateTime(2026, 8, 1),
+        updatedAt: DateTime(2026, 8, 1),
+      ),
+    );
     await pumpApp(tester, flashcards: flashcards, notebooks: notebooks);
     await openFlashcards(tester);
 
@@ -107,7 +125,12 @@ void main() {
     await tester.tap(find.text('VLSI Unit 3'));
     await tester.pumpAndSettle();
 
-    expect(find.text('This notebook has no indexed sources yet. Add a source first.'), findsOneWidget);
+    expect(
+      find.text(
+        'This notebook has no indexed sources yet. Add a source first.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('deleting a deck removes it from the list', (tester) async {
@@ -125,7 +148,9 @@ void main() {
     expect(find.text('No decks yet'), findsOneWidget);
   });
 
-  testWidgets('study session: flip, rate, and finish with a summary', (tester) async {
+  testWidgets('study session: flip, rate, and finish with a summary', (
+    tester,
+  ) async {
     final flashcards = FakeFlashcardsRepository(
       decks: [deck(1, cards: 2)],
       cards: sampleCards(),
@@ -143,7 +168,10 @@ void main() {
     // Flip reveals the answer and the rating row.
     await tester.tap(find.text('What is threshold voltage?'));
     await tester.pumpAndSettle();
-    expect(find.text('The gate voltage where the channel conducts.'), findsOneWidget);
+    expect(
+      find.text('The gate voltage where the channel conducts.'),
+      findsOneWidget,
+    );
     expect(find.text('How well did you know it?'), findsOneWidget);
 
     // Rate "Good" (4) → next card.
@@ -166,8 +194,13 @@ void main() {
     expect(flashcards.reviews[1].$3, 5); // Easy
   });
 
-  testWidgets('session shows an honest error when the deck is missing', (tester) async {
-    await pumpApp(tester, flashcards: FakeFlashcardsRepository(decks: const []));
+  testWidgets('session shows an honest error when the deck is missing', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      flashcards: FakeFlashcardsRepository(decks: const []),
+    );
 
     // Direct route to a deck that does not exist (e.g. a stale deep link).
     final router = GoRouter.of(tester.element(find.text('Ready to study?')));

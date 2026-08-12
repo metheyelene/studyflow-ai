@@ -4,11 +4,7 @@ import '../../../core/theme/app_theme.dart';
 
 /// Translucent linear progress with a track tinted by the accent.
 class GlassProgress extends StatelessWidget {
-  const GlassProgress({
-    super.key,
-    required this.value,
-    this.height = 8,
-  });
+  const GlassProgress({super.key, required this.value, this.height = 8});
 
   /// 0–1.
   final double value;

@@ -52,7 +52,8 @@ class AudioEpisode {
   final String style; // focused | friendly | quick | deep | podcast
   final String length; // quick | standard | deep
   final String status; // processing | ready | failed
-  final String pipelineStage; // queued | organizing | writing | generating audio | ready | failed
+  final String
+  pipelineStage; // queued | organizing | writing | generating audio | ready | failed
   final String audioUrl;
   final DateTime createdAt;
   final String? notebookId;
@@ -78,7 +79,9 @@ class AudioEpisode {
       status: json['status'] as String? ?? 'processing',
       pipelineStage: json['pipelineStage'] as String? ?? 'queued',
       audioUrl: json['audioUrl'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       notebookId: json['notebookId'] as String?,
       notebookTitle: json['notebookTitle'] as String?,
       errorMessage: json['errorMessage'] as String?,
@@ -88,7 +91,8 @@ class AudioEpisode {
       transcript: transcript is List
           ? [
               for (final s in transcript)
-                if (s is Map) TranscriptSection.fromJson(Map<String, dynamic>.from(s)),
+                if (s is Map)
+                  TranscriptSection.fromJson(Map<String, dynamic>.from(s)),
             ]
           : const [],
       script: json['script'] as String?,

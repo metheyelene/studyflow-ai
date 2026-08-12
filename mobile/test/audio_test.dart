@@ -5,7 +5,11 @@ import 'package:studyflow_mobile/features/audio/audio_models.dart';
 import 'helpers.dart';
 
 void main() {
-  AudioEpisode readyEpisode(String id, {String status = 'ready', String stage = 'ready'}) {
+  AudioEpisode readyEpisode(
+    String id, {
+    String status = 'ready',
+    String stage = 'ready',
+  }) {
     return AudioEpisode(
       id: id,
       title: 'VLSI Unit 3 — Study Podcast',
@@ -20,10 +24,15 @@ void main() {
       wordCount: 900,
       createdAt: DateTime(2026, 8, 12),
       transcript: const [
-        TranscriptSection(heading: 'Introduction', text: 'Welcome to your study session.', startSec: 0),
+        TranscriptSection(
+          heading: 'Introduction',
+          text: 'Welcome to your study session.',
+          startSec: 0,
+        ),
         TranscriptSection(
           heading: 'Core concepts',
-          text: 'Threshold voltage is the gate voltage at which a channel forms.',
+          text:
+              'Threshold voltage is the gate voltage at which a channel forms.',
           startSec: 30,
           sources: ['VLSI Notes'],
         ),
@@ -43,12 +52,16 @@ void main() {
       expect(find.text('Start a podcast'), findsOneWidget);
     });
 
-    testWidgets('lists episodes with ready/processing/failed status', (tester) async {
-      final audio = FakeAudioRepository(episodes: [
-        readyEpisode('ep-1'),
-        readyEpisode('ep-2', status: 'processing', stage: 'writing'),
-        readyEpisode('ep-3', status: 'failed', stage: 'failed', ),
-      ]);
+    testWidgets('lists episodes with ready/processing/failed status', (
+      tester,
+    ) async {
+      final audio = FakeAudioRepository(
+        episodes: [
+          readyEpisode('ep-1'),
+          readyEpisode('ep-2', status: 'processing', stage: 'writing'),
+          readyEpisode('ep-3', status: 'failed', stage: 'failed'),
+        ],
+      );
       final router = buildAppRouter();
       await pumpApp(tester, audio: audio, router: router);
       router.go('/audio');
@@ -63,40 +76,51 @@ void main() {
       expect(find.textContaining('Generation failed'), findsWidgets);
     });
 
-    testWidgets('generating from a notebook opens the ready episode in the player', (tester) async {
-      final audio = FakeAudioRepository();
-      final notebooks = FakeNotebooksRepository();
-      await notebooks.create(title: 'Biology', description: null);
-      final router = buildAppRouter();
-      final player = FakePodcastPlayer();
-      await pumpApp(tester, audio: audio, notebooks: notebooks, router: router, podcastPlayer: player);
-      router.go('/audio');
-      await tester.pumpAndSettle();
+    testWidgets(
+      'generating from a notebook opens the ready episode in the player',
+      (tester) async {
+        final audio = FakeAudioRepository();
+        final notebooks = FakeNotebooksRepository();
+        await notebooks.create(title: 'Biology', description: null);
+        final router = buildAppRouter();
+        final player = FakePodcastPlayer();
+        await pumpApp(
+          tester,
+          audio: audio,
+          notebooks: notebooks,
+          router: router,
+          podcastPlayer: player,
+        );
+        router.go('/audio');
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('New podcast'));
-      await tester.pumpAndSettle();
-      expect(find.text('Create a Study Podcast'), findsOneWidget);
-      // Pick the notebook + a style + length, then generate.
-      await tester.tap(find.text('Biology'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Friendly Tutor'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Quick · 5–10 min'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Generate episode'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('New podcast'));
+        await tester.pumpAndSettle();
+        expect(find.text('Create a Study Podcast'), findsOneWidget);
+        // Pick the notebook + a style + length, then generate.
+        await tester.tap(find.text('Biology'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Friendly Tutor'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Quick · 5–10 min'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Generate episode'));
+        await tester.pumpAndSettle();
 
-      // Generation completed immediately (fake) and the player opened.
-      expect(find.text('VLSI Unit 3 — Study Podcast'), findsNothing);
-      expect(find.text('Generated podcast'), findsOneWidget);
-      expect(find.text('Chapters'), findsOneWidget);
-      expect(player.loadedBytes, isNotNull);
-      expect(audio.createCalls, 1);
-      expect(audio.lastStyle, 'friendly');
-      expect(audio.lastLength, 'quick');
-    });
+        // Generation completed immediately (fake) and the player opened.
+        expect(find.text('VLSI Unit 3 — Study Podcast'), findsNothing);
+        expect(find.text('Generated podcast'), findsOneWidget);
+        expect(find.text('Chapters'), findsOneWidget);
+        expect(player.loadedBytes, isNotNull);
+        expect(audio.createCalls, 1);
+        expect(audio.lastStyle, 'friendly');
+        expect(audio.lastLength, 'quick');
+      },
+    );
 
-    testWidgets('shows real pipeline stages while the backend job runs', (tester) async {
+    testWidgets('shows real pipeline stages while the backend job runs', (
+      tester,
+    ) async {
       // Two polls: the first still reports the organizing stage, the
       // second resolves the job to ready.
       final audio = FakeAudioRepository(pollsUntilReady: 2);
@@ -125,7 +149,9 @@ void main() {
       expect(find.text('Chapters'), findsOneWidget);
     });
 
-    testWidgets('generation failure is shown inline with the friendly error', (tester) async {
+    testWidgets('generation failure is shown inline with the friendly error', (
+      tester,
+    ) async {
       final audio = FakeAudioRepository(failCreate: true);
       final notebooks = FakeNotebooksRepository();
       await notebooks.create(title: 'Biology', description: null);
@@ -146,32 +172,47 @@ void main() {
   });
 
   group('Podcast player', () {
-    testWidgets('downloads and plays the episode, shows transcript and chapters', (tester) async {
-      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
+    testWidgets(
+      'downloads and plays the episode, shows transcript and chapters',
+      (tester) async {
+        final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
+        final player = FakePodcastPlayer();
+        final router = buildAppRouter();
+        await pumpApp(
+          tester,
+          audio: audio,
+          router: router,
+          podcastPlayer: player,
+        );
+        router.go('/audio/ep-1');
+        await tester.pumpAndSettle();
+
+        expect(find.text('VLSI Unit 3 — Study Podcast'), findsWidgets);
+        expect(player.loadedBytes, isNotNull);
+        expect(player.playing, isTrue);
+        expect(find.text('Chapters'), findsOneWidget);
+        expect(find.text('Transcript'), findsOneWidget);
+        // The section appears both as a chapter row and a transcript block.
+        expect(find.text('Core concepts'), findsNWidgets(2));
+        // Source chip for the grounded section.
+        expect(find.text('VLSI Notes'), findsOneWidget);
+      },
+    );
+
+    testWidgets('resumes from the saved position and saves new positions', (
+      tester,
+    ) async {
+      final audio = FakeAudioRepository(
+        episodes: [readyEpisode('ep-1').copyWith(playbackPositionSec: 74)],
+      );
       final player = FakePodcastPlayer();
       final router = buildAppRouter();
-      await pumpApp(tester, audio: audio, router: router, podcastPlayer: player);
-      router.go('/audio/ep-1');
-      await tester.pumpAndSettle();
-
-      expect(find.text('VLSI Unit 3 — Study Podcast'), findsWidgets);
-      expect(player.loadedBytes, isNotNull);
-      expect(player.playing, isTrue);
-      expect(find.text('Chapters'), findsOneWidget);
-      expect(find.text('Transcript'), findsOneWidget);
-      // The section appears both as a chapter row and a transcript block.
-      expect(find.text('Core concepts'), findsNWidgets(2));
-      // Source chip for the grounded section.
-      expect(find.text('VLSI Notes'), findsOneWidget);
-    });
-
-    testWidgets('resumes from the saved position and saves new positions', (tester) async {
-      final audio = FakeAudioRepository(episodes: [
-        readyEpisode('ep-1').copyWith(playbackPositionSec: 74),
-      ]);
-      final player = FakePodcastPlayer();
-      final router = buildAppRouter();
-      await pumpApp(tester, audio: audio, router: router, podcastPlayer: player);
+      await pumpApp(
+        tester,
+        audio: audio,
+        router: router,
+        podcastPlayer: player,
+      );
       router.go('/audio/ep-1');
       await tester.pumpAndSettle();
 
@@ -183,7 +224,12 @@ void main() {
       final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
       final player = FakePodcastPlayer();
       final router = buildAppRouter();
-      await pumpApp(tester, audio: audio, router: router, podcastPlayer: player);
+      await pumpApp(
+        tester,
+        audio: audio,
+        router: router,
+        podcastPlayer: player,
+      );
       router.go('/audio/ep-1');
       await tester.pumpAndSettle();
 
@@ -192,12 +238,17 @@ void main() {
       expect(player.lastSeek, const Duration(seconds: 30));
     });
 
-    testWidgets('failed episode shows the friendly error, not a raw stack', (tester) async {
-      final audio = FakeAudioRepository(episodes: [
-        readyEpisode('ep-1', status: 'failed', stage: 'failed').copyWith(
-          errorMessage: 'This notebook has no indexed sources yet. Add a source first.',
-        ),
-      ]);
+    testWidgets('failed episode shows the friendly error, not a raw stack', (
+      tester,
+    ) async {
+      final audio = FakeAudioRepository(
+        episodes: [
+          readyEpisode('ep-1', status: 'failed', stage: 'failed').copyWith(
+            errorMessage:
+                'This notebook has no indexed sources yet. Add a source first.',
+          ),
+        ],
+      );
       final router = buildAppRouter();
       await pumpApp(tester, audio: audio, router: router);
       router.go('/audio/ep-1');

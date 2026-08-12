@@ -48,7 +48,8 @@ class ApiNotebooksRepository implements NotebooksRepository {
     final res = await _client.get<dynamic>('/api/notebooks');
     final data = res.data;
     final list = data is Map ? data['notebooks'] : null;
-    if (list is! List) throw const NotebooksException('Could not load notebooks.');
+    if (list is! List)
+      throw const NotebooksException('Could not load notebooks.');
     return [
       for (final n in list)
         if (n is Map) Notebook.fromJson(Map<String, dynamic>.from(n)),
@@ -63,7 +64,8 @@ class ApiNotebooksRepository implements NotebooksRepository {
     );
     final data = res.data;
     final nb = data is Map ? data['notebook'] : null;
-    if (nb is! Map) throw const NotebooksException('Could not create the notebook.');
+    if (nb is! Map)
+      throw const NotebooksException('Could not create the notebook.');
     return Notebook.fromJson(Map<String, dynamic>.from(nb));
   }
 
@@ -75,16 +77,21 @@ class ApiNotebooksRepository implements NotebooksRepository {
   @override
   Future<List<NotebookSource>> listSources(String notebookId) async {
     try {
-      final res = await _client.get<dynamic>('/api/notebooks/$notebookId/sources');
+      final res = await _client.get<dynamic>(
+        '/api/notebooks/$notebookId/sources',
+      );
       final data = res.data;
       final list = data is Map ? data['sources'] : null;
-      if (list is! List) throw const NotebooksException('Could not load sources.');
+      if (list is! List)
+        throw const NotebooksException('Could not load sources.');
       return [
         for (final s in list)
           if (s is Map) NotebookSource.fromJson(Map<String, dynamic>.from(s)),
       ];
     } on DioException {
-      throw const NotebooksException('Could not load sources. Check your connection and try again.');
+      throw const NotebooksException(
+        'Could not load sources. Check your connection and try again.',
+      );
     }
   }
 
@@ -102,7 +109,9 @@ class ApiNotebooksRepository implements NotebooksRepository {
       final data = res.data;
       final source = data is Map ? data['source'] : null;
       if (source is! Map) {
-        throw const NotebooksException('Could not add the source. Please try again.');
+        throw const NotebooksException(
+          'Could not add the source. Please try again.',
+        );
       }
       return NotebookSource.fromJson(Map<String, dynamic>.from(source));
     } on DioException catch (e) {
@@ -111,14 +120,17 @@ class ApiNotebooksRepository implements NotebooksRepository {
           ? (e.response!.data as Map)['error']
           : null;
       throw NotebooksException(switch (status) {
-        400 || 422 => (message is String && message.isNotEmpty)
-            ? message
-            : 'Check the source text and try again.',
-        403 => (message is String && message.isNotEmpty)
-            ? message
-            : "You've reached the source limit for your plan.",
+        400 || 422 =>
+          (message is String && message.isNotEmpty)
+              ? message
+              : 'Check the source text and try again.',
+        403 =>
+          (message is String && message.isNotEmpty)
+              ? message
+              : "You've reached the source limit for your plan.",
         401 => 'Your session expired. Please log in again.',
-        null => 'Could not reach the server. Check your connection and try again.',
+        null =>
+          'Could not reach the server. Check your connection and try again.',
         _ => 'Something went wrong. Please try again.',
       });
     }
@@ -138,13 +150,16 @@ class ApiNotebooksRepository implements NotebooksRepository {
           'question': question,
           'mode': mode,
           'history': [
-            for (final m in history) {'role': m.isUser ? 'user' : 'assistant', 'content': m.content},
+            for (final m in history)
+              {'role': m.isUser ? 'user' : 'assistant', 'content': m.content},
           ],
         },
       );
       final body = res.data;
       if (body is! String || body.isEmpty) {
-        throw const NotebooksException('The AI returned an empty answer. Please try again.');
+        throw const NotebooksException(
+          'The AI returned an empty answer. Please try again.',
+        );
       }
       return parseChatReply(body);
     } on DioException catch (e) {
@@ -158,14 +173,17 @@ class ApiNotebooksRepository implements NotebooksRepository {
         ? (e.response!.data as Map)['error']
         : null;
     return switch (status) {
-      400 || 422 => (message is String && message.isNotEmpty)
-          ? message
-          : 'The AI could not answer that. Try rephrasing the question.',
-      429 => (message is String && message.isNotEmpty)
-          ? message
-          : "You've used this month's free AI allowance. Upgrade for a higher limit.",
+      400 || 422 =>
+        (message is String && message.isNotEmpty)
+            ? message
+            : 'The AI could not answer that. Try rephrasing the question.',
+      429 =>
+        (message is String && message.isNotEmpty)
+            ? message
+            : "You've used this month's free AI allowance. Upgrade for a higher limit.",
       401 => 'Your session expired. Please log in again.',
-      null => 'Could not reach the server. Check your connection and try again.',
+      null =>
+        'Could not reach the server. Check your connection and try again.',
       _ => 'Something went wrong. Please try again.',
     };
   }

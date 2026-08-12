@@ -4,19 +4,31 @@ import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 
 const kHomeNavItems = [
-  GlassNavItem(label: 'Home', icon: Icons.home_outlined, selectedIcon: Icons.home),
+  GlassNavItem(
+    label: 'Home',
+    icon: Icons.home_outlined,
+    selectedIcon: Icons.home,
+  ),
   GlassNavItem(
     label: 'Notebooks',
     icon: Icons.library_books_outlined,
     selectedIcon: Icons.library_books,
   ),
-  GlassNavItem(label: 'Study', icon: Icons.school_outlined, selectedIcon: Icons.school),
+  GlassNavItem(
+    label: 'Study',
+    icon: Icons.school_outlined,
+    selectedIcon: Icons.school,
+  ),
   GlassNavItem(
     label: 'Progress',
     icon: Icons.insights_outlined,
     selectedIcon: Icons.insights,
   ),
-  GlassNavItem(label: 'Profile', icon: Icons.person_outline, selectedIcon: Icons.person),
+  GlassNavItem(
+    label: 'Profile',
+    icon: Icons.person_outline,
+    selectedIcon: Icons.person,
+  ),
 ];
 
 /// Adaptive navigation shell: floating bottom bar on phones, floating

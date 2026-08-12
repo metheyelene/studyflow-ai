@@ -50,18 +50,26 @@ class NotebooksController extends AsyncNotifier<List<Notebook>> {
 
 final notebooksControllerProvider =
     AsyncNotifierProvider<NotebooksController, List<Notebook>>(
-  NotebooksController.new,
-);
+      NotebooksController.new,
+    );
 
 /// State of one notebook's AI conversation.
 class NotebookChatState {
-  const NotebookChatState({this.messages = const [], this.busy = false, this.error});
+  const NotebookChatState({
+    this.messages = const [],
+    this.busy = false,
+    this.error,
+  });
 
   final List<ChatMessage> messages;
   final bool busy;
   final String? error;
 
-  NotebookChatState copyWith({List<ChatMessage>? messages, bool? busy, String? error}) {
+  NotebookChatState copyWith({
+    List<ChatMessage>? messages,
+    bool? busy,
+    String? error,
+  }) {
     return NotebookChatState(
       messages: messages ?? this.messages,
       busy: busy ?? this.busy,
@@ -83,20 +91,17 @@ class NotebookChatController extends FamilyNotifier<NotebookChatState, String> {
 
     // History sent to the backend = the conversation BEFORE this question.
     final prior = state.messages;
-    final history = [
-      ...prior,
-      ChatMessage(role: ChatRole.user, content: text),
-    ];
+    final history = [...prior, ChatMessage(role: ChatRole.user, content: text)];
     state = state.copyWith(messages: history, busy: true, error: null);
 
     try {
-      final reply = await ref.read(notebooksRepositoryProvider).chat(
-            arg,
-            question: text,
-            history: prior,
-          );
+      final reply = await ref
+          .read(notebooksRepositoryProvider)
+          .chat(arg, question: text, history: prior);
       if (reply.answer.isEmpty && reply.citations.isEmpty) {
-        throw const NotebooksException('The AI returned an empty answer. Please try again.');
+        throw const NotebooksException(
+          'The AI returned an empty answer. Please try again.',
+        );
       }
       state = state.copyWith(
         messages: [
@@ -110,11 +115,7 @@ class NotebookChatController extends FamilyNotifier<NotebookChatState, String> {
         busy: false,
       );
     } on NotebooksException catch (e) {
-      state = state.copyWith(
-        messages: history,
-        busy: false,
-        error: e.message,
-      );
+      state = state.copyWith(messages: history, busy: false, error: e.message);
     } catch (_) {
       state = state.copyWith(
         messages: history,
@@ -127,5 +128,5 @@ class NotebookChatController extends FamilyNotifier<NotebookChatState, String> {
 
 final notebookChatControllerProvider =
     NotifierProvider.family<NotebookChatController, NotebookChatState, String>(
-  NotebookChatController.new,
-);
+      NotebookChatController.new,
+    );

@@ -9,14 +9,18 @@ import 'helpers.dart';
 void main() {
   group('parseChatReply', () {
     test('parses the answer and citation trailer', () {
-      const body = 'Photosynthesis converts light energy into chemical energy.\n\n'
+      const body =
+          'Photosynthesis converts light energy into chemical energy.\n\n'
           '__SF_CITATIONS__{"citations":[{"marker":1,"chunkId":"c1","sourceId":"s1",'
           '"sourceTitle":"Biology Notes","page":12,"excerpt":"Photosynthesis converts '
           'light energy into chemical energy."}]}';
 
       final reply = parseChatReply(body);
 
-      expect(reply.answer, 'Photosynthesis converts light energy into chemical energy.');
+      expect(
+        reply.answer,
+        'Photosynthesis converts light energy into chemical energy.',
+      );
       expect(reply.citations, hasLength(1));
       expect(reply.citations.first.marker, 1);
       expect(reply.citations.first.sourceTitle, 'Biology Notes');
@@ -58,15 +62,18 @@ void main() {
   });
 
   group('notebook AI chat', () {
-    testWidgets('asking a question shows the grounded answer with citations',
-        (tester) async {
+    testWidgets('asking a question shows the grounded answer with citations', (
+      tester,
+    ) async {
       final fake = FakeNotebooksRepository();
-      fake.notebooks.add(Notebook(
-        id: 'nb-1',
-        title: 'Cell Biology',
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-      ));
+      fake.notebooks.add(
+        Notebook(
+          id: 'nb-1',
+          title: 'Cell Biology',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        ),
+      );
       await pumpApp(tester, notebooks: fake);
 
       await tester.tap(find.text('Notebooks'));
@@ -86,7 +93,9 @@ void main() {
       expect(fake.chatCalls, 1);
       expect(fake.chatQuestions, ['Explain photosynthesis']);
       expect(
-        find.text('Photosynthesis converts light into chemical energy, as covered in your notes.'),
+        find.text(
+          'Photosynthesis converts light into chemical energy, as covered in your notes.',
+        ),
         findsOneWidget,
       );
       // Citation chip renders with source title.
@@ -95,12 +104,14 @@ void main() {
 
     testWidgets('tapping a citation opens the source excerpt', (tester) async {
       final fake = FakeNotebooksRepository();
-      fake.notebooks.add(Notebook(
-        id: 'nb-1',
-        title: 'Cell Biology',
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-      ));
+      fake.notebooks.add(
+        Notebook(
+          id: 'nb-1',
+          title: 'Cell Biology',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        ),
+      );
       await pumpApp(tester, notebooks: fake);
 
       await tester.tap(find.text('Notebooks'));
@@ -124,35 +135,47 @@ void main() {
       );
     });
 
-    testWidgets('a failed answer surfaces a friendly error and keeps the question',
-        (tester) async {
-      final fake = FakeNotebooksRepository();
-      fake.failChat = true;
-      fake.notebooks.add(Notebook(
-        id: 'nb-1',
-        title: 'Cell Biology',
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-      ));
-      await pumpApp(tester, notebooks: fake);
+    testWidgets(
+      'a failed answer surfaces a friendly error and keeps the question',
+      (tester) async {
+        final fake = FakeNotebooksRepository();
+        fake.failChat = true;
+        fake.notebooks.add(
+          Notebook(
+            id: 'nb-1',
+            title: 'Cell Biology',
+            createdAt: DateTime(2026),
+            updatedAt: DateTime(2026),
+          ),
+        );
+        await pumpApp(tester, notebooks: fake);
 
-      await tester.tap(find.text('Notebooks'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cell Biology'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask AI'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Notebooks'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Cell Biology'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Ask AI'));
+        await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask'));
-      await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byType(TextField),
+          'Explain photosynthesis',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Ask'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.text('The AI could not answer that. Try rephrasing the question.'),
-        findsOneWidget,
-      );
-      expect(find.text('Explain photosynthesis'), findsOneWidget); // question kept
-    });
+        expect(
+          find.text(
+            'The AI could not answer that. Try rephrasing the question.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Explain photosynthesis'),
+          findsOneWidget,
+        ); // question kept
+      },
+    );
   });
 }

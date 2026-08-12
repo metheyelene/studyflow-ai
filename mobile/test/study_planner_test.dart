@@ -55,11 +55,18 @@ void main() {
     );
   }
 
-  testWidgets('generates a plan from the Study tab when none exists', (tester) async {
+  testWidgets('generates a plan from the Study tab when none exists', (
+    tester,
+  ) async {
     final planner = FakeStudyPlannerRepository();
     final dashboard = FakeDashboardRepository(currentExams: exams);
     final router = buildAppRouter();
-    await pumpApp(tester, router: router, planner: planner, dashboard: dashboard);
+    await pumpApp(
+      tester,
+      router: router,
+      planner: planner,
+      dashboard: dashboard,
+    );
     router.go('/study');
     await tester.pumpAndSettle();
 
@@ -77,7 +84,12 @@ void main() {
     final planner = FakeStudyPlannerRepository(plans: [seedPlan()]);
     final dashboard = FakeDashboardRepository(currentExams: exams);
     final router = buildAppRouter();
-    await pumpApp(tester, router: router, planner: planner, dashboard: dashboard);
+    await pumpApp(
+      tester,
+      router: router,
+      planner: planner,
+      dashboard: dashboard,
+    );
     router.go('/study');
     await tester.pumpAndSettle();
 
@@ -88,11 +100,16 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
 
-    expect(planner.plans.single.tasks.firstWhere((t) => t.id == 't-today').status, 'done');
+    expect(
+      planner.plans.single.tasks.firstWhere((t) => t.id == 't-today').status,
+      'done',
+    );
     expect(find.text('1/3 done'), findsOneWidget);
   });
 
-  testWidgets('plan screen groups by date with version and regenerate', (tester) async {
+  testWidgets('plan screen groups by date with version and regenerate', (
+    tester,
+  ) async {
     final planner = FakeStudyPlannerRepository(plans: [seedPlan(version: 2)]);
     final router = buildAppRouter();
     await pumpApp(tester, router: router, planner: planner);
@@ -112,11 +129,18 @@ void main() {
     expect(planner.lastGeneratedExamId, 'ex-1');
   });
 
-  testWidgets('revisiting the Study tab silently re-fetches the plan', (tester) async {
+  testWidgets('revisiting the Study tab silently re-fetches the plan', (
+    tester,
+  ) async {
     final planner = FakeStudyPlannerRepository(plans: [seedPlan()]);
     final dashboard = FakeDashboardRepository(currentExams: exams);
     final router = buildAppRouter();
-    await pumpApp(tester, router: router, planner: planner, dashboard: dashboard);
+    await pumpApp(
+      tester,
+      router: router,
+      planner: planner,
+      dashboard: dashboard,
+    );
 
     // First visit builds the provider (initial fetch = 1 list call).
     router.go('/study');
@@ -143,7 +167,10 @@ void main() {
 
     await tester.tap(find.text('Skip').first);
     await tester.pumpAndSettle();
-    expect(planner.plans.single.tasks.firstWhere((t) => t.id == 't-today').status, 'skipped');
+    expect(
+      planner.plans.single.tasks.firstWhere((t) => t.id == 't-today').status,
+      'skipped',
+    );
     expect(find.text('Unskip'), findsOneWidget);
   });
 }

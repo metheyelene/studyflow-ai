@@ -64,12 +64,20 @@ class GlassInput extends StatelessWidget {
           cursorColor: g.primary,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: g.textMuted.withValues(alpha: 0.7), fontSize: 15),
-            prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 18, color: g.textMuted),
+            hintStyle: TextStyle(
+              color: g.textMuted.withValues(alpha: 0.7),
+              fontSize: 15,
+            ),
+            prefixIcon: prefixIcon == null
+                ? null
+                : Icon(prefixIcon, size: 18, color: g.textMuted),
             suffixIcon: suffix,
             filled: true,
             fillColor: g.surfaceSubtle,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: g.border),

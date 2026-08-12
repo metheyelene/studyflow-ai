@@ -47,7 +47,8 @@ class FlashcardProgress {
       decks: decks is List
           ? [
               for (final d in decks)
-                if (d is Map) DeckAccuracy.fromJson(Map<String, dynamic>.from(d)),
+                if (d is Map)
+                  DeckAccuracy.fromJson(Map<String, dynamic>.from(d)),
             ]
           : const [],
     );
@@ -79,8 +80,12 @@ class FlashcardDeck {
       title: json['title'] as String? ?? 'Untitled deck',
       cardCount: (json['cardCount'] as num?)?.toInt() ?? 0,
       notebookId: json['notebookId'] as String?,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 }

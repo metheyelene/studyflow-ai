@@ -69,9 +69,11 @@ class StudyPlan {
 
   int get doneCount => tasks.where((t) => t.isDone).length;
 
-  int get progressPercent => tasks.isEmpty ? 0 : (doneCount / tasks.length * 100).round();
+  int get progressPercent =>
+      tasks.isEmpty ? 0 : (doneCount / tasks.length * 100).round();
 
-  List<StudyPlanTask> tasksOn(String date) => tasks.where((t) => t.date == date).toList();
+  List<StudyPlanTask> tasksOn(String date) =>
+      tasks.where((t) => t.date == date).toList();
 
   factory StudyPlan.fromJson(Map<String, dynamic> json) {
     final tasks = json['tasks'];
@@ -85,7 +87,8 @@ class StudyPlan {
       tasks: tasks is List
           ? [
               for (final t in tasks)
-                if (t is Map) StudyPlanTask.fromJson(Map<String, dynamic>.from(t)),
+                if (t is Map)
+                  StudyPlanTask.fromJson(Map<String, dynamic>.from(t)),
             ]
           : const [],
     );
@@ -95,7 +98,11 @@ class StudyPlan {
 abstract class StudyPlannerRepository {
   Future<List<StudyPlan>> list();
   Future<StudyPlan> generate(String examId);
-  Future<StudyPlan> updateTask(String planId, {required String taskId, required String status});
+  Future<StudyPlan> updateTask(
+    String planId, {
+    required String taskId,
+    required String status,
+  });
 }
 
 class ApiStudyPlannerRepository implements StudyPlannerRepository {
@@ -108,7 +115,8 @@ class ApiStudyPlannerRepository implements StudyPlannerRepository {
     final res = await _client.get<dynamic>('/api/study-plans');
     final data = res.data;
     final list = data is Map ? data['plans'] : null;
-    if (list is! List) throw const StudyPlannerException('Could not load your study plans.');
+    if (list is! List)
+      throw const StudyPlannerException('Could not load your study plans.');
     return [
       for (final p in list)
         if (p is Map) StudyPlan.fromJson(Map<String, dynamic>.from(p)),
@@ -117,24 +125,35 @@ class ApiStudyPlannerRepository implements StudyPlannerRepository {
 
   @override
   Future<StudyPlan> generate(String examId) async {
-    final res = await _client.post<dynamic>('/api/study-plans', data: {'examId': examId});
+    final res = await _client.post<dynamic>(
+      '/api/study-plans',
+      data: {'examId': examId},
+    );
     final data = res.data;
-    if (data is! Map) throw const StudyPlannerException('Could not build that plan.');
+    if (data is! Map)
+      throw const StudyPlannerException('Could not build that plan.');
     final plan = data['plan'];
-    if (plan is! Map) throw const StudyPlannerException('Could not build that plan.');
+    if (plan is! Map)
+      throw const StudyPlannerException('Could not build that plan.');
     return StudyPlan.fromJson(Map<String, dynamic>.from(plan));
   }
 
   @override
-  Future<StudyPlan> updateTask(String planId, {required String taskId, required String status}) async {
-    final res = await _client.patch<dynamic>('/api/study-plans/$planId', data: {
-      'taskId': taskId,
-      'status': status,
-    });
+  Future<StudyPlan> updateTask(
+    String planId, {
+    required String taskId,
+    required String status,
+  }) async {
+    final res = await _client.patch<dynamic>(
+      '/api/study-plans/$planId',
+      data: {'taskId': taskId, 'status': status},
+    );
     final data = res.data;
-    if (data is! Map) throw const StudyPlannerException('Could not update that task.');
+    if (data is! Map)
+      throw const StudyPlannerException('Could not update that task.');
     final plan = data['plan'];
-    if (plan is! Map) throw const StudyPlannerException('Could not update that task.');
+    if (plan is! Map)
+      throw const StudyPlannerException('Could not update that task.');
     return StudyPlan.fromJson(Map<String, dynamic>.from(plan));
   }
 }
@@ -157,15 +176,20 @@ class StudyPlannerController extends AsyncNotifier<List<StudyPlan>> {
   Future<StudyPlan> generate(String examId) async {
     final plan = await _repo.generate(examId);
     final plans = await _repo.list();
-    state = AsyncData([
-      plan,
-      ...plans.where((p) => p.id != plan.id),
-    ]);
+    state = AsyncData([plan, ...plans.where((p) => p.id != plan.id)]);
     return plan;
   }
 
-  Future<void> updateTask(StudyPlan plan, StudyPlanTask task, String status) async {
-    final updated = await _repo.updateTask(plan.id, taskId: task.id, status: status);
+  Future<void> updateTask(
+    StudyPlan plan,
+    StudyPlanTask task,
+    String status,
+  ) async {
+    final updated = await _repo.updateTask(
+      plan.id,
+      taskId: task.id,
+      status: status,
+    );
     final current = await future;
     state = AsyncData([
       for (final p in current)
@@ -199,4 +223,6 @@ final studyPlannerRepositoryProvider = Provider<StudyPlannerRepository>(
 );
 
 final studyPlannerControllerProvider =
-    AsyncNotifierProvider<StudyPlannerController, List<StudyPlan>>(StudyPlannerController.new);
+    AsyncNotifierProvider<StudyPlannerController, List<StudyPlan>>(
+      StudyPlannerController.new,
+    );

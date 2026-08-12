@@ -66,7 +66,10 @@ class _CreatorScreenState extends State<CreatorScreen> {
                         tooltip: 'Back',
                       ),
                       const SizedBox(width: 4),
-                      Text('About StudyFlow', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'About StudyFlow',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -106,11 +109,18 @@ class _CreatorScreenState extends State<CreatorScreen> {
                             onTap: () => _openMail(),
                             borderRadius: BorderRadius.circular(8),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.mail_outline, size: 16, color: g.primary),
+                                  Icon(
+                                    Icons.mail_outline,
+                                    size: 16,
+                                    color: g.primary,
+                                  ),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
@@ -131,7 +141,8 @@ class _CreatorScreenState extends State<CreatorScreen> {
                           GlassButton(
                             label: 'Contact Creator',
                             icon: Icons.auto_awesome,
-                            onPressed: () => _openMail(subject: AppInfo.feedbackSubject),
+                            onPressed: () =>
+                                _openMail(subject: AppInfo.feedbackSubject),
                           ),
                         ],
                       ),
@@ -154,7 +165,11 @@ class _CreatorScreenState extends State<CreatorScreen> {
                           const SizedBox(height: 8),
                           Text(
                             AppInfo.tagline,
-                            style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.5),
+                            style: TextStyle(
+                              color: g.textMuted,
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
                           ),
                           const SizedBox(height: 14),
                           for (final feature in AppInfo.features)
@@ -162,12 +177,19 @@ class _CreatorScreenState extends State<CreatorScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
                                 children: [
-                                  Icon(Icons.check_circle, size: 16, color: g.primary),
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 16,
+                                    color: g.primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       feature,
-                                      style: TextStyle(color: g.textPrimary, fontSize: 14),
+                                      style: TextStyle(
+                                        color: g.textPrimary,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -196,14 +218,19 @@ class _CreatorScreenState extends State<CreatorScreen> {
                           Text(
                             'Have an idea, found something that could be better, or '
                             'discovered a bug? I’d love to hear from you.',
-                            style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
+                            style: TextStyle(
+                              color: g.textMuted,
+                              fontSize: 14,
+                              height: 1.45,
+                            ),
                           ),
                           const SizedBox(height: 14),
                           GlassButton(
                             label: 'Send Feedback',
                             icon: Icons.send_outlined,
                             variant: GlassButtonVariant.glass,
-                            onPressed: () => _openMail(subject: AppInfo.feedbackSubject),
+                            onPressed: () =>
+                                _openMail(subject: AppInfo.feedbackSubject),
                           ),
                         ],
                       ),
@@ -226,13 +253,19 @@ class _CreatorScreenState extends State<CreatorScreen> {
                                   ? 'StudyFlow AI'
                                   : 'StudyFlow AI · Version ${v.version} · Build ${v.buildNumber}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: g.textMuted, fontSize: 12),
+                              style: TextStyle(
+                                color: g.textMuted,
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text.rich(
                               TextSpan(
                                 text: 'Created by ',
-                                style: TextStyle(color: g.textMuted, fontSize: 12),
+                                style: TextStyle(
+                                  color: g.textMuted,
+                                  fontSize: 12,
+                                ),
                                 children: [
                                   TextSpan(
                                     text: AppInfo.creatorName,
@@ -241,7 +274,10 @@ class _CreatorScreenState extends State<CreatorScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  TextSpan(text: ' · ${AppInfo.creatorRole.split(' of ').first}'),
+                                  TextSpan(
+                                    text:
+                                        ' · ${AppInfo.creatorRole.split(' of ').first}',
+                                  ),
                                 ],
                               ),
                               textAlign: TextAlign.center,
@@ -277,7 +313,10 @@ class _MonogramAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: g.primarySoft,
-        border: Border.all(color: g.primary.withValues(alpha: 0.35), width: 1.5),
+        border: Border.all(
+          color: g.primary.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: g.primary.withValues(alpha: 0.2),

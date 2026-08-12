@@ -117,7 +117,11 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
 }
 
 class _NotebookCard extends StatelessWidget {
-  const _NotebookCard({required this.notebook, required this.selected, required this.onTap});
+  const _NotebookCard({
+    required this.notebook,
+    required this.selected,
+    required this.onTap,
+  });
 
   final Notebook notebook;
   final bool selected;
@@ -144,7 +148,11 @@ class _NotebookCard extends StatelessWidget {
                     color: g.primarySoft,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.library_books_outlined, size: 20, color: g.primary),
+                  child: Icon(
+                    Icons.library_books_outlined,
+                    size: 20,
+                    color: g.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -223,11 +231,19 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_outlined, size: 30, color: g.textMuted.withValues(alpha: 0.7)),
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 30,
+              color: g.textMuted.withValues(alpha: 0.7),
+            ),
             const SizedBox(height: 10),
             Text(
               'Could not load your notebooks',
-              style: TextStyle(color: g.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: g.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -269,7 +285,11 @@ class _EmptyState extends StatelessWidget {
                   color: g.primarySoft,
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(Icons.library_books_outlined, size: 26, color: g.primary),
+                child: Icon(
+                  Icons.library_books_outlined,
+                  size: 26,
+                  color: g.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -281,10 +301,14 @@ class _EmptyState extends StatelessWidget {
                 hasQuery
                     ? 'Nothing matches your search. Try a different name or create a new notebook.'
                     : 'Create your first notebook and add your notes — StudyFlow AI will '
-                        'answer questions and build flashcards, quizzes, and study guides '
-                        'from them.',
+                          'answer questions and build flashcards, quizzes, and study guides '
+                          'from them.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 14,
+                  height: 1.45,
+                ),
               ),
               if (!hasQuery) ...[
                 const SizedBox(height: 16),

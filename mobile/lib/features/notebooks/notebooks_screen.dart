@@ -18,7 +18,9 @@ class NotebooksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notebooks = ref.watch(notebooksControllerProvider).valueOrNull ?? const <Notebook>[];
+    final notebooks =
+        ref.watch(notebooksControllerProvider).valueOrNull ??
+        const <Notebook>[];
     Notebook? selected;
     for (final n in notebooks) {
       if (n.id == selectedId) {
@@ -72,11 +74,19 @@ class _SelectHint extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.library_books_outlined, size: 44, color: g.textMuted.withValues(alpha: 0.5)),
+          Icon(
+            Icons.library_books_outlined,
+            size: 44,
+            color: g.textMuted.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 12),
           Text(
             'Select a notebook',
-            style: TextStyle(color: g.textMuted, fontSize: 15, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: g.textMuted,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

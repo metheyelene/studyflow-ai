@@ -10,14 +10,17 @@ import 'podcast_player_interface.dart';
 /// and plays it with just_audio, so seeking, speed, and resume all work
 /// against a local file.
 class JustAudioPodcastPlayer implements PodcastPlayer {
-  JustAudioPodcastPlayer([AudioPlayer? player]) : _player = player ?? AudioPlayer();
+  JustAudioPodcastPlayer([AudioPlayer? player])
+    : _player = player ?? AudioPlayer();
 
   final AudioPlayer _player;
 
   @override
   Future<void> load(Uint8List bytes) async {
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/studyflow_episode_${DateTime.now().millisecondsSinceEpoch}.mp3');
+    final file = File(
+      '${dir.path}/studyflow_episode_${DateTime.now().millisecondsSinceEpoch}.mp3',
+    );
     await file.writeAsBytes(bytes, flush: true);
     await _player.setFilePath(file.path);
   }

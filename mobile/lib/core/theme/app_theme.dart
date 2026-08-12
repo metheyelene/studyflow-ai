@@ -17,13 +17,42 @@ abstract final class AppSpacing {
 /// Typography scale — the one place font sizes/weights/letter-spacing are
 /// defined. Screens should reference these instead of inline `fontSize:`.
 abstract final class AppText {
-  static const TextStyle caption = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w500);
-  static const TextStyle captionMuted = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w500);
-  static const TextStyle body = TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w400);
-  static const TextStyle bodyMedium = TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600);
-  static const TextStyle eyebrow = TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w600, letterSpacing: 0.8);
-  static const TextStyle small = TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w400);
-  static const TextStyle smallMuted = TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w400);
+  static const TextStyle caption = TextStyle(
+    fontSize: 12,
+    height: 1.3,
+    fontWeight: FontWeight.w500,
+  );
+  static const TextStyle captionMuted = TextStyle(
+    fontSize: 12,
+    height: 1.3,
+    fontWeight: FontWeight.w500,
+  );
+  static const TextStyle body = TextStyle(
+    fontSize: 14,
+    height: 1.45,
+    fontWeight: FontWeight.w400,
+  );
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 14,
+    height: 1.4,
+    fontWeight: FontWeight.w600,
+  );
+  static const TextStyle eyebrow = TextStyle(
+    fontSize: 12,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.8,
+  );
+  static const TextStyle small = TextStyle(
+    fontSize: 13,
+    height: 1.35,
+    fontWeight: FontWeight.w400,
+  );
+  static const TextStyle smallMuted = TextStyle(
+    fontSize: 13,
+    height: 1.35,
+    fontWeight: FontWeight.w400,
+  );
 }
 
 /// StudyFlow glass design tokens — the single source for the translucent
@@ -200,20 +229,23 @@ extension GlassBuildContext on BuildContext {
 
 ThemeData buildAppTheme(Brightness brightness) {
   final isDark = brightness == Brightness.dark;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF6366F1),
-    brightness: brightness,
-  ).copyWith(
-    primary: isDark ? const Color(0xFF818CF8) : const Color(0xFF6366F1),
-    surface: isDark ? const Color(0xFF1A1A22) : const Color(0xFFFFFFFF),
-    error: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
-  );
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: const Color(0xFF6366F1),
+        brightness: brightness,
+      ).copyWith(
+        primary: isDark ? const Color(0xFF818CF8) : const Color(0xFF6366F1),
+        surface: isDark ? const Color(0xFF1A1A22) : const Color(0xFFFFFFFF),
+        error: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+      );
 
   final base = ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
-    scaffoldBackgroundColor: isDark ? const Color(0xFF121216) : const Color(0xFFF4F4F8),
+    scaffoldBackgroundColor: isDark
+        ? const Color(0xFF121216)
+        : const Color(0xFFF4F4F8),
   );
 
   return base.copyWith(

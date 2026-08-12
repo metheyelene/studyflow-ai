@@ -27,7 +27,11 @@ import 'package:studyflow_mobile/features/study/study_planner.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
 
-const testUser = AuthUser(id: 'user_1', name: 'Test User', email: 'test@example.com');
+const testUser = AuthUser(
+  id: 'user_1',
+  name: 'Test User',
+  email: 'test@example.com',
+);
 
 /// In-memory auth repository. [current] starts signed in so most tests
 /// boot straight into the app; set it to null for auth-screen tests.
@@ -44,7 +48,10 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthUser?> getSession() async => current;
 
   @override
-  Future<AuthUser> signIn({required String email, required String password}) async {
+  Future<AuthUser> signIn({
+    required String email,
+    required String password,
+  }) async {
     signInCalls++;
     lastSignInEmail = email;
     if (email == 'fail@example.com') {
@@ -134,10 +141,13 @@ class FakeNotebooksRepository implements NotebooksRepository {
     chatCalls++;
     chatQuestions.add(question);
     if (failChat) {
-      throw const NotebooksException('The AI could not answer that. Try rephrasing the question.');
+      throw const NotebooksException(
+        'The AI could not answer that. Try rephrasing the question.',
+      );
     }
     return ChatReply(
-      answer: 'Photosynthesis converts light into chemical energy, as covered in your notes.',
+      answer:
+          'Photosynthesis converts light into chemical energy, as covered in your notes.',
       citations: const [
         ChatCitation(
           marker: 1,
@@ -154,7 +164,8 @@ class FakeNotebooksRepository implements NotebooksRepository {
   int _sourceCounter = 0;
 
   @override
-  Future<List<NotebookSource>> listSources(String notebookId) async => List.of(sources);
+  Future<List<NotebookSource>> listSources(String notebookId) async =>
+      List.of(sources);
 
   @override
   Future<NotebookSource> addPastedSource(
@@ -202,10 +213,16 @@ class FakeQuizzesRepository implements QuizzesRepository {
   }
 
   @override
-  Future<QuizDetail> generate(String notebookId, {String? difficulty, int? count}) async {
+  Future<QuizDetail> generate(
+    String notebookId, {
+    String? difficulty,
+    int? count,
+  }) async {
     generateCalls++;
     if (failGenerate) {
-      throw const QuizzesException('This notebook has no indexed sources yet. Add a source first.');
+      throw const QuizzesException(
+        'This notebook has no indexed sources yet. Add a source first.',
+      );
     }
     final quiz = QuizSummary(
       id: 'quiz-${quizzes.length + 1}',
@@ -235,7 +252,8 @@ class FakeQuizzesRepository implements QuizzesRepository {
   Future<QuizResult> submit(String quizId, {required List<int> answers}) async {
     submitCalls++;
     lastAnswers = answers;
-    if (failSubmit) throw const QuizzesException('Could not score your answers.');
+    if (failSubmit)
+      throw const QuizzesException('Could not score your answers.');
     return QuizResult(
       score: 2,
       total: questions.length,
@@ -248,7 +266,9 @@ class FakeQuizzesRepository implements QuizzesRepository {
             options: questions[i].options,
             selectedIndex: i < answers.length ? answers[i] : 0,
             correctIndex: questions[i].correctIndex,
-            correct: i < answers.length ? answers[i] == questions[i].correctIndex : false,
+            correct: i < answers.length
+                ? answers[i] == questions[i].correctIndex
+                : false,
             explanation: questions[i].explanation,
           ),
       ],
@@ -280,10 +300,15 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   }
 
   @override
-  Future<FlashcardDeckDetail> generate(String notebookId, {String? title}) async {
+  Future<FlashcardDeckDetail> generate(
+    String notebookId, {
+    String? title,
+  }) async {
     generateCalls++;
     if (failGenerate) {
-      throw const FlashcardsException('This notebook has no indexed sources yet. Add a source first.');
+      throw const FlashcardsException(
+        'This notebook has no indexed sources yet. Add a source first.',
+      );
     }
     final deck = FlashcardDeck(
       id: 'deck-${decks.length + 1}',
@@ -300,7 +325,8 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   @override
   Future<FlashcardDeckDetail> deck(String deckId) async {
     final deck = decks.where((d) => d.id == deckId).firstOrNull;
-    if (deck == null) throw const FlashcardsException('Could not load that deck.');
+    if (deck == null)
+      throw const FlashcardsException('Could not load that deck.');
     return FlashcardDeckDetail(deck: deck, cards: List.of(cards));
   }
 
@@ -310,11 +336,19 @@ class FakeFlashcardsRepository implements FlashcardsRepository {
   }
 
   @override
-  Future<void> review(String deckId, {required String cardId, required int rating}) async {
+  Future<void> review(
+    String deckId, {
+    required String cardId,
+    required int rating,
+  }) async {
     reviews.add((deckId, cardId, rating));
   }
 
-  FlashcardProgress progressData = const FlashcardProgress(totalReviews: 0, uniqueCards: 0, decks: []);
+  FlashcardProgress progressData = const FlashcardProgress(
+    totalReviews: 0,
+    uniqueCards: 0,
+    decks: [],
+  );
 
   @override
   Future<FlashcardProgress> progress() async => progressData;
@@ -344,11 +378,18 @@ class FakeAudioRepository implements AudioRepository {
   Future<List<AudioEpisode>> list() async => List.of(episodes);
 
   @override
-  Future<AudioEpisode> create(String notebookId, {String style = 'focused', String length = 'standard'}) async {
+  Future<AudioEpisode> create(
+    String notebookId, {
+    String style = 'focused',
+    String length = 'standard',
+  }) async {
     createCalls++;
     lastStyle = style;
     lastLength = length;
-    if (failCreate) throw const AudioException('This notebook has no indexed sources yet. Add a source first.');
+    if (failCreate)
+      throw const AudioException(
+        'This notebook has no indexed sources yet. Add a source first.',
+      );
     final ready = pollsUntilReady <= 0;
     final episode = AudioEpisode(
       id: 'ep-${episodes.length + 1}',
@@ -362,7 +403,11 @@ class FakeAudioRepository implements AudioRepository {
       durationSec: 300,
       wordCount: 900,
       transcript: const [
-        TranscriptSection(heading: 'Introduction', text: 'Welcome to your study session.', startSec: 0),
+        TranscriptSection(
+          heading: 'Introduction',
+          text: 'Welcome to your study session.',
+          startSec: 0,
+        ),
         TranscriptSection(
           heading: 'Core concepts',
           text: 'The key ideas are covered here.',
@@ -384,7 +429,11 @@ class FakeAudioRepository implements AudioRepository {
     if (e.isProcessing && _createdProcessing && pollsUntilReady > 0) {
       pollsUntilReady--;
       if (pollsUntilReady == 0) {
-        e = e.copyWith(status: 'ready', pipelineStage: 'ready', durationSec: 300);
+        e = e.copyWith(
+          status: 'ready',
+          pipelineStage: 'ready',
+          durationSec: 300,
+        );
         episodes[index] = e;
       }
     }
@@ -403,7 +452,10 @@ class FakeAudioRepository implements AudioRepository {
   }
 
   @override
-  Future<Uint8List> download(String episodeId, {void Function(int, int?)? onProgress}) async {
+  Future<Uint8List> download(
+    String episodeId, {
+    void Function(int, int?)? onProgress,
+  }) async {
     return Uint8List.fromList(List.filled(64, 1)); // fake MP3 bytes
   }
 }
@@ -477,7 +529,8 @@ class FakeStudyPlannerRepository implements StudyPlannerRepository {
   Future<StudyPlan> generate(String examId) async {
     generateCalls++;
     lastGeneratedExamId = examId;
-    if (failGenerate) throw const StudyPlannerException('Could not build that plan.');
+    if (failGenerate)
+      throw const StudyPlannerException('Could not build that plan.');
     final plan = StudyPlan(
       id: 'plan-$examId',
       examId: examId,
@@ -500,7 +553,11 @@ class FakeStudyPlannerRepository implements StudyPlannerRepository {
   }
 
   @override
-  Future<StudyPlan> updateTask(String planId, {required String taskId, required String status}) async {
+  Future<StudyPlan> updateTask(
+    String planId, {
+    required String taskId,
+    required String status,
+  }) async {
     final plan = plans.firstWhere((p) => p.id == planId);
     final updated = StudyPlan(
       id: plan.id,
@@ -514,7 +571,10 @@ class FakeStudyPlannerRepository implements StudyPlannerRepository {
           if (t.id == taskId) t.copyWith(status: status) else t,
       ],
     );
-    plans = [for (final p in plans) if (p.id == planId) updated else p];
+    plans = [
+      for (final p in plans)
+        if (p.id == planId) updated else p,
+    ];
     return updated;
   }
 }
@@ -579,8 +639,11 @@ Future<FakeAuthRepository> pumpApp(
   if (onboardingStatus != null) {
     onboardingEvents.debugSet(onboardingStatus);
   }
-  final authFake = auth ?? FakeAuthRepository(current: signedIn ? testUser : null);
-  authEvents.debugSet(signedIn ? const AuthAuthenticated(testUser) : const AuthUnauthenticated());
+  final authFake =
+      auth ?? FakeAuthRepository(current: signedIn ? testUser : null);
+  authEvents.debugSet(
+    signedIn ? const AuthAuthenticated(testUser) : const AuthUnauthenticated(),
+  );
 
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -590,14 +653,30 @@ Future<FakeAuthRepository> pumpApp(
     ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(authFake),
-        onboardingRepositoryProvider.overrideWithValue(onboarding ?? FakeOnboardingRepository()),
-        dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
-        notebooksRepositoryProvider.overrideWithValue(notebooks ?? FakeNotebooksRepository()),
-        flashcardsRepositoryProvider.overrideWithValue(flashcards ?? FakeFlashcardsRepository()),
-        quizzesRepositoryProvider.overrideWithValue(quizzes ?? FakeQuizzesRepository()),
-        audioRepositoryProvider.overrideWithValue(audio ?? FakeAudioRepository()),
-        podcastPlayerProvider.overrideWithValue(podcastPlayer ?? FakePodcastPlayer()),
-        studyPlannerRepositoryProvider.overrideWithValue(planner ?? FakeStudyPlannerRepository()),
+        onboardingRepositoryProvider.overrideWithValue(
+          onboarding ?? FakeOnboardingRepository(),
+        ),
+        dashboardRepositoryProvider.overrideWithValue(
+          dashboard ?? FakeDashboardRepository(),
+        ),
+        notebooksRepositoryProvider.overrideWithValue(
+          notebooks ?? FakeNotebooksRepository(),
+        ),
+        flashcardsRepositoryProvider.overrideWithValue(
+          flashcards ?? FakeFlashcardsRepository(),
+        ),
+        quizzesRepositoryProvider.overrideWithValue(
+          quizzes ?? FakeQuizzesRepository(),
+        ),
+        audioRepositoryProvider.overrideWithValue(
+          audio ?? FakeAudioRepository(),
+        ),
+        podcastPlayerProvider.overrideWithValue(
+          podcastPlayer ?? FakePodcastPlayer(),
+        ),
+        studyPlannerRepositoryProvider.overrideWithValue(
+          planner ?? FakeStudyPlannerRepository(),
+        ),
       ],
       child: MaterialApp.router(
         routerConfig: router ?? buildAppRouter(),

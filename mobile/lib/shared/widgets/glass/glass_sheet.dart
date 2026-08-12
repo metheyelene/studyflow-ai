@@ -33,7 +33,11 @@ Future<T?> showGlassSheet<T>({
 }
 
 class _SheetSurface extends StatelessWidget {
-  const _SheetSurface({required this.builder, required this.g, required this.isScrollControlled});
+  const _SheetSurface({
+    required this.builder,
+    required this.g,
+    required this.isScrollControlled,
+  });
 
   final WidgetBuilder builder;
   final GlassTheme g;

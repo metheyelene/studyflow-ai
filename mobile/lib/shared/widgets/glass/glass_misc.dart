@@ -32,10 +32,7 @@ class GlassListTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              if (leading != null) ...[
-                leading!,
-                const SizedBox(width: 12),
-              ],
+              if (leading != null) ...[leading!, const SizedBox(width: 12)],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +95,11 @@ class GlassSkeleton extends StatelessWidget {
 }
 
 /// Tiny toast overlay (SnackBar wrapper styled to the glass system).
-void showGlassToast(BuildContext context, String message, {bool error = false}) {
+void showGlassToast(
+  BuildContext context,
+  String message, {
+  bool error = false,
+}) {
   final g = context.glass;
   final overlay = Overlay.of(context);
   final entry = OverlayEntry(

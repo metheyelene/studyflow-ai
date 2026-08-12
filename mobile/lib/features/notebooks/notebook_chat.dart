@@ -6,8 +6,6 @@ library;
 
 import 'dart:convert';
 
-
-
 /// A grounded citation attached to an AI answer.
 class ChatCitation {
   const ChatCitation({
@@ -80,7 +78,9 @@ ChatReply parseChatReply(String body) {
   final answer = body.substring(0, markerAt).trim();
   final trailerJson = body.substring(markerAt + _trailerMarker.length).trim();
   try {
-    final decoded = trailerJson.isEmpty ? null : (jsonDecode(trailerJson) as Map);
+    final decoded = trailerJson.isEmpty
+        ? null
+        : (jsonDecode(trailerJson) as Map);
     final rawCitations = decoded?['citations'];
     if (rawCitations is List) {
       return ChatReply(

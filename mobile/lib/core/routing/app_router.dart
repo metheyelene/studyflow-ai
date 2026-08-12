@@ -84,9 +84,18 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
       };
     },
     routes: [
-      GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
-      GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
-      GoRoute(path: AppRoutes.signup, builder: (context, state) => const SignupScreen()),
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        builder: (context, state) => const SignupScreen(),
+      ),
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
@@ -110,51 +119,90 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
           );
         },
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.home, builder: (context, state) => const DashboardScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.notebooks, builder: (context, state) => const NotebooksScreen()),
-            GoRoute(
-              path: AppRoutes.notebookDetail,
-              builder: (context, state) =>
-                  NotebooksScreen(selectedId: state.pathParameters['id']),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.study, builder: (context, state) => const StudyScreen()),
-            GoRoute(
-              path: AppRoutes.studyPlanDetail,
-              builder: (context, state) => StudyPlanScreen(
-                examId: state.pathParameters['examId'] ?? '',
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (context, state) => const DashboardScreen(),
               ),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.progress, builder: (context, state) => const ProgressScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
-          ]),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.notebooks,
+                builder: (context, state) => const NotebooksScreen(),
+              ),
+              GoRoute(
+                path: AppRoutes.notebookDetail,
+                builder: (context, state) =>
+                    NotebooksScreen(selectedId: state.pathParameters['id']),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.study,
+                builder: (context, state) => const StudyScreen(),
+              ),
+              GoRoute(
+                path: AppRoutes.studyPlanDetail,
+                builder: (context, state) => StudyPlanScreen(
+                  examId: state.pathParameters['examId'] ?? '',
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.progress,
+                builder: (context, state) => const ProgressScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.profile,
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
-      GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: AppRoutes.aboutCreator, builder: (context, state) => const CreatorScreen()),
-      GoRoute(path: AppRoutes.flashcards, builder: (context, state) => const FlashcardsScreen()),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.aboutCreator,
+        builder: (context, state) => const CreatorScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.flashcards,
+        builder: (context, state) => const FlashcardsScreen(),
+      ),
       GoRoute(
         path: AppRoutes.flashcardDeck,
         builder: (context, state) => FlashcardSessionScreen(
           deckId: state.pathParameters['deckId'] ?? '',
         ),
       ),
-      GoRoute(path: AppRoutes.quizzes, builder: (context, state) => const QuizzesScreen()),
+      GoRoute(
+        path: AppRoutes.quizzes,
+        builder: (context, state) => const QuizzesScreen(),
+      ),
       GoRoute(
         path: AppRoutes.quizDetail,
-        builder: (context, state) => QuizSessionScreen(
-          quizId: state.pathParameters['quizId'] ?? '',
-        ),
+        builder: (context, state) =>
+            QuizSessionScreen(quizId: state.pathParameters['quizId'] ?? ''),
       ),
-      GoRoute(path: AppRoutes.audio, builder: (context, state) => const PodcastLibraryScreen()),
+      GoRoute(
+        path: AppRoutes.audio,
+        builder: (context, state) => const PodcastLibraryScreen(),
+      ),
       GoRoute(
         path: AppRoutes.audioEpisode,
         builder: (context, state) => PodcastPlayerScreen(
@@ -171,7 +219,9 @@ String? _authenticatedRedirect(String loc, bool onAuthPage) {
 
   // Auth pages and the splash are never resting places once signed in.
   if (onAuthPage || loc == AppRoutes.splash) {
-    return ob == OnboardingStatus.needed ? AppRoutes.onboarding : AppRoutes.home;
+    return ob == OnboardingStatus.needed
+        ? AppRoutes.onboarding
+        : AppRoutes.home;
   }
   // The onboarding screen is the only place a `needed` user may rest.
   if (loc == AppRoutes.onboarding) {

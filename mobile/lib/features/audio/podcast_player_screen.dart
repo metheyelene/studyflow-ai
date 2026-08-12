@@ -25,7 +25,8 @@ class PodcastPlayerScreen extends ConsumerStatefulWidget {
   final String episodeId;
 
   @override
-  ConsumerState<PodcastPlayerScreen> createState() => _PodcastPlayerScreenState();
+  ConsumerState<PodcastPlayerScreen> createState() =>
+      _PodcastPlayerScreenState();
 }
 
 class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
@@ -64,12 +65,16 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
     final ep = _episode;
     if (ep == null || !ep.isReady) return;
     try {
-      final pos = await player.positionStream.first.timeout(const Duration(milliseconds: 300));
+      final pos = await player.positionStream.first.timeout(
+        const Duration(milliseconds: 300),
+      );
       final sec = pos.inSeconds;
       if (sec > 0) {
         await _repo.savePosition(ep.id, sec);
         if (mounted) {
-          ref.read(audioControllerProvider.notifier).upsert(ep.copyWith(playbackPositionSec: sec));
+          ref
+              .read(audioControllerProvider.notifier)
+              .upsert(ep.copyWith(playbackPositionSec: sec));
         }
       }
     } catch (_) {
@@ -101,7 +106,11 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
       if (episode.isReady) await _startPlayback();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e is AudioException ? e.message : 'Could not load that episode.');
+      setState(
+        () => _error = e is AudioException
+            ? e.message
+            : 'Could not load that episode.',
+      );
     }
   }
 
@@ -138,7 +147,11 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e is AudioException ? e.message : 'Could not play that episode.');
+      setState(
+        () => _error = e is AudioException
+            ? e.message
+            : 'Could not play that episode.',
+      );
     }
   }
 
@@ -183,7 +196,9 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not export the audio file. Please try again.')),
+        const SnackBar(
+          content: Text('Could not export the audio file. Please try again.'),
+        ),
       );
     }
   }
@@ -203,14 +218,25 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 26,
+                      color: g.textMuted,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Could not play this episode', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Could not play this episode',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       _error!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                      style: TextStyle(
+                        color: g.textMuted,
+                        fontSize: 13.5,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     GlassButton(
@@ -241,10 +267,10 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
         child: episode == null
             ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
             : episode.isProcessing
-                ? _PreparingView(episode: episode)
-                : episode.isFailed
-                    ? _FailedView(episode: episode, onRetry: () => _load())
-                    : _buildPlayer(g, episode),
+            ? _PreparingView(episode: episode)
+            : episode.isFailed
+            ? _FailedView(episode: episode, onRetry: () => _load())
+            : _buildPlayer(g, episode),
       ),
     );
   }
@@ -301,14 +327,15 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
                 const SizedBox(height: 4),
                 _TimeRow(player: player, episode: episode),
                 const SizedBox(height: 8),
-                _Controls(player: player, onToggle: _togglePlay, onCycleSpeed: _cycleSpeed),
+                _Controls(
+                  player: player,
+                  onToggle: _togglePlay,
+                  onCycleSpeed: _cycleSpeed,
+                ),
                 const SizedBox(height: 6),
                 _SpeedLabel(speed: player.speed),
                 const SizedBox(height: 24),
-                _ChaptersTranscript(
-                  episode: episode,
-                  player: player,
-                ),
+                _ChaptersTranscript(episode: episode, player: player),
               ],
             ),
           ),
@@ -339,11 +366,19 @@ class _Artwork extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
-          BoxShadow(color: g.primary.withValues(alpha: 0.25), blurRadius: 32, offset: const Offset(0, 14)),
+          BoxShadow(
+            color: g.primary.withValues(alpha: 0.25),
+            blurRadius: 32,
+            offset: const Offset(0, 14),
+          ),
         ],
       ),
       child: Center(
-        child: Icon(Icons.headphones, size: 56, color: Colors.white.withValues(alpha: 0.92)),
+        child: Icon(
+          Icons.headphones,
+          size: 56,
+          color: Colors.white.withValues(alpha: 0.92),
+        ),
       ),
     );
   }
@@ -360,12 +395,15 @@ class _ProgressBar extends StatelessWidget {
     return StreamBuilder<Duration?>(
       stream: player.durationStream,
       builder: (context, durationSnap) {
-        final duration = durationSnap.data ?? Duration(seconds: episode.durationSec ?? 0);
+        final duration =
+            durationSnap.data ?? Duration(seconds: episode.durationSec ?? 0);
         return StreamBuilder<Duration>(
           stream: player.positionStream,
           builder: (context, posSnap) {
             final position = posSnap.data ?? Duration.zero;
-            final max = duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1.0;
+            final max = duration.inMilliseconds > 0
+                ? duration.inMilliseconds.toDouble()
+                : 1.0;
             return SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 trackHeight: 3.5,
@@ -375,7 +413,8 @@ class _ProgressBar extends StatelessWidget {
               child: Slider(
                 value: position.inMilliseconds.clamp(0, max.toInt()).toDouble(),
                 max: max,
-                onChanged: (v) => player.seek(Duration(milliseconds: v.toInt())),
+                onChanged: (v) =>
+                    player.seek(Duration(milliseconds: v.toInt())),
               ),
             );
           },
@@ -401,14 +440,21 @@ class _TimeRow extends StatelessWidget {
         return StreamBuilder<Duration?>(
           stream: player.durationStream,
           builder: (context, durSnap) {
-            final duration = durSnap.data ?? Duration(seconds: episode.durationSec ?? 0);
+            final duration =
+                durSnap.data ?? Duration(seconds: episode.durationSec ?? 0);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(_fmt(position.inSeconds), style: TextStyle(color: g.textMuted, fontSize: 12)),
-                  Text(_fmt(duration.inSeconds), style: TextStyle(color: g.textMuted, fontSize: 12)),
+                  Text(
+                    _fmt(position.inSeconds),
+                    style: TextStyle(color: g.textMuted, fontSize: 12),
+                  ),
+                  Text(
+                    _fmt(duration.inSeconds),
+                    style: TextStyle(color: g.textMuted, fontSize: 12),
+                  ),
                 ],
               ),
             );
@@ -426,7 +472,11 @@ class _TimeRow extends StatelessWidget {
 }
 
 class _Controls extends StatelessWidget {
-  const _Controls({required this.player, required this.onToggle, required this.onCycleSpeed});
+  const _Controls({
+    required this.player,
+    required this.onToggle,
+    required this.onCycleSpeed,
+  });
 
   final PodcastPlayer player;
   final VoidCallback onToggle;
@@ -470,7 +520,11 @@ class _Controls extends StatelessWidget {
 }
 
 class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.tooltip, required this.onTap});
+  const _IconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String tooltip;
@@ -532,7 +586,11 @@ class _SpeedLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    final label = speed == 1.0 ? '1×' : speed == speed.roundToDouble() ? '${speed.toInt()}×' : '$speed×';
+    final label = speed == 1.0
+        ? '1×'
+        : speed == speed.roundToDouble()
+        ? '${speed.toInt()}×'
+        : '$speed×';
     return Text(label, style: TextStyle(color: g.textMuted, fontSize: 12.5));
   }
 }
@@ -553,7 +611,10 @@ class _ChaptersTranscript extends StatelessWidget {
       stream: player.positionStream,
       builder: (context, posSnap) {
         final position = posSnap.data ?? Duration.zero;
-        final currentHeading = _currentSection(sections, position.inSeconds)?.heading;
+        final currentHeading = _currentSection(
+          sections,
+          position.inSeconds,
+        )?.heading;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -576,7 +637,10 @@ class _ChaptersTranscript extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             for (final s in sections) ...[
-              _TranscriptBlock(section: s, onTap: () => player.seek(Duration(seconds: s.startSec))),
+              _TranscriptBlock(
+                section: s,
+                onTap: () => player.seek(Duration(seconds: s.startSec)),
+              ),
               const SizedBox(height: 12),
             ],
           ],
@@ -585,7 +649,10 @@ class _ChaptersTranscript extends StatelessWidget {
     );
   }
 
-  static TranscriptSection? _currentSection(List<TranscriptSection> sections, int positionSec) {
+  static TranscriptSection? _currentSection(
+    List<TranscriptSection> sections,
+    int positionSec,
+  ) {
     TranscriptSection? current;
     for (final s in sections) {
       if (s.startSec <= positionSec) current = s;
@@ -595,7 +662,11 @@ class _ChaptersTranscript extends StatelessWidget {
 }
 
 class _ChapterRow extends StatelessWidget {
-  const _ChapterRow({required this.section, required this.active, required this.onTap});
+  const _ChapterRow({
+    required this.section,
+    required this.active,
+    required this.onTap,
+  });
 
   final TranscriptSection section;
   final bool active;
@@ -614,7 +685,11 @@ class _ChapterRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              Icon(Icons.play_circle_outline, size: 18, color: active ? g.primary : g.textMuted),
+              Icon(
+                Icons.play_circle_outline,
+                size: 18,
+                color: active ? g.primary : g.textMuted,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -679,7 +754,11 @@ class _TranscriptBlock extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   section.text,
-                  style: TextStyle(color: g.textPrimary, fontSize: 14, height: 1.5),
+                  style: TextStyle(
+                    color: g.textPrimary,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
                 if (section.sources.isNotEmpty) ...[
                   const SizedBox(height: 10),
@@ -689,14 +768,20 @@ class _TranscriptBlock extends StatelessWidget {
                     children: [
                       for (final source in section.sources)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: g.surfaceSubtle,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             source,
-                            style: TextStyle(color: g.textMuted, fontSize: 11.5),
+                            style: TextStyle(
+                              color: g.textMuted,
+                              fontSize: 11.5,
+                            ),
                           ),
                         ),
                     ],
@@ -731,13 +816,18 @@ class _PreparingView extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 3),
             ),
             const SizedBox(height: 18),
-            Text(episode.title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),                Text(
-                  kPipelineStageLabels[episode.pipelineStage] ?? 'Preparing your episode…',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: g.textMuted, fontSize: 13.5),
-                ),
-
+            Text(
+              episode.title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              kPipelineStageLabels[episode.pipelineStage] ??
+                  'Preparing your episode…',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: g.textMuted, fontSize: 13.5),
+            ),
           ],
         ),
       ),
@@ -763,12 +853,19 @@ class _FailedView extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: 26, color: g.danger),
               const SizedBox(height: 12),
-              Text('This episode failed to generate', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'This episode failed to generate',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 episode.errorMessage ?? 'Something went wrong.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 16),
               GlassButton(
@@ -801,12 +898,22 @@ class _DownloadingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3)),
+            const SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
             const SizedBox(height: 18),
-            Text(episode.title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              episode.title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
-              pct == null ? 'Loading your episode…' : 'Loading your episode… $pct%',
+              pct == null
+                  ? 'Loading your episode…'
+                  : 'Loading your episode… $pct%',
               textAlign: TextAlign.center,
               style: TextStyle(color: g.textMuted, fontSize: 13.5),
             ),

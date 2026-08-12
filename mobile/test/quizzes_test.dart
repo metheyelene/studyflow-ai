@@ -6,33 +6,44 @@ import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
 
 import 'helpers.dart';
 
-QuizSummary quiz(int n, {int questions = 2, int? bestScore, int attempts = 1}) => QuizSummary(
-      id: 'quiz-$n',
-      title: 'VLSI Unit 3 quiz',
-      questionCount: questions,
-      difficulty: 'medium',
-      attempts: attempts,
-      bestScore: bestScore,
-      bestTotal: bestScore == null ? null : questions,
-      createdAt: DateTime(2026, 8, 1),
-    );
+QuizSummary quiz(
+  int n, {
+  int questions = 2,
+  int? bestScore,
+  int attempts = 1,
+}) => QuizSummary(
+  id: 'quiz-$n',
+  title: 'VLSI Unit 3 quiz',
+  questionCount: questions,
+  difficulty: 'medium',
+  attempts: attempts,
+  bestScore: bestScore,
+  bestTotal: bestScore == null ? null : questions,
+  createdAt: DateTime(2026, 8, 1),
+);
 
 List<QuizQuestion> sampleQuestions() => const [
-      QuizQuestion(
-        id: 'q1',
-        question: 'What is threshold voltage?',
-        options: ['Oxide thickness', 'Gate voltage where the channel conducts', 'Body bias', 'Drain current'],
-        correctIndex: 1,
-        explanation: 'Threshold voltage is the gate voltage at which the channel begins to conduct.',
-      ),
-      QuizQuestion(
-        id: 'q2',
-        question: 'What is Vt?',
-        options: ['Threshold voltage', 'Drain voltage'],
-        correctIndex: 0,
-        explanation: 'Vt is the threshold voltage.',
-      ),
-    ];
+  QuizQuestion(
+    id: 'q1',
+    question: 'What is threshold voltage?',
+    options: [
+      'Oxide thickness',
+      'Gate voltage where the channel conducts',
+      'Body bias',
+      'Drain current',
+    ],
+    correctIndex: 1,
+    explanation:
+        'Threshold voltage is the gate voltage at which the channel begins to conduct.',
+  ),
+  QuizQuestion(
+    id: 'q2',
+    question: 'What is Vt?',
+    options: ['Threshold voltage', 'Drain voltage'],
+    correctIndex: 0,
+    explanation: 'Vt is the threshold voltage.',
+  ),
+];
 
 /// Navigate from the dashboard to the quizzes screen.
 Future<void> openQuizzes(WidgetTester tester) async {
@@ -78,15 +89,19 @@ void main() {
     expect(find.text('VLSI Unit 3 quiz'), findsOneWidget);
   });
 
-  testWidgets('generating a quiz from a notebook navigates to the session', (tester) async {
+  testWidgets('generating a quiz from a notebook navigates to the session', (
+    tester,
+  ) async {
     final quizzes = FakeQuizzesRepository(questions: sampleQuestions());
     final notebooks = FakeNotebooksRepository();
-    notebooks.notebooks.add(Notebook(
-      id: 'nb-1',
-      title: 'VLSI Unit 3',
-      createdAt: DateTime(2026, 8, 1),
-      updatedAt: DateTime(2026, 8, 1),
-    ));
+    notebooks.notebooks.add(
+      Notebook(
+        id: 'nb-1',
+        title: 'VLSI Unit 3',
+        createdAt: DateTime(2026, 8, 1),
+        updatedAt: DateTime(2026, 8, 1),
+      ),
+    );
     await pumpApp(tester, quizzes: quizzes, notebooks: notebooks);
     await openQuizzes(tester);
 
@@ -103,15 +118,22 @@ void main() {
     expect(find.text('What is threshold voltage?'), findsOneWidget);
   });
 
-  testWidgets('generate failure shows a friendly message in the sheet', (tester) async {
-    final quizzes = FakeQuizzesRepository(questions: sampleQuestions(), failGenerate: true);
+  testWidgets('generate failure shows a friendly message in the sheet', (
+    tester,
+  ) async {
+    final quizzes = FakeQuizzesRepository(
+      questions: sampleQuestions(),
+      failGenerate: true,
+    );
     final notebooks = FakeNotebooksRepository();
-    notebooks.notebooks.add(Notebook(
-      id: 'nb-1',
-      title: 'VLSI Unit 3',
-      createdAt: DateTime(2026, 8, 1),
-      updatedAt: DateTime(2026, 8, 1),
-    ));
+    notebooks.notebooks.add(
+      Notebook(
+        id: 'nb-1',
+        title: 'VLSI Unit 3',
+        createdAt: DateTime(2026, 8, 1),
+        updatedAt: DateTime(2026, 8, 1),
+      ),
+    );
     await pumpApp(tester, quizzes: quizzes, notebooks: notebooks);
     await openQuizzes(tester);
 
@@ -120,10 +142,17 @@ void main() {
     await tester.tap(find.text('VLSI Unit 3'));
     await tester.pumpAndSettle();
 
-    expect(find.text('This notebook has no indexed sources yet. Add a source first.'), findsOneWidget);
+    expect(
+      find.text(
+        'This notebook has no indexed sources yet. Add a source first.',
+      ),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('answering questions shows feedback and a scored result', (tester) async {
+  testWidgets('answering questions shows feedback and a scored result', (
+    tester,
+  ) async {
     final quizzes = FakeQuizzesRepository(
       quizzes: [quiz(1)],
       questions: sampleQuestions(),
@@ -138,7 +167,10 @@ void main() {
     await tester.tap(find.text('Oxide thickness'));
     await tester.pumpAndSettle();
     expect(find.text('Not quite'), findsOneWidget);
-    expect(find.textContaining('Threshold voltage is the gate voltage'), findsOneWidget);
+    expect(
+      find.textContaining('Threshold voltage is the gate voltage'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Next question'));
     await tester.pumpAndSettle();

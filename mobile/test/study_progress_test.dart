@@ -19,14 +19,19 @@ String _fmt(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}';
 
 void main() {
-  testWidgets('Study tab shows real exam countdowns and a real material CTA',
-      (tester) async {
+  testWidgets('Study tab shows real exam countdowns and a real material CTA', (
+    tester,
+  ) async {
     final examDate = DateTime.now().add(const Duration(days: 6));
     await pumpApp(
       tester,
       dashboard: FakeDashboardRepository(
         currentExams: [
-          UpcomingExam(id: 'ex-1', title: 'Organic Chemistry', date: _fmt(examDate)),
+          UpcomingExam(
+            id: 'ex-1',
+            title: 'Organic Chemistry',
+            date: _fmt(examDate),
+          ),
         ],
       ),
     );
@@ -44,7 +49,9 @@ void main() {
     expect(find.text('Notebooks'), findsWidgets);
   });
 
-  testWidgets('Progress tab shows live notebook and source counts', (tester) async {
+  testWidgets('Progress tab shows live notebook and source counts', (
+    tester,
+  ) async {
     final notebooks = FakeNotebooksRepository();
     notebooks.notebooks.addAll([
       Notebook(

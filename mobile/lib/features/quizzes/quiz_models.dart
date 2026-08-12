@@ -32,7 +32,9 @@ class QuizSummary {
       attempts: (json['attempts'] as num?)?.toInt() ?? 0,
       bestScore: (json['bestScore'] as num?)?.toInt(),
       bestTotal: (json['bestTotal'] as num?)?.toInt(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 }
@@ -132,7 +134,8 @@ class QuizResult {
       perQuestion: list is List
           ? [
               for (final q in list)
-                if (q is Map) QuizAnswerResult.fromJson(Map<String, dynamic>.from(q)),
+                if (q is Map)
+                  QuizAnswerResult.fromJson(Map<String, dynamic>.from(q)),
             ]
           : const [],
     );

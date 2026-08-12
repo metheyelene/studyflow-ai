@@ -26,7 +26,9 @@ class QuizSessionScreen extends ConsumerWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return _SessionScaffold(
             title: 'Loading quiz…',
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
           );
         }
         if (snapshot.hasError || snapshot.data == null) {
@@ -37,9 +39,16 @@ class QuizSessionScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 26,
+                      color: g.textMuted,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Could not load this quiz', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Could not load this quiz',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 14),
                     GlassButton(
                       label: 'Back',
@@ -115,7 +124,10 @@ class _SessionBody extends ConsumerStatefulWidget {
 }
 
 class _SessionBodyState extends ConsumerState<_SessionBody> {
-  late List<int?> _answers = List<int?>.filled(widget.detail.questions.length, null);
+  late List<int?> _answers = List<int?>.filled(
+    widget.detail.questions.length,
+    null,
+  );
   int _index = 0;
   QuizResult? _result;
   bool _submitting = false;
@@ -142,7 +154,10 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
     try {
       final result = await ref
           .read(quizzesRepositoryProvider)
-          .submit(detail.quiz.id, answers: _answers.map((a) => a ?? 0).toList());
+          .submit(
+            detail.quiz.id,
+            answers: _answers.map((a) => a ?? 0).toList(),
+          );
       if (!mounted) return;
       setState(() => _result = result);
     } catch (e) {
@@ -222,10 +237,10 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
             text: question.options[i],
             state: answered
                 ? (i == question.correctIndex
-                    ? _OptionState.correct
-                    : i == selected
-                        ? _OptionState.wrong
-                        : _OptionState.neutral)
+                      ? _OptionState.correct
+                      : i == selected
+                      ? _OptionState.wrong
+                      : _OptionState.neutral)
                 : _OptionState.neutral,
             onTap: () => _select(i),
           ),
@@ -376,8 +391,11 @@ class _FeedbackCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(correct ? Icons.check_circle_outline : Icons.cancel_outlined,
-                    size: 20, color: color),
+                Icon(
+                  correct ? Icons.check_circle_outline : Icons.cancel_outlined,
+                  size: 20,
+                  color: color,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   correct ? 'Correct' : 'Not quite',
@@ -422,12 +440,19 @@ class _EmptyQuiz extends StatelessWidget {
             children: [
               Icon(Icons.quiz_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text('This quiz is empty', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'This quiz is empty',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 'Delete it and generate a new one from a notebook with sources.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -462,9 +487,13 @@ class _Results extends StatelessWidget {
                   height: 96,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: (passed ? g.success : g.warning).withValues(alpha: 0.12),
+                    color: (passed ? g.success : g.warning).withValues(
+                      alpha: 0.12,
+                    ),
                     border: Border.all(
-                      color: (passed ? g.success : g.warning).withValues(alpha: 0.4),
+                      color: (passed ? g.success : g.warning).withValues(
+                        alpha: 0.4,
+                      ),
                       width: 3,
                     ),
                   ),
@@ -578,7 +607,11 @@ class _ReviewItem extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 item.explanation!,
-                style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.45),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13,
+                  height: 1.45,
+                ),
               ),
             ],
           ],

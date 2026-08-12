@@ -10,12 +10,26 @@ void main() {
     totalReviews: 6,
     uniqueCards: 3,
     decks: const [
-      DeckAccuracy(deckId: 'deck_a', title: 'VLSI Unit 3', reviews: 4, remembered: 3, accuracy: 75),
-      DeckAccuracy(deckId: 'deck_b', title: 'Thermo', reviews: 2, remembered: 0, accuracy: 0),
+      DeckAccuracy(
+        deckId: 'deck_a',
+        title: 'VLSI Unit 3',
+        reviews: 4,
+        remembered: 3,
+        accuracy: 75,
+      ),
+      DeckAccuracy(
+        deckId: 'deck_b',
+        title: 'Thermo',
+        reviews: 2,
+        remembered: 0,
+        accuracy: 0,
+      ),
     ],
   );
 
-  testWidgets('shows an honest empty state when there are no reviews', (tester) async {
+  testWidgets('shows an honest empty state when there are no reviews', (
+    tester,
+  ) async {
     final flashcards = FakeFlashcardsRepository();
     final router = buildAppRouter();
     await pumpApp(tester, router: router, flashcards: flashcards);
@@ -29,8 +43,11 @@ void main() {
     expect(find.text('Cards reviewed'), findsNothing);
   });
 
-  testWidgets('shows total cards reviewed and per-deck accuracy', (tester) async {
-    final flashcards = FakeFlashcardsRepository()..progressData = sampleProgress;
+  testWidgets('shows total cards reviewed and per-deck accuracy', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository()
+      ..progressData = sampleProgress;
     final router = buildAppRouter();
     await pumpApp(tester, router: router, flashcards: flashcards);
     router.go('/progress');
@@ -49,8 +66,11 @@ void main() {
     expect(find.textContaining('4 revs'), findsOneWidget);
   });
 
-  testWidgets('surfaces a load failure with a retry that recovers', (tester) async {
-    final flashcards = FakeFlashcardsRepository()..progressData = sampleProgress;
+  testWidgets('surfaces a load failure with a retry that recovers', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository()
+      ..progressData = sampleProgress;
     var failNext = true;
     final failing = _FailingProgressRepository(flashcards, () => failNext);
     final router = buildAppRouter();
@@ -74,7 +94,8 @@ class _FailingProgressRepository extends FakeFlashcardsRepository {
 
   @override
   Future<FlashcardProgress> progress() async {
-    if (_shouldFail()) throw const FlashcardsException('Could not load your flashcard history.');
+    if (_shouldFail())
+      throw const FlashcardsException('Could not load your flashcard history.');
     return _inner.progressData;
   }
 }

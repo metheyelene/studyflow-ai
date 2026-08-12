@@ -11,7 +11,11 @@ abstract class FlashcardsRepository {
   Future<void> delete(String deckId);
 
   /// Best-effort: records one rating; throws only so the caller can decide.
-  Future<void> review(String deckId, {required String cardId, required int rating});
+  Future<void> review(
+    String deckId, {
+    required String cardId,
+    required int rating,
+  });
 
   /// Review-history aggregates for the Progress screen (cards reviewed,
   /// per-deck accuracy from the backend's flashcard_reviews table).
@@ -28,7 +32,8 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
     final res = await _client.get<dynamic>('/api/flashcards');
     final data = res.data;
     final list = data is Map ? data['decks'] : null;
-    if (list is! List) throw const FlashcardsException('Could not load your decks.');
+    if (list is! List)
+      throw const FlashcardsException('Could not load your decks.');
     return [
       for (final d in list)
         if (d is Map) FlashcardDeck.fromJson(Map<String, dynamic>.from(d)),
@@ -36,13 +41,20 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
   }
 
   @override
-  Future<FlashcardDeckDetail> generate(String notebookId, {String? title}) async {
-    final res = await _client.post<dynamic>('/api/flashcards', data: {
-      'notebookId': notebookId,
-      if (title != null && title.isNotEmpty) 'title': title,
-    });
+  Future<FlashcardDeckDetail> generate(
+    String notebookId, {
+    String? title,
+  }) async {
+    final res = await _client.post<dynamic>(
+      '/api/flashcards',
+      data: {
+        'notebookId': notebookId,
+        if (title != null && title.isNotEmpty) 'title': title,
+      },
+    );
     final data = res.data;
-    if (data is! Map) throw const FlashcardsException('Could not generate that deck.');
+    if (data is! Map)
+      throw const FlashcardsException('Could not generate that deck.');
     final deckJson = data['deck'];
     final cards = data['cards'];
     if (deckJson is! Map || cards is! List) {
@@ -61,7 +73,8 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
   Future<FlashcardDeckDetail> deck(String deckId) async {
     final res = await _client.get<dynamic>('/api/flashcards/$deckId');
     final data = res.data;
-    if (data is! Map) throw const FlashcardsException('Could not load that deck.');
+    if (data is! Map)
+      throw const FlashcardsException('Could not load that deck.');
     final deckJson = data['deck'];
     final cards = data['cards'];
     if (deckJson is! Map || cards is! List) {
@@ -77,10 +90,15 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
   }
 
   @override
-  Future<void> delete(String deckId) => _client.delete<dynamic>('/api/flashcards/$deckId');
+  Future<void> delete(String deckId) =>
+      _client.delete<dynamic>('/api/flashcards/$deckId');
 
   @override
-  Future<void> review(String deckId, {required String cardId, required int rating}) async {
+  Future<void> review(
+    String deckId, {
+    required String cardId,
+    required int rating,
+  }) async {
     await _client.post<dynamic>(
       '/api/flashcards/$deckId/review',
       data: {'cardId': cardId, 'rating': rating},
@@ -91,7 +109,8 @@ class ApiFlashcardsRepository implements FlashcardsRepository {
   Future<FlashcardProgress> progress() async {
     final res = await _client.get<dynamic>('/api/progress/flashcards');
     final data = res.data;
-    if (data is! Map) throw const FlashcardsException('Could not load your flashcard history.');
+    if (data is! Map)
+      throw const FlashcardsException('Could not load your flashcard history.');
     return FlashcardProgress.fromJson(Map<String, dynamic>.from(data));
   }
 }

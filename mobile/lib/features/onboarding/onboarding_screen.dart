@@ -13,11 +13,23 @@ import 'onboarding_models.dart';
 /// The five onboarding goals. Values must match the backend's GOAL_OPTIONS
 /// (src/lib/onboarding.ts); labels are the user-facing copy.
 const _goalChoices = <({String value, String label, IconData icon})>[
-  (value: 'summaries', label: 'AI summaries', icon: Icons.auto_awesome_outlined),
+  (
+    value: 'summaries',
+    label: 'AI summaries',
+    icon: Icons.auto_awesome_outlined,
+  ),
   (value: 'flashcards', label: 'Flashcards', icon: Icons.style_outlined),
   (value: 'quizzes', label: 'Quizzes', icon: Icons.quiz_outlined),
-  (value: 'study planning', label: 'Study planning', icon: Icons.calendar_month_outlined),
-  (value: 'staying motivated', label: 'Staying motivated', icon: Icons.local_fire_department_outlined),
+  (
+    value: 'study planning',
+    label: 'Study planning',
+    icon: Icons.calendar_month_outlined,
+  ),
+  (
+    value: 'staying motivated',
+    label: 'Staying motivated',
+    icon: Icons.local_fire_department_outlined,
+  ),
 ];
 
 const _minuteChoices = [30, 60, 90, 120, 180];
@@ -61,18 +73,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   bool get _canContinue => switch (_step) {
-        0 => _course.text.trim().length >= 2,
-        1 => _subjects.text.trim().isNotEmpty,
-        2 => true, // exams are optional
-        3 => true,
-        _ => _goals.isNotEmpty,
-      };
+    0 => _course.text.trim().length >= 2,
+    1 => _subjects.text.trim().isNotEmpty,
+    2 => true, // exams are optional
+    3 => true,
+    _ => _goals.isNotEmpty,
+  };
 
   String? get _stepHint => switch (_step) {
-        0 => 'e.g. Medicine, Biology, Law, Computer Science',
-        1 => 'e.g. Anatomy, Physiology, Biochemistry',
-        _ => null,
-      };
+    0 => 'e.g. Medicine, Biology, Law, Computer Science',
+    1 => 'e.g. Anatomy, Physiology, Biochemistry',
+    _ => null,
+  };
 
   void _next() {
     setState(() {
@@ -102,7 +114,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
     if (picked == null) return;
     setState(() {
-      row.date = '${picked.year.toString().padLeft(4, '0')}-'
+      row.date =
+          '${picked.year.toString().padLeft(4, '0')}-'
           '${picked.month.toString().padLeft(2, '0')}-'
           '${picked.day.toString().padLeft(2, '0')}';
     });
@@ -123,7 +136,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               for (final row in _exams)
                 if (row.date != null)
                   OnboardingExam(
-                    name: row.name.text.trim().isEmpty ? null : row.name.text.trim(),
+                    name: row.name.text.trim().isEmpty
+                        ? null
+                        : row.name.text.trim(),
                     date: row.date!,
                   ),
             ],
@@ -166,7 +181,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         color: g.primarySoft,
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: Icon(Icons.auto_stories, size: 26, color: g.primary),
+                      child: Icon(
+                        Icons.auto_stories,
+                        size: 26,
+                        color: g.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -214,7 +233,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         if (_step > 0) const SizedBox(width: 10),
                         Expanded(
                           child: GlassButton(
-                            label: _step < _stepCount - 1 ? 'Continue' : 'Finish setup',
+                            label: _step < _stepCount - 1
+                                ? 'Continue'
+                                : 'Finish setup',
                             icon: _step < _stepCount - 1
                                 ? Icons.arrow_forward
                                 : Icons.check,
@@ -222,8 +243,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             onPressed: _busy
                                 ? null
                                 : _step < _stepCount - 1
-                                    ? (_canContinue ? _next : null)
-                                    : (_canContinue ? _finish : null),
+                                ? (_canContinue ? _next : null)
+                                : (_canContinue ? _finish : null),
                           ),
                         ),
                       ],
@@ -239,46 +260,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   String _stepTitle(int step) => switch (step) {
-        0 => 'Your course',
-        1 => 'Your subjects',
-        2 => 'Your exams',
-        3 => 'Study time',
-        _ => 'Your goals',
-      };
+    0 => 'Your course',
+    1 => 'Your subjects',
+    2 => 'Your exams',
+    3 => 'Study time',
+    _ => 'Your goals',
+  };
 
   List<Widget> _buildStep(BuildContext context) {
     final g = context.glass;
-    final header = Text(
-      switch (_step) {
-        0 => 'What are you studying?',
-        1 => 'Your subjects',
-        2 => 'When are your exams?',
-        3 => 'How long do you study each day?',
-        _ => 'What do you want help with?',
-      },
-      style: Theme.of(context).textTheme.titleMedium,
-    );
+    final header = Text(switch (_step) {
+      0 => 'What are you studying?',
+      1 => 'Your subjects',
+      2 => 'When are your exams?',
+      3 => 'How long do you study each day?',
+      _ => 'What do you want help with?',
+    }, style: Theme.of(context).textTheme.titleMedium);
 
     final body = switch (_step) {
       0 => GlassInput(
-          controller: _course,
-          label: 'Course',
-          hintText: _stepHint,
-          textInputAction: TextInputAction.next,
-          prefixIcon: Icons.school_outlined,
-          // Keep the Continue button's enabled state live as the user types.
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _canContinue ? _next() : null,
-        ),
+        controller: _course,
+        label: 'Course',
+        hintText: _stepHint,
+        textInputAction: TextInputAction.next,
+        prefixIcon: Icons.school_outlined,
+        // Keep the Continue button's enabled state live as the user types.
+        onChanged: (_) => setState(() {}),
+        onSubmitted: (_) => _canContinue ? _next() : null,
+      ),
       1 => GlassInput(
-          controller: _subjects,
-          label: 'Subjects',
-          hintText: _stepHint,
-          textInputAction: TextInputAction.next,
-          prefixIcon: Icons.menu_book_outlined,
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _canContinue ? _next() : null,
-        ),
+        controller: _subjects,
+        label: 'Subjects',
+        hintText: _stepHint,
+        textInputAction: TextInputAction.next,
+        prefixIcon: Icons.menu_book_outlined,
+        onChanged: (_) => setState(() {}),
+        onSubmitted: (_) => _canContinue ? _next() : null,
+      ),
       2 => _buildExamsStep(g),
       3 => _buildMinutesStep(g),
       _ => _buildGoalsStep(g),

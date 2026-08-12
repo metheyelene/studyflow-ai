@@ -15,7 +15,11 @@ class ExamCountdownCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final g = context.glass;
     final days = exam.daysUntil(DateTime.now());
-    final countdown = days < 0 ? 'Date set' : days == 0 ? 'Today' : '$days days';
+    final countdown = days < 0
+        ? 'Date set'
+        : days == 0
+        ? 'Today'
+        : '$days days';
     final soon = days >= 0 && days <= 7;
 
     return GlassCard(

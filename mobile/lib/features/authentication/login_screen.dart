@@ -41,10 +41,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _busy = true;
       _error = null;
     });
-    final error = await ref.read(authControllerProvider.notifier).signIn(
-          email: email,
-          password: password,
-        );
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .signIn(email: email, password: password);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -76,7 +75,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: g.primarySoft,
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: Icon(Icons.auto_stories, size: 26, color: g.primary),
+                      child: Icon(
+                        Icons.auto_stories,
+                        size: 26,
+                        color: g.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -146,10 +149,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(color: g.textMuted, fontSize: 13),
                         ),
                         TextButton(
-                          onPressed: _busy ? null : () => context.go(AppRoutes.signup),
+                          onPressed: _busy
+                              ? null
+                              : () => context.go(AppRoutes.signup),
                           child: Text(
                             'Create an account',
-                            style: TextStyle(color: g.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: g.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

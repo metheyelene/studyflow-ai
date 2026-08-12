@@ -38,7 +38,8 @@ class AudioController extends AsyncNotifier<AudioLibraryState> {
   }) async {
     var episode = await _repo.create(notebookId, style: style, length: length);
     if (episode.isReady) return episode;
-    if (episode.isFailed) throw AudioException(episode.errorMessage ?? 'Generation failed.');
+    if (episode.isFailed)
+      throw AudioException(episode.errorMessage ?? 'Generation failed.');
 
     // Poll the job. The POST returns immediately (202) and the pipeline
     // runs server-side — never keep the request open client-side.
@@ -49,7 +50,9 @@ class AudioController extends AsyncNotifier<AudioLibraryState> {
       onStage?.call(episode.pipelineStage);
     }
     if (episode.isFailed) {
-      throw AudioException(episode.errorMessage ?? 'Generation failed. Please try again.');
+      throw AudioException(
+        episode.errorMessage ?? 'Generation failed. Please try again.',
+      );
     }
     if (episode.isProcessing) {
       throw const AudioException(
@@ -63,7 +66,9 @@ class AudioController extends AsyncNotifier<AudioLibraryState> {
     await _repo.delete(episodeId);
     final current = await future;
     state = AsyncData(
-      current.copyWith(episodes: current.episodes.where((e) => e.id != episodeId).toList()),
+      current.copyWith(
+        episodes: current.episodes.where((e) => e.id != episodeId).toList(),
+      ),
     );
   }
 
@@ -84,4 +89,6 @@ class AudioController extends AsyncNotifier<AudioLibraryState> {
 }
 
 final audioControllerProvider =
-    AsyncNotifierProvider<AudioController, AudioLibraryState>(AudioController.new);
+    AsyncNotifierProvider<AudioController, AudioLibraryState>(
+      AudioController.new,
+    );

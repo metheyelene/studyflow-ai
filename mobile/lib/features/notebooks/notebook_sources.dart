@@ -2,8 +2,6 @@
 /// (`GET /api/notebooks/[id]/sources`).
 library;
 
-
-
 enum SourceStatus { processing, ready, failed, unknown }
 
 /// A source (pasted text today; uploads land in a later phase).
@@ -39,7 +37,9 @@ class NotebookSource {
       },
       wordCount: (json['wordCount'] as num?)?.toInt(),
       pageCount: (json['pageCount'] as num?)?.toInt(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 

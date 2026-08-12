@@ -23,14 +23,20 @@ class ProgressScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
-    final notebooks = ref.watch(notebooksControllerProvider).valueOrNull ?? const [];
+    final notebooks =
+        ref.watch(notebooksControllerProvider).valueOrNull ?? const [];
     final dashboard = ref.watch(dashboardControllerProvider).valueOrNull;
     final sourceCount = notebooks.fold<int>(0, (sum, n) => sum + n.sourceCount);
     final aiUsed = dashboard?.usage.used;
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, AppSpacing.xl, 20, context.isPhone ? 120 : 40),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          AppSpacing.xl,
+          20,
+          context.isPhone ? 120 : 40,
+        ),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
@@ -79,7 +85,9 @@ class ProgressScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 _FlashcardProgressSection(
                   progress: ref.watch(flashcardProgressControllerProvider),
-                  onRetry: () => ref.read(flashcardProgressControllerProvider.notifier).refresh(),
+                  onRetry: () => ref
+                      .read(flashcardProgressControllerProvider.notifier)
+                      .refresh(),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle(title: 'LEARNING INSIGHTS'),
@@ -107,11 +115,16 @@ class ProgressScreen extends ConsumerWidget {
                         'Quiz trends, weakest topics, and review recommendations '
                         'build up from real study history — nothing is invented.',
                         textAlign: TextAlign.center,
-                        style: AppText.small.copyWith(color: g.textMuted, height: 1.45),
+                        style: AppText.small.copyWith(
+                          color: g.textMuted,
+                          height: 1.45,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       GlassButton(
-                        label: notebooks.isEmpty ? 'Create a notebook' : 'Open notebooks',
+                        label: notebooks.isEmpty
+                            ? 'Create a notebook'
+                            : 'Open notebooks',
                         icon: Icons.library_books_outlined,
                         onPressed: () => context.go(AppRoutes.notebooks),
                       ),
@@ -129,7 +142,11 @@ class ProgressScreen extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.icon, required this.label, required this.value});
+  const _StatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -154,10 +171,7 @@ class _StatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppText.small.copyWith(color: g.textMuted),
-          ),
+          Text(label, style: AppText.small.copyWith(color: g.textMuted)),
         ],
       ),
     );
@@ -181,7 +195,10 @@ class _SectionTitle extends StatelessWidget {
 /// Flashcard review history from the backend: totals + per-deck accuracy.
 /// Renders an honest empty state until real reviews exist.
 class _FlashcardProgressSection extends StatelessWidget {
-  const _FlashcardProgressSection({required this.progress, required this.onRetry});
+  const _FlashcardProgressSection({
+    required this.progress,
+    required this.onRetry,
+  });
 
   final AsyncValue<FlashcardProgress> progress;
   final VoidCallback onRetry;
@@ -221,7 +238,10 @@ class _FlashcardProgressSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'No flashcard reviews yet. Review a deck and your accuracy history will appear here.',
-                      style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                      style: AppText.small.copyWith(
+                        color: g.textMuted,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                   GlassButton(
@@ -275,7 +295,10 @@ class _FlashcardProgressSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                for (final deck in p.decks) ...[_DeckAccuracyRow(deck: deck), const SizedBox(height: 10)],
+                for (final deck in p.decks) ...[
+                  _DeckAccuracyRow(deck: deck),
+                  const SizedBox(height: 10),
+                ],
               ],
             ),
           ),
@@ -303,12 +326,20 @@ class _DeckAccuracyRow extends StatelessWidget {
                 deck.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: g.textPrimary, fontSize: 13.5, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: g.textPrimary,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             Text(
               '${deck.accuracy}%',
-              style: TextStyle(color: g.primary, fontSize: 13, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: g.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(width: 6),
             Text(

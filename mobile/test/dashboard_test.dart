@@ -28,7 +28,9 @@ void main() {
     expect(find.text('Ready to study?'), findsOneWidget);
   });
 
-  testWidgets('dashboard lists real upcoming exams with countdowns', (tester) async {
+  testWidgets('dashboard lists real upcoming exams with countdowns', (
+    tester,
+  ) async {
     final examDate = DateTime.now().add(const Duration(days: 12));
     final dashboard = FakeDashboardRepository(
       currentExams: [
@@ -41,7 +43,9 @@ void main() {
     expect(find.text('12 days'), findsOneWidget);
   });
 
-  testWidgets('exam dates render human-readable, never the raw ISO string', (tester) async {
+  testWidgets('exam dates render human-readable, never the raw ISO string', (
+    tester,
+  ) async {
     // The API sends full ISO timestamps (e.g. 2026-09-15T00:00:00.000Z).
     final dashboard = FakeDashboardRepository(
       currentExams: [
@@ -59,12 +63,17 @@ void main() {
   });
 
   testWidgets('empty exams show the honest empty state', (tester) async {
-    await pumpApp(tester, dashboard: FakeDashboardRepository(currentExams: const []));
+    await pumpApp(
+      tester,
+      dashboard: FakeDashboardRepository(currentExams: const []),
+    );
 
     expect(find.text('No upcoming exams'), findsOneWidget);
   });
 
-  testWidgets('usage failure shows a friendly error and retry recovers', (tester) async {
+  testWidgets('usage failure shows a friendly error and retry recovers', (
+    tester,
+  ) async {
     final dashboard = FakeDashboardRepository(failUsage: true);
     await pumpApp(tester, dashboard: dashboard);
 

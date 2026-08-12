@@ -39,7 +39,10 @@ class PodcastLibraryScreen extends ConsumerWidget {
                   tooltip: 'Back',
                 ),
                 Expanded(
-                  child: Text('My Audio', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    'My Audio',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 GlassButton(
                   label: 'New podcast',
@@ -55,20 +58,31 @@ class PodcastLibraryScreen extends ConsumerWidget {
             child: state.when(
               loading: () => const _EpisodesLoading(),
               error: (err, _) => _EpisodesError(
-                message: err is AudioException ? err.message : 'Could not load your audio.',
-                onRetry: () => ref.read(audioControllerProvider.notifier).refresh(),
+                message: err is AudioException
+                    ? err.message
+                    : 'Could not load your audio.',
+                onRetry: () =>
+                    ref.read(audioControllerProvider.notifier).refresh(),
               ),
               data: (s) {
                 if (s.episodes.isEmpty) {
-                  return _EmptyLibrary(onGenerate: () => _openGenerateSheet(context, ref));
+                  return _EmptyLibrary(
+                    onGenerate: () => _openGenerateSheet(context, ref),
+                  );
                 }
                 return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 96 : 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    context.isPhone ? 96 : 24,
+                  ),
                   itemCount: s.episodes.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => _EpisodeCard(
                     episode: s.episodes[i],
-                    onOpen: () => context.push('${AppRoutes.audio}/${s.episodes[i].id}'),
+                    onOpen: () =>
+                        context.push('${AppRoutes.audio}/${s.episodes[i].id}'),
                     onDelete: () => _confirmDelete(context, ref, s.episodes[i]),
                   ),
                 );
@@ -97,7 +111,11 @@ class PodcastLibraryScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, AudioEpisode episode) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    AudioEpisode episode,
+  ) async {
     final confirmed = await showGlassModal<bool>(
       context: context,
       barrierDismissible: true,
@@ -105,11 +123,18 @@ class PodcastLibraryScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Delete this episode?', style: Theme.of(dialogContext).textTheme.titleLarge),
+          Text(
+            'Delete this episode?',
+            style: Theme.of(dialogContext).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
             '“${episode.title}” and its transcript will be removed. This can\'t be undone.',
-            style: TextStyle(color: context.glass.textMuted, fontSize: 14, height: 1.45),
+            style: TextStyle(
+              color: context.glass.textMuted,
+              fontSize: 14,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
@@ -138,14 +163,20 @@ class PodcastLibraryScreen extends ConsumerWidget {
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete the episode. Please try again.')),
+        const SnackBar(
+          content: Text('Could not delete the episode. Please try again.'),
+        ),
       );
     }
   }
 }
 
 class _EpisodeCard extends StatelessWidget {
-  const _EpisodeCard({required this.episode, required this.onOpen, required this.onDelete});
+  const _EpisodeCard({
+    required this.episode,
+    required this.onOpen,
+    required this.onDelete,
+  });
 
   final AudioEpisode episode;
   final VoidCallback onOpen;
@@ -155,7 +186,9 @@ class _EpisodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final g = context.glass;
     final subtitle = switch (episode.status) {
-      'processing' => kPipelineStageLabels[episode.pipelineStage] ?? 'Preparing your episode…',
+      'processing' =>
+        kPipelineStageLabels[episode.pipelineStage] ??
+            'Preparing your episode…',
       'failed' => episode.errorMessage ?? 'Generation failed.',
       _ => _episodeMeta(episode),
     };
@@ -207,7 +240,9 @@ class _EpisodeCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: episode.isFailed ? g.danger : g.textMuted,
+                                color: episode.isFailed
+                                    ? g.danger
+                                    : g.textMuted,
                                 fontSize: 12.5,
                               ),
                             ),
@@ -218,7 +253,9 @@ class _EpisodeCard extends StatelessWidget {
                               child: SizedBox(
                                 width: 12,
                                 height: 12,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             ),
                         ],
@@ -228,7 +265,11 @@ class _EpisodeCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline, size: 20, color: g.textMuted),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: g.textMuted,
+                  ),
                   tooltip: 'Delete episode',
                 ),
               ],
@@ -305,12 +346,19 @@ class _EpisodesError extends StatelessWidget {
             children: [
               Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text('Could not load your audio', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Could not load your audio',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 16),
               GlassButton(
@@ -347,10 +395,17 @@ class _EmptyLibrary extends StatelessWidget {
                 color: g.primarySoft,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.headphones_outlined, size: 24, color: g.primary),
+              child: Icon(
+                Icons.headphones_outlined,
+                size: 24,
+                color: g.primary,
+              ),
             ),
             const SizedBox(height: 14),
-            Text('No podcasts yet', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'No podcasts yet',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               'Turn a notebook into a Study Podcast. StudyFlow organizes your '
@@ -378,7 +433,8 @@ class _GeneratePodcastSheet extends ConsumerStatefulWidget {
   const _GeneratePodcastSheet();
 
   @override
-  ConsumerState<_GeneratePodcastSheet> createState() => _GeneratePodcastSheetState();
+  ConsumerState<_GeneratePodcastSheet> createState() =>
+      _GeneratePodcastSheetState();
 }
 
 class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
@@ -396,12 +452,15 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
       _stage = 'Queued…';
     });
     try {
-      final episode = await ref.read(audioControllerProvider.notifier).createPodcast(
+      final episode = await ref
+          .read(audioControllerProvider.notifier)
+          .createPodcast(
             _notebookId!,
             style: _style,
             length: _length,
             onStage: (stage) {
-              if (mounted) setState(() => _stage = kPipelineStageLabels[stage] ?? stage);
+              if (mounted)
+                setState(() => _stage = kPipelineStageLabels[stage] ?? stage);
             },
           );
       if (!mounted) return;
@@ -411,7 +470,9 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
       setState(() {
         _busy = false;
         _stage = null;
-        _error = e is AudioException ? e.message : 'Could not create that podcast. Please try again.';
+        _error = e is AudioException
+            ? e.message
+            : 'Could not create that podcast. Please try again.';
       });
     }
   }
@@ -433,93 +494,109 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Text('Create a Study Podcast', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(
-            'StudyFlow reads the notebook\'s sources, organizes the material, '
-            'writes a grounded script, and narrates it as an MP3 episode.',
-            style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          Text('Notebook', style: TextStyle(color: g.textMuted, fontSize: 12.5)),
-          const SizedBox(height: 8),
-          if (notebooks.isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
-            )
-          else if (notebooks.hasError || (notebooks.valueOrNull ?? const []).isEmpty)
             Text(
-              'You don\'t have any notebooks yet. Create one, add a source, then come back.',
-              style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
-            )
-          else
-            _NotebookPicker(
-              notebooks: notebooks.valueOrNull!,
-              selectedId: _notebookId,
-              onSelect: (id) => setState(() => _notebookId = id),
+              'Create a Study Podcast',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          const SizedBox(height: 16),
-          Text('Style', style: TextStyle(color: g.textMuted, fontSize: 12.5)),
-
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final style in kPodcastStyleLabels.entries)
-                _ChoicePill(
-                  label: style.value,
-                  selected: _style == style.key,
-                  onTap: _busy ? null : () => setState(() => _style = style.key),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text('Length', style: TextStyle(color: g.textMuted, fontSize: 12.5)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final length in kPodcastLengthLabels.entries)
-                _ChoicePill(
-                  label: length.value,
-                  selected: _length == length.key,
-                  onTap: _busy ? null : () => setState(() => _length = length.key),
-                ),
-            ],
-          ),
-          if (_stage != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'StudyFlow reads the notebook\'s sources, organizes the material, '
+              'writes a grounded script, and narrates it as an MP3 episode.',
+              style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
+            ),
             const SizedBox(height: 16),
-            Row(
+            Text(
+              'Notebook',
+              style: TextStyle(color: g.textMuted, fontSize: 12.5),
+            ),
+            const SizedBox(height: 8),
+            if (notebooks.isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Center(
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              )
+            else if (notebooks.hasError ||
+                (notebooks.valueOrNull ?? const []).isEmpty)
+              Text(
+                'You don\'t have any notebooks yet. Create one, add a source, then come back.',
+                style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
+              )
+            else
+              _NotebookPicker(
+                notebooks: notebooks.valueOrNull!,
+                selectedId: _notebookId,
+                onSelect: (id) => setState(() => _notebookId = id),
+              ),
+            const SizedBox(height: 16),
+            Text('Style', style: TextStyle(color: g.textMuted, fontSize: 12.5)),
+
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _stage!,
-                    style: TextStyle(color: g.textMuted, fontSize: 13),
+                for (final style in kPodcastStyleLabels.entries)
+                  _ChoicePill(
+                    label: style.value,
+                    selected: _style == style.key,
+                    onTap: _busy
+                        ? null
+                        : () => setState(() => _style = style.key),
                   ),
-                ),
               ],
             ),
-          ],
-          if (_error != null) ...[
-            const SizedBox(height: 10),
-            Text(_error!, style: TextStyle(color: g.danger, fontSize: 13)),
-          ],
-          const SizedBox(height: 18),
-          GlassButton(
-            label: _busy ? 'Creating…' : 'Generate episode',
-            icon: Icons.mic_none,
-            expand: true,
-            onPressed: _busy || _notebookId == null ? null : _generate,
-          ),
+            const SizedBox(height: 16),
+            Text(
+              'Length',
+              style: TextStyle(color: g.textMuted, fontSize: 12.5),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final length in kPodcastLengthLabels.entries)
+                  _ChoicePill(
+                    label: length.value,
+                    selected: _length == length.key,
+                    onTap: _busy
+                        ? null
+                        : () => setState(() => _length = length.key),
+                  ),
+              ],
+            ),
+            if (_stage != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _stage!,
+                      style: TextStyle(color: g.textMuted, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(_error!, style: TextStyle(color: g.danger, fontSize: 13)),
+            ],
+            const SizedBox(height: 18),
+            GlassButton(
+              label: _busy ? 'Creating…' : 'Generate episode',
+              icon: Icons.mic_none,
+              expand: true,
+              onPressed: _busy || _notebookId == null ? null : _generate,
+            ),
           ],
         ),
       ),
@@ -528,7 +605,11 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
 }
 
 class _NotebookPicker extends StatelessWidget {
-  const _NotebookPicker({required this.notebooks, required this.selectedId, required this.onSelect});
+  const _NotebookPicker({
+    required this.notebooks,
+    required this.selectedId,
+    required this.onSelect,
+  });
 
   final List<Notebook> notebooks;
   final String? selectedId;
@@ -552,7 +633,11 @@ class _NotebookPicker extends StatelessWidget {
 }
 
 class _ChoicePill extends StatelessWidget {
-  const _ChoicePill({required this.label, required this.selected, required this.onTap});
+  const _ChoicePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;

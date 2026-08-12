@@ -39,7 +39,10 @@ class FlashcardsScreen extends ConsumerWidget {
                   tooltip: 'Back',
                 ),
                 Expanded(
-                  child: Text('Flashcards', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    'Flashcards',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 GlassBadge(
                   label: decks.valueOrNull == null
@@ -62,8 +65,11 @@ class FlashcardsScreen extends ConsumerWidget {
             child: decks.when(
               loading: () => const _DecksLoading(),
               error: (err, _) => _DecksError(
-                message: err is FlashcardsException ? err.message : 'Could not load your decks.',
-                onRetry: () => ref.read(flashcardsControllerProvider.notifier).refresh(),
+                message: err is FlashcardsException
+                    ? err.message
+                    : 'Could not load your decks.',
+                onRetry: () =>
+                    ref.read(flashcardsControllerProvider.notifier).refresh(),
               ),
               data: (state) {
                 if (state.decks.isEmpty) {
@@ -72,7 +78,12 @@ class FlashcardsScreen extends ConsumerWidget {
                   );
                 }
                 return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 96 : 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    context.isPhone ? 96 : 24,
+                  ),
                   itemCount: state.decks.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => _DeckCard(
@@ -80,7 +91,8 @@ class FlashcardsScreen extends ConsumerWidget {
                     onOpen: () => context.push(
                       '${AppRoutes.flashcards}/${state.decks[i].id}',
                     ),
-                    onDelete: () => _confirmDelete(context, ref, state.decks[i]),
+                    onDelete: () =>
+                        _confirmDelete(context, ref, state.decks[i]),
                   ),
                 );
               },
@@ -100,7 +112,11 @@ class FlashcardsScreen extends ConsumerWidget {
     context.push('${AppRoutes.flashcards}/${detail.deck.id}');
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, FlashcardDeck deck) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    FlashcardDeck deck,
+  ) async {
     final confirmed = await showGlassModal<bool>(
       context: context,
       barrierDismissible: true,
@@ -108,11 +124,18 @@ class FlashcardsScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Delete this deck?', style: Theme.of(dialogContext).textTheme.titleLarge),
+          Text(
+            'Delete this deck?',
+            style: Theme.of(dialogContext).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
             '“${deck.title}” and its ${deck.cardCount} cards will be removed. This can\'t be undone.',
-            style: TextStyle(color: context.glass.textMuted, fontSize: 14, height: 1.45),
+            style: TextStyle(
+              color: context.glass.textMuted,
+              fontSize: 14,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
@@ -196,12 +219,19 @@ class _DecksError extends StatelessWidget {
             children: [
               Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text('Could not load your decks', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Could not load your decks',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: g.textMuted, fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  color: g.textMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 16),
               GlassButton(
@@ -263,7 +293,11 @@ class _EmptyDecks extends StatelessWidget {
 }
 
 class _DeckCard extends StatelessWidget {
-  const _DeckCard({required this.deck, required this.onOpen, required this.onDelete});
+  const _DeckCard({
+    required this.deck,
+    required this.onOpen,
+    required this.onDelete,
+  });
 
   final FlashcardDeck deck;
   final VoidCallback onOpen;
@@ -317,7 +351,11 @@ class _DeckCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline, size: 20, color: g.textMuted),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: g.textMuted,
+                  ),
                   tooltip: 'Delete deck',
                 ),
               ],
@@ -380,7 +418,10 @@ class _GenerateDeckSheetState extends ConsumerState<_GenerateDeckSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Generate a deck', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Generate a deck',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 4),
           Text(
             'StudyFlow AI reads the notebook\'s sources and builds front/back '

@@ -33,24 +33,36 @@ class StudyPlanScreen extends ConsumerWidget {
                   tooltip: 'Back',
                 ),
                 Expanded(
-                  child: Text('Study plan', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    'Study plan',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
               ],
             ),
           ),
           Expanded(
             child: plans.when(
-              loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+              loading: () => const Center(
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
               error: (err, _) => _ErrorState(
-                message: err is StudyPlannerException ? err.message : 'Could not load that plan.',
-                onRetry: () => ref.read(studyPlannerControllerProvider.notifier).refresh(),
+                message: err is StudyPlannerException
+                    ? err.message
+                    : 'Could not load that plan.',
+                onRetry: () =>
+                    ref.read(studyPlannerControllerProvider.notifier).refresh(),
               ),
               data: (planList) {
-                final plan = planList.where((p) => p.examId == examId).firstOrNull;
+                final plan = planList
+                    .where((p) => p.examId == examId)
+                    .firstOrNull;
                 if (plan == null) {
                   return _ErrorState(
                     message: 'No plan yet for this exam.',
-                    onRetry: () => ref.read(studyPlannerControllerProvider.notifier).refresh(),
+                    onRetry: () => ref
+                        .read(studyPlannerControllerProvider.notifier)
+                        .refresh(),
                   );
                 }
                 return _PlanBody(
@@ -60,9 +72,15 @@ class StudyPlanScreen extends ConsumerWidget {
                       .updateTask(plan, task, task.isDone ? 'pending' : 'done'),
                   onSkip: (task) => ref
                       .read(studyPlannerControllerProvider.notifier)
-                      .updateTask(plan, task, task.isSkipped ? 'pending' : 'skipped'),
+                      .updateTask(
+                        plan,
+                        task,
+                        task.isSkipped ? 'pending' : 'skipped',
+                      ),
                   onRegenerate: () async {
-                    await ref.read(studyPlannerControllerProvider.notifier).generate(plan.examId);
+                    await ref
+                        .read(studyPlannerControllerProvider.notifier)
+                        .generate(plan.examId);
                   },
                 );
               },
@@ -110,17 +128,27 @@ class _PlanBody extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(plan.examTitle, style: Theme.of(context).textTheme.titleMedium),
+                      child: Text(
+                        plan.examTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: g.primarySoft,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         'v${plan.version}',
-                        style: TextStyle(color: g.primary, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: g.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -143,7 +171,10 @@ class _PlanBody extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Generated ${_dayLabel(plan.generatedForDate, today)}. Regenerating rebuilds from today and keeps completed tasks.',
-                  style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+                  style: AppText.small.copyWith(
+                    color: g.textMuted,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -164,7 +195,11 @@ class _PlanBody extends StatelessWidget {
               children: [
                 for (var i = 0; i < plan.tasksOn(date).length; i++) ...[
                   if (i > 0)
-                    Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1, indent: 48),
+                    Divider(
+                      color: g.textPrimary.withValues(alpha: 0.06),
+                      height: 1,
+                      indent: 48,
+                    ),
                   _TaskTile(
                     task: plan.tasksOn(date)[i],
                     onToggle: () => onToggle(plan.tasksOn(date)[i]),
@@ -197,13 +232,30 @@ class _PlanBody extends StatelessWidget {
     final tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
     if (date == _dateKey(tomorrow)) return 'Tomorrow';
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${days[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
   }
 }
 
 class _TaskTile extends StatelessWidget {
-  const _TaskTile({required this.task, required this.onToggle, required this.onSkip});
+  const _TaskTile({
+    required this.task,
+    required this.onToggle,
+    required this.onSkip,
+  });
 
   final StudyPlanTask task;
   final VoidCallback onToggle;
@@ -239,7 +291,11 @@ class _TaskTile extends StatelessWidget {
                 if (task.detail.isNotEmpty)
                   Text(
                     task.detail,
-                    style: TextStyle(color: g.textMuted, fontSize: 12.5, height: 1.35),
+                    style: TextStyle(
+                      color: g.textMuted,
+                      fontSize: 12.5,
+                      height: 1.35,
+                    ),
                   ),
                 const SizedBox(height: 2),
                 Text(
@@ -281,7 +337,11 @@ class _ErrorState extends StatelessWidget {
             children: [
               Icon(Icons.event_busy_outlined, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
-              Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 16),
               GlassButton(
                 label: 'Try again',

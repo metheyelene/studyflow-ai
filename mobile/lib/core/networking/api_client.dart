@@ -44,28 +44,31 @@ class ApiClient {
     Map<String, dynamic>? query,
     void Function(int, int?)? onReceiveProgress,
     bool asBytes = false,
-  }) =>
-      _dio.get<T>(
-        path,
-        queryParameters: query,
-        onReceiveProgress: onReceiveProgress,
-        options: asBytes ? Options(responseType: ResponseType.bytes) : null,
-      );
+  }) => _dio.get<T>(
+    path,
+    queryParameters: query,
+    onReceiveProgress: onReceiveProgress,
+    options: asBytes ? Options(responseType: ResponseType.bytes) : null,
+  );
 
-  Future<Response<T>> post<T>(String path, {Object? data}) => _dio.post<T>(path, data: data);
+  Future<Response<T>> post<T>(String path, {Object? data}) =>
+      _dio.post<T>(path, data: data);
 
   /// POST that treats the response body as raw text — used by the notebook
   /// chat endpoint, whose body is a streamed answer followed by a citation
   /// trailer (not JSON).
-  Future<Response<String>> postPlain(String path, {Object? data}) => _dio.post<String>(
+  Future<Response<String>> postPlain(String path, {Object? data}) =>
+      _dio.post<String>(
         path,
         data: data,
         options: Options(responseType: ResponseType.plain),
       );
 
-  Future<Response<T>> put<T>(String path, {Object? data}) => _dio.put<T>(path, data: data);
+  Future<Response<T>> put<T>(String path, {Object? data}) =>
+      _dio.put<T>(path, data: data);
 
-  Future<Response<T>> patch<T>(String path, {Object? data}) => _dio.patch<T>(path, data: data);
+  Future<Response<T>> patch<T>(String path, {Object? data}) =>
+      _dio.patch<T>(path, data: data);
 
   Future<Response<T>> delete<T>(String path) => _dio.delete<T>(path);
 
@@ -73,15 +76,22 @@ class ApiClient {
   /// so the session survives an app restart.
   Future<void> saveSessionToken(Response<dynamic> response) async {
     final raw = response.headers.value('set-cookie');
-    final token = _tokenFromSetCookie(raw) ?? (response.data is Map ? (response.data as Map)['token'] : null);
+    final token =
+        _tokenFromSetCookie(raw) ??
+        (response.data is Map ? (response.data as Map)['token'] : null);
     if (token is String && token.isNotEmpty) {
-      await _secureStorage.write(key: AppConfig.sessionTokenStorageKey, value: token);
+      await _secureStorage.write(
+        key: AppConfig.sessionTokenStorageKey,
+        value: token,
+      );
     }
   }
 
   /// Restore the persisted token and attach it as a cookie header.
   Future<String?> restoreSessionToken() async {
-    final token = await _secureStorage.read(key: AppConfig.sessionTokenStorageKey);
+    final token = await _secureStorage.read(
+      key: AppConfig.sessionTokenStorageKey,
+    );
     if (token != null && token.isNotEmpty) {
       _attachCookie(token);
     }

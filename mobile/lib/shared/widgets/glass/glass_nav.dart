@@ -4,7 +4,11 @@ import '../../../core/theme/app_theme.dart';
 import 'glass_card.dart';
 
 class GlassNavItem {
-  const GlassNavItem({required this.label, required this.icon, required this.selectedIcon});
+  const GlassNavItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+  });
   final String label;
   final IconData icon;
   final IconData selectedIcon;
@@ -56,7 +60,11 @@ class GlassNavigationBar extends StatelessWidget {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton({required this.item, required this.selected, required this.onTap});
+  const _NavButton({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
   final GlassNavItem item;
   final bool selected;
@@ -153,14 +161,18 @@ class GlassNavigationRail extends StatelessWidget {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: i == currentIndex ? g.primarySoft : Colors.transparent,
+                      color: i == currentIndex
+                          ? g.primarySoft
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          i == currentIndex ? items[i].selectedIcon : items[i].icon,
+                          i == currentIndex
+                              ? items[i].selectedIcon
+                              : items[i].icon,
                           size: 22,
                           color: i == currentIndex ? g.primary : g.textMuted,
                         ),
@@ -169,7 +181,9 @@ class GlassNavigationRail extends StatelessWidget {
                           Text(
                             items[i].label,
                             style: TextStyle(
-                              color: i == currentIndex ? g.primary : g.textMuted,
+                              color: i == currentIndex
+                                  ? g.primary
+                                  : g.textMuted,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -221,18 +235,27 @@ class GlassTabBar extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: i == currentIndex ? g.surfaceStrong : Colors.transparent,
+                    color: i == currentIndex
+                        ? g.surfaceStrong
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
-                    border: i == currentIndex ? Border.all(color: g.border) : null,
+                    border: i == currentIndex
+                        ? Border.all(color: g.border)
+                        : null,
                   ),
                   child: Text(
                     tabs[i],
                     style: TextStyle(
                       color: i == currentIndex ? g.textPrimary : g.textMuted,
                       fontSize: 13,
-                      fontWeight: i == currentIndex ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: i == currentIndex
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                     ),
                   ),
                 ),

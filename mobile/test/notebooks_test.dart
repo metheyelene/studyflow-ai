@@ -19,15 +19,19 @@ void main() {
     await tester.tap(find.text('New'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.descendant(of: find.byType(BottomSheet), matching: find.byType(TextField)),
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(TextField),
+      ),
       name,
     );
     await tester.tap(find.text('Create notebook'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('empty state → create notebook → card appears with search',
-      (tester) async {
+  testWidgets('empty state → create notebook → card appears with search', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await openNotebooksTab(tester);
 
@@ -47,8 +51,9 @@ void main() {
     expect(find.text('Cell Biology — Unit 3'), findsOneWidget);
   });
 
-  testWidgets('opening a notebook on phone shows the detail and back returns',
-      (tester) async {
+  testWidgets('opening a notebook on phone shows the detail and back returns', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await openNotebooksTab(tester);
     await createNotebook(tester, 'VLSI Design');
@@ -68,14 +73,18 @@ void main() {
     expect(find.text('VLSI Design'), findsOneWidget);
   });
 
-  testWidgets('tablet/desktop shows master-detail: list + detail panes',
-      (tester) async {
+  testWidgets('tablet/desktop shows master-detail: list + detail panes', (
+    tester,
+  ) async {
     await pumpApp(tester, size: const Size(1024, 768));
     await openNotebooksTab(tester);
     expect(find.text('Select a notebook'), findsOneWidget);
 
     await createNotebook(tester, 'Thermodynamics');
-    expect(find.text('Select a notebook'), findsOneWidget); // still nothing selected
+    expect(
+      find.text('Select a notebook'),
+      findsOneWidget,
+    ); // still nothing selected
 
     await tester.tap(find.text('Thermodynamics'));
     await tester.pumpAndSettle();
@@ -83,11 +92,15 @@ void main() {
     expect(find.text('Select a notebook'), findsNothing);
     expect(find.text('No sources yet'), findsOneWidget);
     // Both panes are visible at once on wide screens.
-    expect(find.text('Thermodynamics'), findsNWidgets(2)); // list card + detail header
+    expect(
+      find.text('Thermodynamics'),
+      findsNWidgets(2),
+    ); // list card + detail header
   });
 
-  testWidgets('create failure surfaces a friendly error and stays open',
-      (tester) async {
+  testWidgets('create failure surfaces a friendly error and stays open', (
+    tester,
+  ) async {
     final repo = _FailingNotebooksRepository();
     await pumpApp(tester, notebooks: repo);
     await openNotebooksTab(tester);
@@ -95,13 +108,19 @@ void main() {
     await tester.tap(find.text('New'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.descendant(of: find.byType(BottomSheet), matching: find.byType(TextField)),
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(TextField),
+      ),
       'Fails',
     );
     await tester.tap(find.text('Create notebook'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Could not create the notebook. Please try again.'), findsOneWidget);
+    expect(
+      find.text('Could not create the notebook. Please try again.'),
+      findsOneWidget,
+    );
     expect(find.text('Create notebook'), findsOneWidget); // sheet still open
 
     // Let the toast's dismiss timer elapse before the test ends.
@@ -112,7 +131,9 @@ void main() {
   test('notebooks controller loads and creates via the repository', () async {
     final container = ProviderContainer(
       overrides: [
-        notebooksRepositoryProvider.overrideWithValue(FakeNotebooksRepository()),
+        notebooksRepositoryProvider.overrideWithValue(
+          FakeNotebooksRepository(),
+        ),
       ],
     );
     addTearDown(container.dispose);

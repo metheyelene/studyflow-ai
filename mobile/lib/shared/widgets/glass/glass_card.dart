@@ -31,12 +31,14 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    final fill = color ?? switch (tone) {
-      GlassTone.surface => g.surface,
-      GlassTone.surfaceStrong => g.surfaceStrong,
-      GlassTone.surfaceSubtle => g.surfaceSubtle,
-      GlassTone.floating => g.floating,
-    };
+    final fill =
+        color ??
+        switch (tone) {
+          GlassTone.surface => g.surface,
+          GlassTone.surfaceStrong => g.surfaceStrong,
+          GlassTone.surfaceSubtle => g.surfaceSubtle,
+          GlassTone.floating => g.floating,
+        };
 
     final container = Container(
       clipBehavior: Clip.antiAlias,
@@ -85,7 +87,10 @@ class GlassCard extends StatelessWidget {
         : container;
 
     if (onTap == null) return surface;
-    return Semantics(button: true, child: InkWell(onTap: onTap, child: surface));
+    return Semantics(
+      button: true,
+      child: InkWell(onTap: onTap, child: surface),
+    );
   }
 }
 
