@@ -41,7 +41,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
   if (range) {
     const match = /^bytes=(\d*)-(\d*)$/.exec(range);
     if (match) {
-      let start = match[1] ? Number(match[1]) : 0;
+      const start = match[1] ? Number(match[1]) : 0;
       let end = match[2] ? Number(match[2]) : size - 1;
       if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= size) {
         return new NextResponse(null, {

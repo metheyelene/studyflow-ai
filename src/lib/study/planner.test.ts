@@ -1,26 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  daysBetween,
-  generateDailyPlan,
-  isPlanStale,
-  regeneratePlan,
-  type PlanTask,
-} from "@/lib/study/planner";
+import { daysBetween, generateDailyPlan, isPlanStale, regeneratePlan } from "@/lib/study/planner";
 
 const now = new Date("2026-08-12T10:00:00Z");
-
-function planTask(t: Partial<PlanTask>): PlanTask {
-  return {
-    id: "x",
-    date: "2026-08-12",
-    title: "t",
-    detail: "d",
-    durationMin: 30,
-    status: "pending",
-    ...t,
-  };
-}
 
 describe("generateDailyPlan", () => {
   it("rejects an exam that is today or already passed", () => {
