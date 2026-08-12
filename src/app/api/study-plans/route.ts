@@ -10,7 +10,9 @@ import {
   isPlanStale,
   regeneratePlan,
   type StudyPlanJson,
+  type WeakSubjectInfo,
 } from "@/lib/study/planner";
+import { fetchRecentSubjectAccuracy } from "@/lib/study/weakSubjects";
 
 export const runtime = "nodejs";
 
@@ -27,9 +29,23 @@ function planJson(
     examDate: exam ? exam.examDate.toISOString() : null,
     version: body.version,
     generatedForDate: body.generatedForDate,
+    focus: body.focus ?? null,
     tasks: body.tasks,
     createdAt: plan.createdAt.toISOString(),
   };
+}
+
+/**
+ * Weak-subject data for adaptive planning — never fatal: if the quiz
+ * aggregation fails, the planner simply stays generic.
+ */
+async function weakSubjectsFor(userId: string, now: Date): Promise<WeakSubjectInfo[]> {
+  try {
+    return await fetchRecentSubjectAccuracy(userId, now);
+  } catch (err) {
+    console.warn("[study-plans:weak-subjects]", err);
+    return [];
+  }
 }
 
 /**
@@ -63,6 +79,18 @@ export async function GET() {
     const now = new Date();
     const refreshed: Array<(typeof plans)[number]> = [];
 
+    // Only touch quiz-attempt data when something actually needs
+    // regenerating — the common case (fresh plans) stays single-query.
+    const needsRefresh = plans.some((plan) => {
+      const exam = plan.examId ? (examById.get(plan.examId) ?? null) : null;
+      return (
+        exam !== null &&
+        isPlanStale(plan.planJson as StudyPlanJson, exam.examDate, now) &&
+        daysBetween(now, exam.examDate) > 0
+      );
+    });
+    const weak = needsRefresh ? await weakSubjectsFor(session.user.id, now) : [];
+
     for (const plan of plans) {
       const exam = plan.examId ? (examById.get(plan.examId) ?? null) : null;
       let body = plan.planJson as StudyPlanJson;
@@ -73,7 +101,10 @@ export async function GET() {
         daysBetween(now, exam.examDate) > 0
       ) {
         try {
-          const fresh = regeneratePlan(body, exam.examDate, now);
+          const fresh = regeneratePlan(body, exam.examDate, now, {
+            weakSubjects: weak,
+            subjectId: exam.subjectId,
+          });
           const [updated] = await db
             .update(schema.studyPlans)
             .set({ planJson: fresh, version: fresh.version })
@@ -125,11 +156,19 @@ export async function POST(request: Request) {
     where: eq(schema.studyPlans.examId, examId),
   });
 
+  const weak = await weakSubjectsFor(session.user.id, new Date());
+
   let bodyJson: StudyPlanJson;
   try {
     bodyJson = existing
-      ? regeneratePlan(existing.planJson as StudyPlanJson, exam.examDate)
-      : generateDailyPlan(exam.examDate);
+      ? regeneratePlan(existing.planJson as StudyPlanJson, exam.examDate, new Date(), {
+          weakSubjects: weak,
+          subjectId: exam.subjectId,
+        })
+      : generateDailyPlan(exam.examDate, new Date(), {
+          weakSubjects: weak,
+          subjectId: exam.subjectId,
+        });
   } catch (err) {
     if (err instanceof Error && /today or already passed/i.test(err.message)) {
       return NextResponse.json({ error: err.message }, { status: 422 });

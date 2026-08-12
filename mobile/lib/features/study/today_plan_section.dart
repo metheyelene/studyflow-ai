@@ -152,6 +152,39 @@ class TodayPlanSection extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (plan.focus != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: g.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.track_changes,
+                          size: 14,
+                          color: g.warning,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Focusing on ${plan.focus!.subjectName} — ${plan.focus!.accuracy}% recent quiz accuracy',
+                            style: TextStyle(
+                              color: g.warning,
+                              fontSize: 12.5,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(99),

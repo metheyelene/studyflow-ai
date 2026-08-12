@@ -18,7 +18,11 @@ void main() {
     UpcomingExam(id: 'ex-1', title: 'Physics Midterm', date: examDateIn(10)),
   ];
 
-  StudyPlan seedPlan({int version = 1, bool todayDone = false}) {
+  StudyPlan seedPlan({
+    int version = 1,
+    bool todayDone = false,
+    StudyPlanFocus? focus,
+  }) {
     return StudyPlan(
       id: 'plan-ex-1',
       examId: 'ex-1',
@@ -26,6 +30,7 @@ void main() {
       version: version,
       generatedForDate: todayKey(),
       examDate: examDateIn(10),
+      focus: focus,
       tasks: [
         StudyPlanTask(
           id: 't-today',
@@ -158,6 +163,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(planner.listCalls, 3);
     expect(find.text('Review core concepts'), findsOneWidget);
+  });
+
+  testWidgets('shows the weak-subject focus banner on a weighted plan', (
+    tester,
+  ) async {
+    final planner = FakeStudyPlannerRepository(
+      plans: [
+        seedPlan(
+          focus: const StudyPlanFocus(
+            subjectId: 's-1',
+            subjectName: 'Physics',
+            accuracy: 55,
+          ),
+        ),
+      ],
+    );
+    final dashboard = FakeDashboardRepository(currentExams: exams);
+    final router = buildAppRouter();
+    await pumpApp(
+      tester,
+      router: router,
+      planner: planner,
+      dashboard: dashboard,
+    );
+    router.go('/study');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Focusing on Physics'), findsOneWidget);
+    expect(find.textContaining('55% recent quiz accuracy'), findsOneWidget);
+  });
+
+  testWidgets('generic plans show no focus banner', (tester) async {
+    final planner = FakeStudyPlannerRepository(plans: [seedPlan()]);
+    final dashboard = FakeDashboardRepository(currentExams: exams);
+    final router = buildAppRouter();
+    await pumpApp(
+      tester,
+      router: router,
+      planner: planner,
+      dashboard: dashboard,
+    );
+    router.go('/study');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Focusing on'), findsNothing);
   });
 
   testWidgets('skipping a task marks it skipped in the plan', (tester) async {

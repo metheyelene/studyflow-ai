@@ -38,7 +38,35 @@ export interface StudyPlanJson {
    * the plan is stale.
    */
   examDate?: string;
+  /**
+   * Set when the exam's subject has weak recent quiz accuracy — the plan
+   * then targets practice at that subject and the UI can explain why.
+   */
+  focus?: PlanFocus;
   tasks: PlanTask[];
+}
+
+/** Weak-subject signal the planner uses to weight tasks. */
+export interface WeakSubjectInfo {
+  subjectId: string;
+  name: string;
+  /** 0–100 accuracy across recent completed quiz attempts. */
+  accuracy: number;
+}
+
+/** What the planner decided to focus on, stamped into the plan JSON. */
+export interface PlanFocus {
+  subjectId: string;
+  subjectName: string;
+  /** 0–100 recent quiz accuracy for that subject (weak, by definition). */
+  accuracy: number;
+}
+
+export interface PlanOptions {
+  /** Subjects with weak recent quiz accuracy (from quiz attempts). */
+  weakSubjects?: WeakSubjectInfo[];
+  /** The exam's subject id, when the exam is subject-linked. */
+  subjectId?: string | null;
 }
 
 export const TASK_STATUSES: PlanTaskStatus[] = ["pending", "done", "skipped"];
@@ -48,6 +76,32 @@ interface TaskTemplate {
   detail: string;
   durationMin: number;
 }
+
+/** Foundation rotation used when the exam's subject has weak recent quiz
+ *  accuracy — practice is aimed at the weak area instead of generic study.
+ *  `{subject}` and `{accuracy}` are filled in at generation time. */
+const WEAK_FOCUS_TASKS: TaskTemplate[] = [
+  {
+    title: "Practice {subject} problems",
+    detail: "Your recent quiz accuracy in {subject} is {accuracy}% — work through extra problems and check every answer against the source.",
+    durationMin: 45,
+  },
+  {
+    title: "Review {subject} quiz mistakes",
+    detail: "Re-read the explanations from your recent {subject} quizzes and redo the questions you got wrong.",
+    durationMin: 30,
+  },
+  {
+    title: "Active recall — {subject}",
+    detail: "Close your notes and recall the {subject} definitions and formulas you have struggled with, then check what you missed.",
+    durationMin: 25,
+  },
+  {
+    title: "Summarize weak areas in {subject}",
+    detail: "Write a short summary of the {subject} topics you keep missing in quizzes.",
+    durationMin: 20,
+  },
+];
 
 /** Foundation rotation for longer horizons (honest, syllabus-agnostic). */
 const FOCUS_TASKS: TaskTemplate[] = [
@@ -119,6 +173,13 @@ export function daysBetween(from: Date, to: Date): number {
   return Math.round((b - a) / 86_400_000);
 }
 
+/** Fill the `{subject}`/`{accuracy}` placeholders in a weak-task template. */
+function fillTemplate(t: TaskTemplate, name: string, accuracy: number): TaskTemplate {
+  const fill = (s: string) =>
+    s.split("{subject}").join(name).split("{accuracy}").join(String(accuracy));
+  return { title: fill(t.title), detail: fill(t.detail), durationMin: t.durationMin };
+}
+
 function dayTasks(date: string, templates: TaskTemplate[], offset: number, count: number): PlanTask[] {
   const out: PlanTask[] = [];
   for (let i = 0; i < count; i++) {
@@ -138,8 +199,17 @@ function dayTasks(date: string, templates: TaskTemplate[], offset: number, count
 /**
  * Build the plan. Throws if the exam is today or already passed — there
  * is nothing left to schedule honestly.
+ *
+ * When `opts.subjectId` matches a weak subject in `opts.weakSubjects`
+ * (recent quiz accuracy below the threshold), the plan's foundation and
+ * revision tasks are retargeted at that subject and `focus` is stamped so
+ * the UI can explain why the plan is weighted there.
  */
-export function generateDailyPlan(examDate: Date, now: Date = new Date()): StudyPlanJson {
+export function generateDailyPlan(
+  examDate: Date,
+  now: Date = new Date(),
+  opts: PlanOptions = {},
+): StudyPlanJson {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const days = daysBetween(today, examDate);
   if (days <= 0) {
@@ -147,25 +217,60 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
   }
 
   const todayKey = dateKey(today);
+  const weak = opts.subjectId
+    ? (opts.weakSubjects?.find((w) => w.subjectId === opts.subjectId) ?? null)
+    : null;
+  const focus: PlanFocus | undefined = weak
+    ? { subjectId: weak.subjectId, subjectName: weak.name, accuracy: weak.accuracy }
+    : undefined;
+
+  const foundationTemplates = weak
+    ? WEAK_FOCUS_TASKS.map((t) => fillTemplate(t, weak.name, weak.accuracy))
+    : FOCUS_TASKS;
+  const revisionTemplates = weak
+    ? REVISION_TASKS.map((t) =>
+        t.title === "Review mistakes"
+          ? fillTemplate(
+              {
+                ...t,
+                title: "Review {subject} mistakes",
+                detail: "Re-read your {subject} quiz mistakes and redo the ones you got wrong.",
+              },
+              weak.name,
+              weak.accuracy,
+            )
+          : t,
+      )
+    : REVISION_TASKS;
+
+  const stamp = (tasks: PlanTask[]): StudyPlanJson => ({
+    version: 1,
+    generatedForDate: todayKey,
+    examDate: dateKey(examDate),
+    ...(focus ? { focus } : {}),
+    tasks,
+  });
+
   const tasks: PlanTask[] = [];
 
   if (days === 1) {
-    // One day left: a single focused revision session.
+    // One day left: a single focused revision session (subject-aware when weak).
+    const [head, practice, mistakes] = [revisionTemplates[0], revisionTemplates[1], revisionTemplates[3]];
     tasks.push(
-      { id: `${todayKey}-0`, date: todayKey, title: "Final revision of key concepts", detail: "Rapidly review the most important ideas and definitions.", durationMin: 40, status: "pending" },
-      { id: `${todayKey}-1`, date: todayKey, title: "Practice questions", detail: "Work through exam-style questions under light time pressure.", durationMin: 30, status: "pending" },
-      { id: `${todayKey}-2`, date: todayKey, title: "Review mistakes", detail: "Re-read your quiz and practice mistakes from this subject.", durationMin: 20, status: "pending" },
+      { id: `${todayKey}-0`, date: todayKey, title: head.title, detail: head.detail, durationMin: head.durationMin, status: "pending" },
+      { id: `${todayKey}-1`, date: todayKey, title: practice.title, detail: practice.detail, durationMin: practice.durationMin, status: "pending" },
+      { id: `${todayKey}-2`, date: todayKey, title: mistakes.title, detail: mistakes.detail, durationMin: mistakes.durationMin, status: "pending" },
     );
-    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
+    return stamp(tasks);
   }
 
   if (days <= 3) {
     // Sprint: two revision tasks per day, rotating.
     for (let i = 0; i < days; i++) {
       const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + i)));
-      tasks.push(...dayTasks(date, REVISION_TASKS, i * 2, 2));
+      tasks.push(...dayTasks(date, revisionTemplates, i * 2, 2));
     }
-    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
+    return stamp(tasks);
   }
 
   if (days <= 14) {
@@ -175,8 +280,8 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
     for (let i = 0; i < foundation; i++) {
       const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + i)));
       // Two tasks per foundation day: one focus task + one practice/recall.
-      const focus = FOCUS_TASKS[i % FOCUS_TASKS.length];
-      const practice = FOCUS_TASKS[(i + 1) % FOCUS_TASKS.length];
+      const focus = foundationTemplates[i % foundationTemplates.length];
+      const practice = foundationTemplates[(i + 1) % foundationTemplates.length];
       tasks.push(
         { id: `${date}-0`, date, title: focus.title, detail: focus.detail, durationMin: focus.durationMin, status: "pending" },
         { id: `${date}-1`, date, title: practice.title, detail: practice.detail, durationMin: practice.durationMin, status: "pending" },
@@ -184,9 +289,9 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
     }
     for (let i = 0; i < sprint; i++) {
       const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + foundation + i)));
-      tasks.push(...dayTasks(date, REVISION_TASKS, i * 2, 2));
+      tasks.push(...dayTasks(date, revisionTemplates, i * 2, 2));
     }
-    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
+    return stamp(tasks);
   }
 
   // Long horizon: rotation through the focus cycle, then a final week.
@@ -194,8 +299,8 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
   const main = days - finalWeek;
   for (let i = 0; i < main; i++) {
     const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + i)));
-    const focus = FOCUS_TASKS[i % FOCUS_TASKS.length];
-    const recall = FOCUS_TASKS[(i + 2) % FOCUS_TASKS.length];
+    const focus = foundationTemplates[i % foundationTemplates.length];
+    const recall = foundationTemplates[(i + 2) % foundationTemplates.length];
     tasks.push(
       { id: `${date}-0`, date, title: focus.title, detail: focus.detail, durationMin: focus.durationMin, status: "pending" },
       { id: `${date}-1`, date, title: recall.title, detail: recall.detail, durationMin: recall.durationMin, status: "pending" },
@@ -203,12 +308,12 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
   }
   for (let i = 0; i < finalWeek; i++) {
     const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + main + i)));
-    const t = REVISION_TASKS[i % REVISION_TASKS.length];
+    const t = revisionTemplates[i % revisionTemplates.length];
     tasks.push(
       { id: `${date}-0`, date, title: t.title, detail: t.detail, durationMin: t.durationMin, status: "pending" },
     );
   }
-  return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
+  return stamp(tasks);
 }
 
 /**
@@ -229,10 +334,17 @@ export function isPlanStale(plan: StudyPlanJson, examDate: Date, now: Date = new
 /**
  * Adaptive regeneration: rebuild from today, but keep tasks the user
  * already completed (matched by date + title). Version increments so the
- * client can show "Plan v2" and stale screens can refresh.
+ * client can show "Plan v2" and stale screens can refresh. Weak-subject
+ * weighting is re-applied from `opts`, so the plan rebalances as quiz
+ * accuracy improves (or the exam's subject changes).
  */
-export function regeneratePlan(previous: StudyPlanJson, examDate: Date, now: Date = new Date()): StudyPlanJson {
-  const fresh = generateDailyPlan(examDate, now);
+export function regeneratePlan(
+  previous: StudyPlanJson,
+  examDate: Date,
+  now: Date = new Date(),
+  opts: PlanOptions = {},
+): StudyPlanJson {
+  const fresh = generateDailyPlan(examDate, now, opts);
   const done = new Set(
     previous.tasks.filter((t) => t.status === "done").map((t) => `${t.date}|${t.title}`),
   );

@@ -47,6 +47,28 @@ class StudyPlanTask {
   }
 }
 
+/// Why the planner weighted this plan: the exam's subject has weak recent
+/// quiz accuracy, so tasks are targeted at it.
+class StudyPlanFocus {
+  const StudyPlanFocus({
+    required this.subjectId,
+    required this.subjectName,
+    required this.accuracy,
+  });
+
+  final String subjectId;
+  final String subjectName;
+  final int accuracy; // 0-100 recent quiz accuracy
+
+  factory StudyPlanFocus.fromJson(Map<String, dynamic> json) {
+    return StudyPlanFocus(
+      subjectId: json['subjectId'] as String? ?? '',
+      subjectName: json['subjectName'] as String? ?? 'this subject',
+      accuracy: (json['accuracy'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 /// A generated plan for one exam.
 class StudyPlan {
   const StudyPlan({
@@ -57,6 +79,7 @@ class StudyPlan {
     required this.generatedForDate,
     required this.tasks,
     this.examDate,
+    this.focus,
   });
 
   final String id;
@@ -66,6 +89,7 @@ class StudyPlan {
   final String generatedForDate;
   final List<StudyPlanTask> tasks;
   final String? examDate;
+  final StudyPlanFocus? focus;
 
   int get doneCount => tasks.where((t) => t.isDone).length;
 
@@ -77,6 +101,7 @@ class StudyPlan {
 
   factory StudyPlan.fromJson(Map<String, dynamic> json) {
     final tasks = json['tasks'];
+    final focus = json['focus'];
     return StudyPlan(
       id: json['id'] as String? ?? '',
       examId: json['examId'] as String? ?? '',
@@ -84,6 +109,9 @@ class StudyPlan {
       version: (json['version'] as num?)?.toInt() ?? 1,
       generatedForDate: json['generatedForDate'] as String? ?? '',
       examDate: json['examDate'] as String?,
+      focus: focus is Map
+          ? StudyPlanFocus.fromJson(Map<String, dynamic>.from(focus))
+          : null,
       tasks: tasks is List
           ? [
               for (final t in tasks)

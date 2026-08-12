@@ -41,10 +41,17 @@ vi.mock("@/lib/auth", () => ({
   auth: { api: { getSession: authMock.getSession } },
 }));
 
+const weakMock = vi.hoisted(() => ({
+  fetchRecentSubjectAccuracy: vi.fn<() => Promise<unknown[]>>(async () => []),
+}));
+vi.mock("@/lib/study/weakSubjects", () => ({
+  fetchRecentSubjectAccuracy: weakMock.fetchRecentSubjectAccuracy,
+}));
+
 // ── imports (after mocks) ───────────────────────────────────────────
 import { GET, POST } from "@/app/api/study-plans/route";
 import { PATCH } from "@/app/api/study-plans/[planId]/route";
-import { dateKey } from "@/lib/study/planner";
+import { dateKey, type StudyPlanJson } from "@/lib/study/planner";
 
 const DAY = 86_400_000;
 const futureDate = (daysAhead: number) => new Date(Date.now() + daysAhead * DAY);
@@ -85,6 +92,7 @@ beforeEach(() => {
   (dbMock.query.studyPlans.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   (dbMock.query.exams.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([examRow]);
   (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(examRow);
+  weakMock.fetchRecentSubjectAccuracy.mockResolvedValue([]);
 });
 
 describe("GET /api/study-plans", () => {
@@ -232,6 +240,53 @@ describe("POST /api/study-plans", () => {
       new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
     );
     expect(res.status).toBe(422);
+  });
+
+  it("weights tasks toward the exam's weak subject and stamps focus", async () => {
+    weakMock.fetchRecentSubjectAccuracy.mockResolvedValue([
+      { subjectId: "subj_1", name: "Physics", correct: 3, total: 10, accuracy: 30 },
+    ]);
+    (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...examRow,
+      subjectId: "subj_1",
+    });
+    // The route runs the real planner; the insert mock just echoes the
+    // values back so the response carries the generated plan.
+    (dbMock.insert as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      values: vi.fn((vals: { planJson: StudyPlanJson }) => ({
+        returning: vi.fn(async () => [planRow({ planJson: vals.planJson, version: vals.planJson.version })]),
+      })),
+    }));
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(weakMock.fetchRecentSubjectAccuracy).toHaveBeenCalledTimes(1);
+    expect(body.plan.focus).toMatchObject({ subjectId: "subj_1", subjectName: "Physics", accuracy: 30 });
+    expect(body.plan.tasks.some((t: { title: string }) => t.title.includes("Physics"))).toBe(true);
+    expect(body.plan.tasks.some((t: { title: string }) => t.title.includes("quiz mistakes"))).toBe(true);
+  });
+
+  it("keeps the plan generic when the exam's subject has no weak data", async () => {
+    weakMock.fetchRecentSubjectAccuracy.mockResolvedValue([
+      { subjectId: "subj_other", name: "Chemistry", correct: 9, total: 10, accuracy: 90 },
+    ]);
+    (dbMock.query.exams.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...examRow,
+      subjectId: "subj_1",
+    });
+    (dbMock.insert as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      values: vi.fn((vals: { planJson: StudyPlanJson }) => ({
+        returning: vi.fn(async () => [planRow({ planJson: vals.planJson, version: vals.planJson.version })]),
+      })),
+    }));
+    const res = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ examId: "exam_1" }) }),
+    );
+    const body = await res.json();
+    expect(body.plan.focus).toBeNull();
+    expect(body.plan.tasks.some((t: { title: string }) => t.title.includes("Physics"))).toBe(false);
   });
 
   it("regenerates an existing plan, bumping the version", async () => {

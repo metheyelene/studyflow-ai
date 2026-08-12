@@ -59,6 +59,63 @@ describe("generateDailyPlan", () => {
   });
 });
 
+describe("weak-subject weighting", () => {
+  const weak = [{ subjectId: "s1", name: "Physics", accuracy: 55 }];
+
+  it("retargets foundation tasks at the exam's weak subject and stamps focus", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now, {
+      weakSubjects: weak,
+      subjectId: "s1",
+    });
+    expect(plan.focus).toEqual({ subjectId: "s1", subjectName: "Physics", accuracy: 55 });
+    const titles = plan.tasks.map((t) => t.title);
+    expect(titles).toContain("Practice Physics problems");
+    expect(titles).toContain("Review Physics quiz mistakes");
+    // Generic foundation titles are replaced, not mixed in.
+    expect(titles.some((t) => t.includes("Review core concepts"))).toBe(false);
+  });
+
+  it("retargets revision tasks in a short sprint", () => {
+    const plan = generateDailyPlan(new Date("2026-08-15T00:00:00Z"), now, {
+      weakSubjects: weak,
+      subjectId: "s1",
+    });
+    expect(plan.focus?.accuracy).toBe(55);
+    const titles = plan.tasks.map((t) => t.title);
+    expect(titles).toContain("Review Physics mistakes");
+    expect(titles.some((t) => t === "Review mistakes")).toBe(false);
+  });
+
+  it("keeps the plan generic when the subject has no weak signal", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now, {
+      weakSubjects: [{ subjectId: "s2", name: "Chemistry", accuracy: 92 }],
+      subjectId: "s1",
+    });
+    expect(plan.focus).toBeUndefined();
+    const titles = plan.tasks.map((t) => t.title);
+    expect(titles.some((t) => t.includes("Physics"))).toBe(false);
+    expect(titles).toContain("Review core concepts");
+  });
+
+  it("regeneration re-applies weighting and preserves completed weak tasks", () => {
+    const first = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now, {
+      weakSubjects: weak,
+      subjectId: "s1",
+    });
+    const done = first.tasks.find((t) => t.title === "Practice Physics problems")!;
+    done.status = "done";
+
+    const second = regeneratePlan(first, new Date("2026-08-22T00:00:00Z"), now, {
+      weakSubjects: weak,
+      subjectId: "s1",
+    });
+    expect(second.version).toBe(2);
+    expect(second.focus).toEqual({ subjectId: "s1", subjectName: "Physics", accuracy: 55 });
+    const carried = second.tasks.find((t) => t.title === "Practice Physics problems");
+    expect(carried?.status).toBe("done");
+  });
+});
+
 describe("regeneratePlan", () => {
   it("bumps the version and preserves completed tasks by date+title", () => {
     const first = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now);
