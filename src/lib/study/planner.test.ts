@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   daysBetween,
   generateDailyPlan,
+  isPlanStale,
   regeneratePlan,
   type PlanTask,
 } from "@/lib/study/planner";
@@ -97,5 +98,37 @@ describe("regeneratePlan", () => {
     first.tasks[0].status = "skipped";
     const second = regeneratePlan(first, new Date("2026-08-15T00:00:00Z"), now);
     expect(second.tasks[0].status).toBe("pending");
+  });
+
+  it("stamps the exam date a plan was generated against", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now);
+    expect(plan.examDate).toBe("2026-08-22");
+    const regen = regeneratePlan(plan, new Date("2026-08-25T00:00:00Z"), now);
+    expect(regen.examDate).toBe("2026-08-25");
+  });
+});
+
+describe("isPlanStale", () => {
+  it("is stale when generated before today", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), new Date("2026-08-11T00:00:00Z"));
+    expect(isPlanStale(plan, new Date("2026-08-22T00:00:00Z"), now)).toBe(true);
+  });
+
+  it("is stale when the exam date moved after generation", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now);
+    expect(isPlanStale(plan, new Date("2026-08-28T00:00:00Z"), now)).toBe(true);
+    // Moving it earlier is just as stale.
+    expect(isPlanStale(plan, new Date("2026-08-19T00:00:00Z"), now)).toBe(true);
+  });
+
+  it("is not stale for a fresh plan with an unchanged exam date", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now);
+    expect(isPlanStale(plan, new Date("2026-08-22T00:00:00Z"), now)).toBe(false);
+  });
+
+  it("judges legacy plans without an examDate stamp by generation date only", () => {
+    const plan = generateDailyPlan(new Date("2026-08-22T00:00:00Z"), now);
+    delete plan.examDate;
+    expect(isPlanStale(plan, new Date("2026-08-28T00:00:00Z"), now)).toBe(false);
   });
 });

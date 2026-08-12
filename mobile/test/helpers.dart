@@ -464,10 +464,14 @@ class FakeStudyPlannerRepository implements StudyPlannerRepository {
   List<StudyPlan> plans;
   bool failGenerate = false;
   int generateCalls = 0;
+  int listCalls = 0;
   String? lastGeneratedExamId;
 
   @override
-  Future<List<StudyPlan>> list() async => List.of(plans);
+  Future<List<StudyPlan>> list() async {
+    listCalls++;
+    return List.of(plans);
+  }
 
   @override
   Future<StudyPlan> generate(String examId) async {

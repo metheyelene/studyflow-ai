@@ -31,6 +31,13 @@ export interface StudyPlanJson {
   version: number;
   /** yyyy-MM-dd of the day the plan was (re)generated. */
   generatedForDate: string;
+  /**
+   * yyyy-MM-dd exam date this plan was generated against. Present on
+   * plans written after this field was added; legacy plans omit it.
+   * When it differs from the exam's current date, the exam moved and
+   * the plan is stale.
+   */
+  examDate?: string;
   tasks: PlanTask[];
 }
 
@@ -149,7 +156,7 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
       { id: `${todayKey}-1`, date: todayKey, title: "Practice questions", detail: "Work through exam-style questions under light time pressure.", durationMin: 30, status: "pending" },
       { id: `${todayKey}-2`, date: todayKey, title: "Review mistakes", detail: "Re-read your quiz and practice mistakes from this subject.", durationMin: 20, status: "pending" },
     );
-    return { version: 1, generatedForDate: todayKey, tasks };
+    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
   }
 
   if (days <= 3) {
@@ -158,7 +165,7 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
       const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + i)));
       tasks.push(...dayTasks(date, REVISION_TASKS, i * 2, 2));
     }
-    return { version: 1, generatedForDate: todayKey, tasks };
+    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
   }
 
   if (days <= 14) {
@@ -179,7 +186,7 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
       const date = dateKey(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + foundation + i)));
       tasks.push(...dayTasks(date, REVISION_TASKS, i * 2, 2));
     }
-    return { version: 1, generatedForDate: todayKey, tasks };
+    return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
   }
 
   // Long horizon: rotation through the focus cycle, then a final week.
@@ -201,7 +208,22 @@ export function generateDailyPlan(examDate: Date, now: Date = new Date()): Study
       { id: `${date}-0`, date, title: t.title, detail: t.detail, durationMin: t.durationMin, status: "pending" },
     );
   }
-  return { version: 1, generatedForDate: todayKey, tasks };
+  return { version: 1, generatedForDate: todayKey, examDate: dateKey(examDate), tasks };
+}
+
+/**
+ * A plan is stale when it no longer covers the current window:
+ *   - it was generated on an earlier day (today's tasks are missing), or
+ *   - the exam date moved after the plan was generated (the stamped
+ *     examDate differs from the exam's current date).
+ * Plans without an examDate stamp (written before the field existed) are
+ * judged only by the generation date; they get stamped on their next
+ * regeneration.
+ */
+export function isPlanStale(plan: StudyPlanJson, examDate: Date, now: Date = new Date()): boolean {
+  if (plan.generatedForDate < dateKey(now)) return true;
+  if (plan.examDate && plan.examDate !== dateKey(examDate)) return true;
+  return false;
 }
 
 /**

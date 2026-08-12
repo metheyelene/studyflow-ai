@@ -5,7 +5,9 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { auth } from "@/lib/auth";
 import {
+  daysBetween,
   generateDailyPlan,
+  isPlanStale,
   regeneratePlan,
   type StudyPlanJson,
 } from "@/lib/study/planner";
@@ -30,7 +32,17 @@ function planJson(
   };
 }
 
-/** GET /api/study-plans — the user's plans, nearest exam first. */
+/**
+ * GET /api/study-plans — the user's plans, nearest exam first.
+ *
+ * Plans are lazily refreshed on read: when a plan is stale (generated on
+ * an earlier day, or the exam date moved after generation), it is
+ * regenerated from today — preserving already-completed tasks — before
+ * being returned. This keeps the plan authoritative on every load (the
+ * Study tab fetches here) without a separate cron. Plans for exams that
+ * are today or already passed are left untouched: there is nothing left
+ * to schedule honestly.
+ */
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -48,8 +60,37 @@ export async function GET() {
       : [];
     const examById = new Map(exams.map((e) => [e.id, e]));
 
+    const now = new Date();
+    const refreshed: Array<(typeof plans)[number]> = [];
+
+    for (const plan of plans) {
+      const exam = plan.examId ? (examById.get(plan.examId) ?? null) : null;
+      let body = plan.planJson as StudyPlanJson;
+
+      if (
+        exam &&
+        isPlanStale(body, exam.examDate, now) &&
+        daysBetween(now, exam.examDate) > 0
+      ) {
+        try {
+          const fresh = regeneratePlan(body, exam.examDate, now);
+          const [updated] = await db
+            .update(schema.studyPlans)
+            .set({ planJson: fresh, version: fresh.version })
+            .where(eq(schema.studyPlans.id, plan.id))
+            .returning();
+          if (updated) body = updated.planJson as StudyPlanJson;
+        } catch (err) {
+          // Keep the stored plan on any regeneration failure — the read
+          // path must never error the whole list for one stale plan.
+          console.warn("[study-plans:auto-regenerate]", err);
+        }
+      }
+      refreshed.push({ ...plan, planJson: body });
+    }
+
     return NextResponse.json({
-      plans: plans.map((p) => planJson(p, p.examId ? (examById.get(p.examId) ?? null) : null)),
+      plans: refreshed.map((p) => planJson(p, p.examId ? (examById.get(p.examId) ?? null) : null)),
     });
   } catch (err) {
     console.error("[study-plans:list]", err);

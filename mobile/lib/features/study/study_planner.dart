@@ -177,6 +177,21 @@ class StudyPlannerController extends AsyncNotifier<List<StudyPlan>> {
     state = const AsyncLoading();
     state = AsyncData(await _repo.list());
   }
+
+  /// Background refresh used when the Study tab becomes visible: re-fetch
+  /// the plans without flipping to a loading skeleton, and keep showing
+  /// the last good data if the fetch fails (explicit Retry still exists
+  /// for real errors). The backend lazily regenerates stale plans on GET,
+  /// so this is what keeps today's tasks current on every visit.
+  Future<void> refreshSilently() async {
+    try {
+      final plans = await _repo.list();
+      state = AsyncData(plans);
+    } catch (_) {
+      // Keep current data — a failed background refresh must not blank
+      // the plan the user is looking at.
+    }
+  }
 }
 
 final studyPlannerRepositoryProvider = Provider<StudyPlannerRepository>(

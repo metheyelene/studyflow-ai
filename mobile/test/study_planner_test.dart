@@ -112,6 +112,28 @@ void main() {
     expect(planner.lastGeneratedExamId, 'ex-1');
   });
 
+  testWidgets('revisiting the Study tab silently re-fetches the plan', (tester) async {
+    final planner = FakeStudyPlannerRepository(plans: [seedPlan()]);
+    final dashboard = FakeDashboardRepository(currentExams: exams);
+    final router = buildAppRouter();
+    await pumpApp(tester, router: router, planner: planner, dashboard: dashboard);
+
+    // First visit builds the provider (initial fetch = 1 list call).
+    router.go('/study');
+    await tester.pumpAndSettle();
+    expect(planner.listCalls, 1);
+    expect(find.text('Review core concepts'), findsOneWidget);
+
+    // Leaving and returning must trigger a background refresh so the
+    // backend's lazy regeneration reaches the UI on every visit.
+    router.go('/home');
+    await tester.pumpAndSettle();
+    router.go('/study');
+    await tester.pumpAndSettle();
+    expect(planner.listCalls, 2);
+    expect(find.text('Review core concepts'), findsOneWidget);
+  });
+
   testWidgets('skipping a task marks it skipped in the plan', (tester) async {
     final planner = FakeStudyPlannerRepository(plans: [seedPlan()]);
     final router = buildAppRouter();

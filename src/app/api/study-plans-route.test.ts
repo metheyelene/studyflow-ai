@@ -44,13 +44,19 @@ vi.mock("@/lib/auth", () => ({
 // ── imports (after mocks) ───────────────────────────────────────────
 import { GET, POST } from "@/app/api/study-plans/route";
 import { PATCH } from "@/app/api/study-plans/[planId]/route";
+import { dateKey } from "@/lib/study/planner";
+
+const DAY = 86_400_000;
+const futureDate = (daysAhead: number) => new Date(Date.now() + daysAhead * DAY);
+const todayKey = () => dateKey(new Date());
+const dayKeyAgo = (daysAgo: number) => dateKey(new Date(Date.now() - daysAgo * DAY));
 
 const examRow = {
   id: "exam_1",
   userId: "user_1",
   subjectId: null,
   title: "Physics Midterm",
-  examDate: new Date("2026-08-22T00:00:00Z"),
+  examDate: futureDate(10),
   createdAt: new Date(),
 };
 
@@ -61,9 +67,10 @@ function planRow(overrides: Record<string, unknown> = {}) {
     examId: "exam_1",
     planJson: {
       version: 1,
-      generatedForDate: "2026-08-12",
+      generatedForDate: dayKeyAgo(1),
+      examDate: dateKey(examRow.examDate),
       tasks: [
-        { id: "2026-08-12-0", date: "2026-08-12", title: "Review core concepts", detail: "d", durationMin: 45, status: "pending" },
+        { id: `${todayKey()}-0`, date: todayKey(), title: "Review core concepts", detail: "d", durationMin: 45, status: "pending" },
       ],
     },
     version: 1,
@@ -82,7 +89,7 @@ beforeEach(() => {
 
 describe("GET /api/study-plans", () => {
   it("lists the user's plans with exam info", async () => {
-    const plan = planRow();
+    const plan = planRow({ planJson: { ...planRow().planJson, generatedForDate: todayKey() } });
     (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
     const res = await GET();
     expect(res.status).toBe(200);
@@ -101,6 +108,85 @@ describe("GET /api/study-plans", () => {
     const res = await GET();
     const body = await res.json();
     expect(body.plans).toEqual([]);
+  });
+
+  it("leaves a fresh plan untouched", async () => {
+    const plan = planRow({
+      planJson: {
+        version: 2,
+        generatedForDate: todayKey(),
+        examDate: dateKey(examRow.examDate),
+        tasks: [{ id: `${todayKey()}-0`, date: todayKey(), title: "Review core concepts", detail: "d", durationMin: 45, status: "done" }],
+      },
+    });
+    (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
+    const res = await GET();
+    const body = await res.json();
+    expect(dbMock.update).not.toHaveBeenCalled();
+    expect(body.plans[0].version).toBe(2);
+    expect(body.plans[0].tasks[0].status).toBe("done");
+  });
+
+  it("regenerates a plan generated on an earlier day, preserving done tasks", async () => {
+    const doneTask = { id: `${todayKey()}-0`, date: todayKey(), title: "Review core concepts", detail: "d", durationMin: 45, status: "done" };
+    const plan = planRow({ planJson: { version: 1, generatedForDate: dayKeyAgo(1), examDate: dateKey(examRow.examDate), tasks: [doneTask] } });
+    (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
+    // The regenerated plan bumps the version; the completed task survives.
+    const updated = planRow({ planJson: { version: 2, generatedForDate: todayKey(), examDate: dateKey(examRow.examDate), tasks: [doneTask] } });
+    (dbMock.update as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn(async () => [updated]),
+        })),
+      })),
+    }));
+    const res = await GET();
+    expect(dbMock.update).toHaveBeenCalledTimes(1);
+    const body = await res.json();
+    expect(body.plans[0].version).toBe(2);
+    expect(body.plans[0].generatedForDate).toBe(todayKey());
+    expect(body.plans[0].tasks[0].status).toBe("done");
+  });
+
+  it("regenerates a plan whose exam date moved", async () => {
+    // Generated today against a date 20 days out; the exam now sits 10 days out.
+    const plan = planRow({
+      planJson: {
+        version: 3,
+        generatedForDate: todayKey(),
+        examDate: dateKey(futureDate(20)),
+        tasks: [{ id: `${todayKey()}-0`, date: todayKey(), title: "Review core concepts", detail: "d", durationMin: 45, status: "pending" }],
+      },
+    });
+    (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
+    (dbMock.update as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn(async () => [planRow({ planJson: { version: 4, generatedForDate: todayKey(), examDate: dateKey(examRow.examDate), tasks: plan.planJson.tasks } })]),
+        })),
+      })),
+    }));
+    const res = await GET();
+    expect(dbMock.update).toHaveBeenCalledTimes(1);
+    const body = await res.json();
+    expect(body.plans[0].version).toBe(4);
+  });
+
+  it("leaves a plan alone when the exam has already passed", async () => {
+    const plan = planRow({
+      planJson: {
+        version: 1,
+        generatedForDate: dayKeyAgo(3),
+        examDate: dayKeyAgo(1),
+        tasks: [{ id: "x-0", date: dayKeyAgo(3), title: "Final revision", detail: "d", durationMin: 40, status: "pending" }],
+      },
+    });
+    (dbMock.query.studyPlans.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([plan]);
+    (dbMock.query.exams.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ ...examRow, examDate: new Date(Date.now() - DAY) }]);
+    const res = await GET();
+    expect(dbMock.update).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.plans[0].version).toBe(1);
   });
 });
 

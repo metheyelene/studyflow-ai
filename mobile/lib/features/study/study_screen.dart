@@ -10,16 +10,63 @@ import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
 import '../dashboard/dashboard_controller.dart';
+import 'study_planner.dart';
 import 'today_plan_section.dart';
 
 /// Study tab — exam countdowns and the study-material entry point. Live
 /// data only: exams come from the user's study setup; the material section
 /// links to real notebooks.
-class StudyScreen extends ConsumerWidget {
+///
+/// The shell keeps tab bodies alive (StatefulShellRoute.indexedStack), so
+/// the planner is silently re-fetched whenever this tab becomes visible —
+/// the backend regenerates stale plans on read, which is what keeps
+/// today's tasks current even if the plan was generated on an earlier day.
+class StudyScreen extends ConsumerStatefulWidget {
   const StudyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StudyScreen> createState() => _StudyScreenState();
+}
+
+class _StudyScreenState extends ConsumerState<StudyScreen> {
+  RouteInformationProvider? _routeInfo;
+  bool _wasVisible = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final router = GoRouter.of(context);
+    if (_routeInfo != router.routeInformationProvider) {
+      _routeInfo?.removeListener(_onRouteChanged);
+      _routeInfo = router.routeInformationProvider;
+      _routeInfo!.addListener(_onRouteChanged);
+      _onRouteChanged();
+    }
+  }
+
+  @override
+  void dispose() {
+    _routeInfo?.removeListener(_onRouteChanged);
+    super.dispose();
+  }
+
+  void _onRouteChanged() {
+    final loc = _routeInfo?.value.uri.path ?? '';
+    final visible =
+        loc == AppRoutes.study || loc.startsWith(AppRoutes.studyPlans);
+    if (visible && !_wasVisible) {
+      final current = ref.read(studyPlannerControllerProvider);
+      // Skip while the provider is still running its first load — that
+      // fetch already covers this visit and avoids a duplicate GET.
+      if (current is AsyncData || current is AsyncError) {
+        ref.read(studyPlannerControllerProvider.notifier).refreshSilently();
+      }
+    }
+    _wasVisible = visible;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final g = context.glass;
     final dashboard = ref.watch(dashboardControllerProvider);
 
