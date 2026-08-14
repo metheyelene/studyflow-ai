@@ -22,7 +22,7 @@ import {
 
 // Lazy client — constructing Stripe requires a key, and we don't want
 // that to crash module import in environments without billing set up.
-function getStripe(): import("stripe").Stripe {
+export function getStripe(): import("stripe").Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new BillingNotConfigured("STRIPE_SECRET_KEY is not set");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
