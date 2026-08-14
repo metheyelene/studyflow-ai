@@ -6,10 +6,10 @@ import '../../../core/theme/app_theme.dart';
 
 /// Context mood for the ambient background. Each mood shifts the tint and
 /// weight of the light fields so the atmosphere quietly matches what the
-/// user is doing — AI work glows cool indigo, audio gets a deeper media
-/// wash, Premium a warmer sheen. The mood never animates: static radial
-/// gradients are GPU-cheap and keep tests deterministic (an infinite
-/// drift loop would hang every `pumpAndSettle`).
+/// user is doing — AI work glows cyan, study a teal/emerald wash, audio a
+/// warm coral field, Premium a golden sheen. The mood never animates:
+/// static radial gradients are GPU-cheap and keep tests deterministic (an
+/// infinite drift loop would hang every `pumpAndSettle`).
 enum BackgroundMood { ambient, study, ai, audio, premium }
 
 /// The flat low-tier fallback surface (keyed so tests can assert the
@@ -43,28 +43,28 @@ class StudyFlowBackground extends ConsumerWidget {
     final a = dark ? 0.20 : 0.12;
     return switch (mood) {
       BackgroundMood.ambient => (
-        a: const Color(0xFF6366F1),
-        b: const Color(0xFF8B5CF6),
+        a: const Color(0xFF0F766E),
+        b: const Color(0xFF06B6D4),
         alpha: a,
       ),
       BackgroundMood.study => (
-        a: const Color(0xFF6366F1),
-        b: const Color(0xFF14B8A6),
+        a: const Color(0xFF0F766E),
+        b: const Color(0xFF10B981),
         alpha: a,
       ),
       BackgroundMood.ai => (
-        a: const Color(0xFF818CF8),
-        b: const Color(0xFFA78BFA),
+        a: const Color(0xFF22D3EE),
+        b: const Color(0xFF3B82F6),
         alpha: dark ? 0.22 : 0.14,
       ),
       BackgroundMood.audio => (
-        a: const Color(0xFF6366F1),
-        b: const Color(0xFF312E81),
+        a: const Color(0xFFFB7185),
+        b: const Color(0xFFF59E0B),
         alpha: dark ? 0.24 : 0.14,
       ),
       BackgroundMood.premium => (
-        a: const Color(0xFF6366F1),
-        b: const Color(0xFFF59E0B),
+        a: const Color(0xFFF59E0B),
+        b: const Color(0xFFFB7185),
         alpha: a,
       ),
     };

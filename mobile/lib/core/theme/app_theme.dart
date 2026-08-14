@@ -143,6 +143,9 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     required this.highlight,
     required this.primary,
     required this.primarySoft,
+    required this.secondary,
+    required this.ai,
+    required this.audio,
     required this.textPrimary,
     required this.textMuted,
     required this.textOnPrimary,
@@ -164,6 +167,16 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   final Color highlight;
   final Color primary;
   final Color primarySoft;
+
+  /// Electric blue — secondary actions and links.
+  final Color secondary;
+
+  /// Cyan — the AI signal color (orbs, thinking states, AI accents).
+  final Color ai;
+
+  /// Coral — the audio/podcast accent.
+  final Color audio;
+
   final Color textPrimary;
   final Color textMuted;
   final Color textOnPrimary;
@@ -185,7 +198,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   static const radiusPill = 999.0;
 
   static const light = GlassTheme(
-    background: Color(0xFFF4F4F8),
+    background: Color(0xFFF4F6F6),
     surface: Color(0xE6FFFFFF),
     surfaceStrong: Color(0xF2FFFFFF),
     surfaceSubtle: Color(0xB3FFFFFF),
@@ -193,14 +206,18 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     border: Color(0x1A6B7280),
     highlight: Color(0x66FFFFFF),
     // Light-mode tokens are tuned for WCAG 4.5:1 on the painted surfaces
-    // (see the contrast audit in docs/design-quality-audit.md): the brand
-    // indigo sits a touch deeper (#5B5FE0) so white button labels and
-    // indigo links both clear AA, and success/warning/muted are darkened
-    // accordingly. Dark mode already passes every pair.
-    primary: Color(0xFF5B5FE0),
-    primarySoft: Color(0x145B5FE0),
-    textPrimary: Color(0xFF17171C),
-    textMuted: Color(0xFF52525B),
+    // (see the contrast audit in docs/design-quality-audit.md): the teal
+    // primary sits at #0F766E (teal-700, ~5.9:1 on white) so white button
+    // labels and teal links both clear AA. Purpose accents — electric blue
+    // (secondary), cyan (AI), coral (audio) — are decorative/icon colors;
+    // status colors are darkened to AA on every painted surface.
+    primary: Color(0xFF0F766E),
+    primarySoft: Color(0x140F766E),
+    secondary: Color(0xFF0369A1),
+    ai: Color(0xFF0891B2),
+    audio: Color(0xFFD9563B),
+    textPrimary: Color(0xFF151A1A),
+    textMuted: Color(0xFF4E5A5A),
     textOnPrimary: Color(0xFFFFFFFF),
     danger: Color(0xFFB91C1C),
     success: Color(0xFF047857),
@@ -211,19 +228,25 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     reducedEffects: false,
   );
 
+  // Dark mode is a cinematic deep-charcoal environment with a blue-green
+  // cast (never pure black): translucent layers pick up the teal/cyan
+  // accents and soft warm highlights keep it from feeling cold.
   static const dark = GlassTheme(
-    background: Color(0xFF121216),
-    surface: Color(0xB31A1A22),
-    surfaceStrong: Color(0xE61F1F28),
-    surfaceSubtle: Color(0x801F1F28),
-    floating: Color(0xCC1F1F28),
+    background: Color(0xFF0E1213),
+    surface: Color(0xB3151B1D),
+    surfaceStrong: Color(0xE6182022),
+    surfaceSubtle: Color(0x80182022),
+    floating: Color(0xCC1B2325),
     border: Color(0x1AFFFFFF),
     highlight: Color(0x14FFFFFF),
-    primary: Color(0xFF818CF8),
-    primarySoft: Color(0x1A818CF8),
-    textPrimary: Color(0xFFF2F2F5),
-    textMuted: Color(0xFF9DA0AA),
-    textOnPrimary: Color(0xFF111114),
+    primary: Color(0xFF2DD4BF),
+    primarySoft: Color(0x1A2DD4BF),
+    secondary: Color(0xFF38BDF8),
+    ai: Color(0xFF22D3EE),
+    audio: Color(0xFFFB7185),
+    textPrimary: Color(0xFFF0F4F3),
+    textMuted: Color(0xFF97A5A3),
+    textOnPrimary: Color(0xFF04211E),
     danger: Color(0xFFF87171),
     success: Color(0xFF34D399),
     warning: Color(0xFFFBBF24),
@@ -244,6 +267,9 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     Color? highlight,
     Color? primary,
     Color? primarySoft,
+    Color? secondary,
+    Color? ai,
+    Color? audio,
     Color? textPrimary,
     Color? textMuted,
     Color? textOnPrimary,
@@ -265,6 +291,9 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
       highlight: highlight ?? this.highlight,
       primary: primary ?? this.primary,
       primarySoft: primarySoft ?? this.primarySoft,
+      secondary: secondary ?? this.secondary,
+      ai: ai ?? this.ai,
+      audio: audio ?? this.audio,
       textPrimary: textPrimary ?? this.textPrimary,
       textMuted: textMuted ?? this.textMuted,
       textOnPrimary: textOnPrimary ?? this.textOnPrimary,
@@ -290,6 +319,9 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
       highlight: Color.lerp(highlight, other.highlight, t)!,
       primary: Color.lerp(primary, other.primary, t)!,
       primarySoft: Color.lerp(primarySoft, other.primarySoft, t)!,
+      secondary: Color.lerp(secondary, other.secondary, t)!,
+      ai: Color.lerp(ai, other.ai, t)!,
+      audio: Color.lerp(audio, other.audio, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       textOnPrimary: Color.lerp(textOnPrimary, other.textOnPrimary, t)!,
@@ -309,13 +341,17 @@ extension GlassBuildContext on BuildContext {
   GlassTheme get glass => Theme.of(this).extension<GlassTheme>()!;
 }
 
-/// StudyFlow brand palette. The indigo is the product signature; it stays
-/// the primary even when the platform supplies a dynamic color scheme.
+/// StudyFlow brand palette — an "electric study" identity built on a
+/// teal/cyan core instead of the indigo era. Purpose-coded accents:
+/// AI → cyan, audio → coral, exams → amber, success → emerald. The teal
+/// seed stays the primary even when the platform supplies dynamic color.
 abstract final class AppColors {
-  static const indigo = Color(0xFF6366F1);
-  static const indigoLight = Color(0xFF818CF8);
-  static const ink = Color(0xFF17171C);
-  static const paper = Color(0xFFFCFCFF);
+  static const teal = Color(0xFF0F766E);
+  static const tealLight = Color(0xFF2DD4BF);
+  static const cyan = Color(0xFF22D3EE);
+  static const coral = Color(0xFFFB7185);
+  static const ink = Color(0xFF151A1A);
+  static const paper = Color(0xFFFCFEFE);
 }
 
 /// Build the full Material 3 Expressive [ColorScheme]: a branded seed-based
@@ -326,28 +362,44 @@ abstract final class AppColors {
 ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
   final isDark = brightness == Brightness.dark;
   final seed = ColorScheme.fromSeed(
-    seedColor: AppColors.indigo,
+    seedColor: AppColors.teal,
     brightness: brightness,
   );
   return (dynamicScheme ?? seed).copyWith(
-    // Light-mode primary is the AA-tuned indigo (4.5:1+ on white); dark
-    // mode uses the lighter indigo so it reads against near-black.
-    primary: isDark ? AppColors.indigoLight : const Color(0xFF5B5FE0),
-    onPrimary: isDark ? const Color(0xFF111114) : Colors.white,
+    // Light-mode primary is the AA-tuned teal (4.5:1+ on white); dark mode
+    // uses the lighter teal so it reads against near-black charcoal.
+    primary: isDark ? AppColors.tealLight : AppColors.teal,
+    onPrimary: isDark ? const Color(0xFF04211E) : Colors.white,
     primaryContainer: isDark
-        ? const Color(0xFF2A2B5C)
-        : const Color(0xFFE0E7FF),
+        ? const Color(0xFF134E4A)
+        : const Color(0xFFCCFBF1),
     onPrimaryContainer: isDark
-        ? const Color(0xFFE0E7FF)
-        : const Color(0xFF1E1B4B),
-    inversePrimary: isDark ? AppColors.indigo : AppColors.indigoLight,
-    surfaceTint: isDark ? AppColors.indigoLight : AppColors.indigo,
-    surface: isDark ? const Color(0xFF1A1A22) : AppColors.paper,
-    onSurface: isDark ? const Color(0xFFF2F2F5) : AppColors.ink,
+        ? const Color(0xFFCCFBF1)
+        : const Color(0xFF042F2A),
+    secondary: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
+    onSecondary: isDark ? const Color(0xFF04222E) : Colors.white,
+    secondaryContainer: isDark
+        ? const Color(0xFF0C4A6E)
+        : const Color(0xFFE0F2FE),
+    onSecondaryContainer: isDark
+        ? const Color(0xFFE0F2FE)
+        : const Color(0xFF0C4A6E),
+    tertiary: isDark ? const Color(0xFFFB7185) : const Color(0xFFC2410C),
+    onTertiary: isDark ? const Color(0xFF3D0416) : Colors.white,
+    tertiaryContainer: isDark
+        ? const Color(0xFF7F1D1D)
+        : const Color(0xFFFFE4E6),
+    onTertiaryContainer: isDark
+        ? const Color(0xFFFFE4E6)
+        : const Color(0xFF7F1D1D),
+    inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
+    surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
+    surface: isDark ? const Color(0xFF161C1E) : AppColors.paper,
+    onSurface: isDark ? const Color(0xFFF0F4F3) : AppColors.ink,
     onSurfaceVariant: isDark
-        ? const Color(0xFF9DA0AA)
-        : const Color(0xFF52525B),
-    outlineVariant: isDark ? const Color(0xFF3E3E47) : const Color(0xFFCAC4D0),
+        ? const Color(0xFF97A5A3)
+        : const Color(0xFF4E5A5A),
+    outlineVariant: isDark ? const Color(0xFF39423F) : const Color(0xFFC9D4D1),
     error: isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C),
     onError: Colors.white,
     errorContainer: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),

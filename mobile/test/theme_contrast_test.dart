@@ -41,7 +41,7 @@ void main() {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.indigo,
+        seedColor: AppColors.teal,
         brightness: brightness,
       ),
     ).colorScheme;
@@ -88,6 +88,14 @@ void main() {
               reason: '$c on ${entry.key}',
             );
           }
+        }
+      });
+
+      test('brand primary is the teal seed (indigo era removed)', () {
+        if (brightness == Brightness.light) {
+          expect(g.primary, AppColors.teal);
+        } else {
+          expect(g.primary, AppColors.tealLight);
         }
       });
 

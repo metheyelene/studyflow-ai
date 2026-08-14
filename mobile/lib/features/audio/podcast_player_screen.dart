@@ -355,8 +355,8 @@ class _Artwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    // The gradient + glow are the episode's hero moment; the low tier
-    // renders a flat primary tile with no drop shadow instead.
+    // The gradient + glow are the episode's hero moment, in the warm coral
+    // audio accent (the low tier renders a flat tile with no shadow).
     final effects = !g.reducedEffects;
     return Container(
       width: 168,
@@ -366,15 +366,15 @@ class _Artwork extends StatelessWidget {
             ? LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [g.primary, g.primary.withValues(alpha: 0.55)],
+                colors: [g.audio, g.audio.withValues(alpha: 0.55)],
               )
             : null,
-        color: effects ? null : g.primary,
+        color: effects ? null : g.audio,
         borderRadius: BorderRadius.circular(30),
         boxShadow: effects
             ? [
                 BoxShadow(
-                  color: g.primary.withValues(alpha: 0.25),
+                  color: g.audio.withValues(alpha: 0.3),
                   blurRadius: 32,
                   offset: const Offset(0, 14),
                 ),
@@ -567,10 +567,10 @@ class _PlayButton extends StatelessWidget {
     final g = context.glass;
     final effects = !g.reducedEffects;
     return Material(
-      color: g.primary,
+      color: g.audio,
       shape: const CircleBorder(),
       elevation: effects ? 4 : 0,
-      shadowColor: g.primary.withValues(alpha: effects ? 0.4 : 0),
+      shadowColor: g.audio.withValues(alpha: effects ? 0.45 : 0),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),

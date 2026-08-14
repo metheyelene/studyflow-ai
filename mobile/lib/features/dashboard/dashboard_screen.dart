@@ -55,50 +55,19 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Ready to study?',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.displaySmall,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                _UsageHero(dashboard: dashboard),
-                const SizedBox(height: AppSpacing.lg),
+                _FocusHero(dashboard: dashboard),
+                const SizedBox(height: AppSpacing.xxl),
+                const _SectionTitle(title: 'YOUR LEARNING'),
+                const SizedBox(height: 6),
+                const _LearningRows(),
+                const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'QUICK ACTIONS'),
                 const SizedBox(height: 10),
                 const _QuickActionsChips(),
-                const SizedBox(height: AppSpacing.lg),
-                const _SectionTitle(title: 'YOUR PROGRESS'),
-                const SizedBox(height: 10),
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      const _StatRow(
-                        icon: Icons.local_fire_department,
-                        label: 'Study streak',
-                        value: '0 days',
-                      ),
-                      Divider(
-                        color: g.textPrimary.withValues(alpha: 0.06),
-                        height: 1,
-                      ),
-                      const _StatRow(
-                        icon: Icons.quiz_outlined,
-                        label: 'Quizzes completed',
-                        value: '0',
-                      ),
-                      Divider(
-                        color: g.textPrimary.withValues(alpha: 0.06),
-                        height: 1,
-                      ),
-                      const _StatRow(
-                        icon: Icons.notes,
-                        label: 'Notes created',
-                        value: '0',
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'UPCOMING'),
                 const SizedBox(height: 10),
                 _UpcomingExams(dashboard: dashboard),
@@ -111,10 +80,12 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Today's Focus hero with the real AI-usage meter — the flagship surface
-/// on Home: large translucent hero, specular sheen, big type, animated ring.
-class _UsageHero extends ConsumerWidget {
-  const _UsageHero({required this.dashboard});
+/// Today's Focus hero — the flagship moment on Home. It leads with the
+/// real AI-usage meter (large translucent hero, specular sheen, animated
+/// ring) and closes with a glossy teal→cyan CTA into the Study tab, so
+/// "what should I do next?" always has an answer.
+class _FocusHero extends ConsumerWidget {
+  const _FocusHero({required this.dashboard});
 
   final AsyncValue<DashboardSnapshot> dashboard;
 
@@ -143,9 +114,9 @@ class _UsageHero extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
-            'Upload your first note to start building a study system.',
+            'Your study engine is ready.',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 20),
@@ -157,7 +128,91 @@ class _UsageHero extends ConsumerWidget {
             ),
             data: (snapshot) => _UsageMeter(usage: snapshot.usage),
           ),
+          const SizedBox(height: 20),
+          _HeroCta(),
         ],
+      ),
+    );
+  }
+}
+
+/// Glossy primary CTA — a teal→cyan gradient button that springs under
+/// press. "Start studying" leads into the adaptive Study tab.
+class _HeroCta extends StatefulWidget {
+  const _HeroCta();
+
+  @override
+  State<_HeroCta> createState() => _HeroCtaState();
+}
+
+class _HeroCtaState extends State<_HeroCta> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      button: true,
+      label: 'Start studying',
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: _pressed
+            ? AppMotion.pressInDuration
+            : AppMotion.pressOutDuration,
+        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
+        child: Material(
+          color: Colors.transparent,
+          child: Listener(
+            onPointerDown: (_) => setState(() => _pressed = true),
+            onPointerUp: (_) => setState(() => _pressed = false),
+            onPointerCancel: (_) => setState(() => _pressed = false),
+            child: InkWell(
+              onTap: () => context.go(AppRoutes.study),
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      g.primary,
+                      Color.lerp(g.primary, g.ai, 0.35)!,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: g.highlight.withValues(alpha: 0.6),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: g.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.bolt_rounded,
+                      size: 18,
+                      color: g.textOnPrimary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Start studying',
+                      style: TextStyle(
+                        color: g.textOnPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -384,35 +439,77 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _StatRow extends StatelessWidget {
-  const _StatRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
+/// Your Learning — an open-canvas list (no card box) where each stat row
+/// carries a purpose-coded accent: streak → amber, quizzes → cyan (AI),
+/// notes → emerald (study). Hairline dividers keep the composition calm.
+class _LearningRows extends StatelessWidget {
+  const _LearningRows();
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: g.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: AppText.small.copyWith(color: g.textPrimary),
+    Widget row({
+      required IconData icon,
+      required Color color,
+      required String label,
+      required String value,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 17, color: color),
             ),
-          ),
-          Text(value, style: AppText.bodyMedium.copyWith(color: g.textPrimary)),
-        ],
-      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+              ),
+            ),
+            Text(
+              value,
+              style: AppText.bodyMedium.copyWith(
+                color: g.textPrimary,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        row(
+          icon: Icons.local_fire_department,
+          color: g.amber,
+          label: 'Study streak',
+          value: '0 days',
+        ),
+        Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
+        row(
+          icon: Icons.quiz_outlined,
+          color: g.ai,
+          label: 'Quizzes completed',
+          value: '0',
+        ),
+        Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
+        row(
+          icon: Icons.notes,
+          color: g.success,
+          label: 'Notes created',
+          value: '0',
+        ),
+      ],
     );
   }
 }
