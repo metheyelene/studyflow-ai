@@ -50,6 +50,9 @@ model names (defaults are in `src/lib/ai/orchestrator.ts`).
 | `STRIPE_SECRET_KEY` | Payments | Stripe API (server-only) |
 | `STRIPE_WEBHOOK_SECRET` | Payments | Verifying webhook signatures |
 | `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` / `_YEARLY` | Payments | Checkout price IDs |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Payments | Play purchase verification, RTDN, founder-dashboard revenue — see [docs/founder-dashboard.md](founder-dashboard.md) for exact Console access |
+| `PLAY_RTDN_AUTH_TOKEN` | Payments | Shared token authenticating Play RTDN webhooks |
+| `ADMIN_EMAILS` | Operations | Comma-separated emails allowed to view `/admin` (founder dashboard) |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` | Notes/docs | Cloudflare R2 file storage |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Hardening | Rate limiting |
 | `SENTRY_DSN` | Error monitoring | Sentry ingestion |

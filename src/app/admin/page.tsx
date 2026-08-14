@@ -6,6 +6,7 @@ import {
   getFounderStats,
   type ChannelRevenue,
   type FounderStats,
+  type RevenueAmount,
 } from "@/lib/founderDashboard";
 import { postgresFoundingStore } from "@/lib/founding";
 import { GlassCard } from "@/components/ui/glass";
@@ -176,6 +177,34 @@ const moneySymbols: Record<string, string> = {
   gbp: "£",
 };
 
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/** "2025-07" → "Jul 25". */
+function monthLabel(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  if (!y || !m || m < 1 || m > 12) return month;
+  return `${monthNames[m - 1]} ${String(y).slice(2)}`;
+}
+
+/** Sum a month's amounts (same native currency in practice; the model keeps
+ *  the array so multi-currency months stay honest in the tooltip). */
+function monthTotal(amounts: RevenueAmount[]): number {
+  return amounts.reduce((a, b) => a + b.amountMinor, 0);
+}
+
 function formatMoney(amountMinor: number, currency: string): string {
   const symbol =
     moneySymbols[currency.toLowerCase()] ?? `${currency.toUpperCase()} `;
@@ -259,8 +288,97 @@ function RevenueCard({ stats }: { stats: FounderStats }) {
             Real amounts reported by each provider in its native currency
             (Stripe: USD · Google Play: INR).
           </p>
+          <RevenueMonthly revenue={revenue} />
         </>
       )}
     </GlassCard>
+  );
+}
+
+function RevenueMonthly({ revenue }: { revenue: FounderStats["revenue"] }) {
+  return (
+    <div className="border-t border-border/60 pt-4">
+      <h3 className="mb-1 font-medium text-sm">Revenue by month</h3>
+      <p className="text-muted-foreground mb-4 text-xs">
+        Each panel is drawn in that provider native currency, so bar
+        heights are comparable within a panel only — never across
+        providers. Missing months had no revenue from that provider.
+      </p>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <MonthlyBarPanel
+          label="Stripe"
+          currency="usd"
+          barClass="bg-indigo-500/80 dark:bg-indigo-400/80"
+          unavailable={!revenue.stripe.available}
+          unavailableNote="Stripe revenue unavailable — no chart."
+          points={revenue.monthly
+            .filter((m) => m.stripe)
+            .map((m) => ({ month: m.month, amountMinor: monthTotal(m.stripe!) }))}
+        />
+        <MonthlyBarPanel
+          label="Google Play"
+          currency="inr"
+          barClass="bg-emerald-500/80 dark:bg-emerald-400/80"
+          unavailable={!revenue.play.available}
+          unavailableNote="Google Play revenue unavailable — no chart."
+          points={revenue.monthly
+            .filter((m) => m.play)
+            .map((m) => ({ month: m.month, amountMinor: monthTotal(m.play!) }))}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MonthlyBarPanel({
+  label,
+  currency,
+  barClass,
+  unavailable,
+  unavailableNote,
+  points,
+}: {
+  label: string;
+  currency: string;
+  barClass: string;
+  unavailable: boolean;
+  unavailableNote: string;
+  points: { month: string; amountMinor: number }[];
+}) {
+  return (
+    <div>
+      <p className="text-muted-foreground mb-3 text-xs font-medium">
+        {label} · {currency.toUpperCase()}
+      </p>
+      {unavailable ? (
+        <p className="text-muted-foreground text-xs">{unavailableNote}</p>
+      ) : points.length === 0 ? (
+        <p className="text-muted-foreground text-xs">
+          No revenue yet in this period.
+        </p>
+      ) : (
+        <div className="flex h-24 items-end gap-1.5">
+          {points.map((p) => {
+            const max = Math.max(...points.map((x) => x.amountMinor), 1);
+            const height = Math.max(2, (p.amountMinor / max) * 92);
+            return (
+              <div
+                key={p.month}
+                title={`${formatMoney(p.amountMinor, currency)} · ${monthLabel(p.month)}`}
+                className="flex min-w-0 flex-1 flex-col items-center gap-1"
+              >
+                <div
+                  className={`w-full rounded-t ${barClass}`}
+                  style={{ height: `${height}px` }}
+                />
+                <span className="text-muted-foreground truncate text-[10px] tabular-nums">
+                  {monthLabel(p.month)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

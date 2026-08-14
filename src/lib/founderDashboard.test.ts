@@ -65,10 +65,17 @@ vi.mock("@/db", () => ({
 }));
 
 import {
+  bucketMonthly,
   collectPlayRevenue,
   collectStripeRevenue,
+  fetchAllStripeInvoicePages,
   getFounderStats,
+  mapWithConcurrency,
+  mergeMonthly,
+  monthKey,
   sumByCurrency,
+  type StripeInvoicePage,
+  type StripeInvoicePageFetcher,
 } from "@/lib/founderDashboard";
 import { inMemoryFoundingStore } from "@/lib/founding";
 
@@ -167,8 +174,8 @@ describe("getFounderStats", () => {
       { stripeSubscriptionId: "sub_1", stripeCustomerId: "cus_1" },
     ];
     const listPaidInvoices = vi.fn(async () => [
-      { amountPaid: 200, currency: "usd" },
-      { amountPaid: 200, currency: "usd" },
+      { amountPaid: 200, currency: "usd", created: 1_752_537_600 }, // 2025-07-15
+      { amountPaid: 200, currency: "usd", created: 1_752_537_600 },
     ]);
 
     const stats = await getFounderStats({
@@ -181,6 +188,9 @@ describe("getFounderStats", () => {
       amounts: [{ amountMinor: 400, currency: "usd" }],
       available: true,
       counts: 2,
+      monthly: [
+        { month: "2025-07", amounts: [{ amountMinor: 400, currency: "usd" }] },
+      ],
     });
   });
 
@@ -190,6 +200,7 @@ describe("getFounderStats", () => {
         playPurchaseToken: "tok-1",
         playSubscriptionId: "founding_member_monthly",
         playPackageName: "ai.studyflow.studyflow_mobile",
+        createdAt: new Date("2025-07-20T10:00:00Z"),
       },
     ];
     const fetchPrice = vi.fn(async () => ({
@@ -206,6 +217,9 @@ describe("getFounderStats", () => {
       amounts: [{ amountMinor: 16_500, currency: "inr" }], // paise
       available: true,
       counts: 1,
+      monthly: [
+        { month: "2025-07", amounts: [{ amountMinor: 16_500, currency: "inr" }] },
+      ],
     });
   });
 
@@ -217,6 +231,7 @@ describe("getFounderStats", () => {
         playPurchaseToken: "tok-1",
         playSubscriptionId: "founding_member_monthly",
         playPackageName: "ai.studyflow.studyflow_mobile",
+        createdAt: new Date("2025-07-20T10:00:00Z"),
       },
     ];
     const listPaidInvoices = vi.fn(async () => {
@@ -237,6 +252,54 @@ describe("getFounderStats", () => {
     expect(stats.revenue.stripe.amounts).toEqual([]);
     expect(stats.revenue.play.available).toBe(false);
     expect(stats.revenue.play.amounts).toEqual([]);
+    // Unavailable channels contribute no monthly data — never fabricated zeroes.
+    expect(stats.revenue.monthly).toEqual([]);
+  });
+
+  it("merges provider revenue into a spanning monthly timeline", async () => {
+    mockSubs = [
+      {
+        stripeSubscriptionId: "sub_1",
+        stripeCustomerId: "cus_1",
+      },
+      {
+        playPurchaseToken: "tok-1",
+        playSubscriptionId: "founding_member_monthly",
+        playPackageName: "ai.studyflow.studyflow_mobile",
+        createdAt: new Date("2025-08-05T10:00:00Z"),
+      },
+    ];
+    const listPaidInvoices = vi.fn(async () => [
+      { amountPaid: 200, currency: "usd", created: 1_752_537_600 }, // 2025-07
+      { amountPaid: 200, currency: "usd", created: 1_755_475_200 }, // 2025-08
+    ]);
+    const fetchPrice = vi.fn(async () => ({
+      priceAmountMicros: 165_000_000,
+      priceCurrencyCode: "INR",
+    }));
+
+    const stats = await getFounderStats({
+      store: emptyStore(),
+      listStripePaidInvoices: listPaidInvoices,
+      fetchPlayPrice: fetchPrice,
+    });
+
+    expect(stats.revenue.monthly).toEqual([
+      {
+        month: "2025-07",
+        stripe: [{ amountMinor: 200, currency: "usd" }],
+      },
+      {
+        month: "2025-08",
+        stripe: [{ amountMinor: 200, currency: "usd" }],
+        play: [{ amountMinor: 16_500, currency: "inr" }],
+      },
+    ]);
+  });
+
+  it("has an empty monthly timeline when there are no purchases", async () => {
+    const stats = await getFounderStats({ store: emptyStore() });
+    expect(stats.revenue.monthly).toEqual([]);
   });
 });
 
@@ -265,18 +328,152 @@ describe("collectors", () => {
       amounts: [{ amountMinor: 0, currency: "usd" }],
       available: true,
       counts: 0,
+      monthly: [],
     });
   });
 
   it("play: no play purchases → real zero, available", async () => {
     const revenue = await collectPlayRevenue(
-      [{ playPurchaseToken: null, playPackageName: null, playSubscriptionId: null }],
+      [
+        {
+          playPurchaseToken: null,
+          playPackageName: null,
+          playSubscriptionId: null,
+        },
+      ],
       vi.fn(),
     );
     expect(revenue).toEqual({
       amounts: [{ amountMinor: 0, currency: "inr" }],
       available: true,
       counts: 0,
+      monthly: [],
     });
+  });
+});
+
+describe("stripe pagination", () => {
+  it("walks every page, chaining starting_after, until has_more is false", async () => {
+    const pages: StripeInvoicePage[] = [
+      {
+        data: [
+          { id: "in_0", amount_paid: 200, currency: "usd", created: 1_752_537_600 },
+          { id: "in_1", amount_paid: 300, currency: "usd", created: 1_752_537_600 },
+        ],
+        has_more: true,
+      },
+      {
+        data: [{ id: "in_2", amount_paid: 400, currency: "usd", created: 1_755_475_200 }],
+        has_more: false,
+      },
+    ];
+    const requests: (string | undefined)[] = [];
+    const fetcher: StripeInvoicePageFetcher = async ({ starting_after }) => {
+      requests.push(starting_after);
+      if (starting_after === undefined) return pages[0];
+      // Cursor is the last invoice id of the previous page → next page.
+      return pages[1];
+    };
+
+    const out = await fetchAllStripeInvoicePages(fetcher);
+
+    expect(out).toEqual([
+      { amountPaid: 200, currency: "usd", created: 1_752_537_600 },
+      { amountPaid: 300, currency: "usd", created: 1_752_537_600 },
+      { amountPaid: 400, currency: "usd", created: 1_755_475_200 },
+    ]);
+    expect(requests).toEqual([undefined, "in_1"]);
+  });
+
+  it("stops instead of spinning when has_more stays true on an empty page", async () => {
+    const requests: string[] = [];
+    const fetcher: StripeInvoicePageFetcher = async ({ starting_after }) => {
+      requests.push(starting_after ?? "(none)");
+      return { data: [], has_more: true }; // pathological API state
+    };
+
+    const out = await fetchAllStripeInvoicePages(fetcher);
+
+    expect(out).toEqual([]);
+    expect(requests.length).toBe(1); // no infinite loop
+  });
+
+  it("maps a single page when there is only one", async () => {
+    const out = await fetchAllStripeInvoicePages(async () => ({
+      data: [{ id: "in_0", amount_paid: 100, currency: "eur" }],
+      has_more: false,
+    }));
+    expect(out).toEqual([{ amountPaid: 100, currency: "eur", created: 0 }]);
+  });
+});
+
+describe("mapWithConcurrency", () => {
+  it("caps concurrent work at the limit and preserves input order", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const work = async (x: number) => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight--;
+      return x * 2;
+    };
+
+    const out = await mapWithConcurrency([1, 2, 3, 4, 5, 6, 7, 8], 3, work);
+
+    expect(out).toEqual([2, 4, 6, 8, 10, 12, 14, 16]);
+    expect(maxInFlight).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("monthly bucketing", () => {
+  it("monthKey maps timestamps to UTC YYYY-MM", () => {
+    expect(monthKey(new Date("2025-07-15T23:59:00Z"))).toBe("2025-07");
+    expect(monthKey("2025-08-01T00:00:00Z")).toBe("2025-08");
+    expect(monthKey(1_752_537_600)).toBe("2025-07");
+  });
+
+  it("bucketMonthly groups by month and currency, oldest first", () => {
+    const out = bucketMonthly([
+      { amountMinor: 100, currency: "usd", at: "2025-08-05T00:00:00Z" },
+      { amountMinor: 50, currency: "usd", at: "2025-07-01T00:00:00Z" },
+      { amountMinor: 30, currency: "usd", at: "2025-08-20T00:00:00Z" },
+      { amountMinor: 99, currency: "inr", at: "2025-08-20T00:00:00Z" },
+    ]);
+    expect(out).toEqual([
+      {
+        month: "2025-07",
+        amounts: [{ amountMinor: 50, currency: "usd" }],
+      },
+      {
+        month: "2025-08",
+        amounts: [
+          { amountMinor: 130, currency: "usd" },
+          { amountMinor: 99, currency: "inr" },
+        ],
+      },
+    ]);
+  });
+
+  it("mergeMonthly spans the timeline, omitting empty provider months", () => {
+    const merged = mergeMonthly(
+      [{ month: "2025-07", amounts: [{ amountMinor: 100, currency: "usd" }] }],
+      [
+        {
+          month: "2025-08",
+          amounts: [{ amountMinor: 16_500, currency: "inr" }],
+        },
+      ],
+    );
+    expect(merged).toEqual([
+      {
+        month: "2025-07",
+        stripe: [{ amountMinor: 100, currency: "usd" }],
+      },
+      {
+        month: "2025-08",
+        play: [{ amountMinor: 16_500, currency: "inr" }],
+      },
+    ]);
   });
 });
