@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../performance/device_tier.dart';
+
 /// Spacing scale — the single source for layout gaps. New screens use
 /// these tokens instead of arbitrary paddings (docs/design-quality-audit.md).
 abstract final class AppSpacing {
@@ -150,6 +152,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     required this.amber,
     required this.blurRadius,
     required this.blurEnabled,
+    required this.reducedEffects,
   });
 
   final Color background;
@@ -170,6 +173,12 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   final Color amber;
   final double blurRadius;
   final bool blurEnabled;
+
+  /// True on the low rendering tier: ambient/hero gradients and heavy drop
+  /// shadows are disabled app-wide (blur radius is handled separately via
+  /// [blurRadius]). Components read this through `context.glass` so no
+  /// provider plumbing is needed — the theme already carries the tier.
+  final bool reducedEffects;
 
   static const radiusCard = 24.0;
   static const radiusInner = 16.0;
@@ -199,6 +208,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     amber: Color(0xFFB45309),
     blurRadius: 24,
     blurEnabled: true,
+    reducedEffects: false,
   );
 
   static const dark = GlassTheme(
@@ -220,6 +230,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     amber: Color(0xFFFBBF24),
     blurRadius: 36,
     blurEnabled: true,
+    reducedEffects: false,
   );
 
   @override
@@ -242,6 +253,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     Color? amber,
     double? blurRadius,
     bool? blurEnabled,
+    bool? reducedEffects,
   }) {
     return GlassTheme(
       background: background ?? this.background,
@@ -262,6 +274,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
       amber: amber ?? this.amber,
       blurRadius: blurRadius ?? this.blurRadius,
       blurEnabled: blurEnabled ?? this.blurEnabled,
+      reducedEffects: reducedEffects ?? this.reducedEffects,
     );
   }
 
@@ -286,6 +299,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
       amber: Color.lerp(amber, other.amber, t)!,
       blurRadius: t < 0.5 ? blurRadius : other.blurRadius,
       blurEnabled: t < 0.5 ? blurEnabled : other.blurEnabled,
+      reducedEffects: t < 0.5 ? reducedEffects : other.reducedEffects,
     );
   }
 }
@@ -385,10 +399,19 @@ TextTheme _buildTextTheme(ColorScheme scheme) {
 ///
 /// [dynamicScheme] is the platform dynamic color scheme (Android 12+ via
 /// `DynamicColorBuilder`); when null the branded seed palette is used.
-ThemeData buildAppTheme(Brightness brightness, {ColorScheme? dynamicScheme}) {
+/// [tier] is the rendering-performance tier: on low-tier devices the glass
+/// blur radius drops (24→10 light, 36→14 dark) so the most GPU-expensive
+/// effect stays cheap; blur is never fully disabled because a small sigma
+/// keeps the material language intact for a fraction of the cost.
+ThemeData buildAppTheme(
+  Brightness brightness, {
+  ColorScheme? dynamicScheme,
+  PerformanceTier tier = PerformanceTier.standard,
+}) {
   final isDark = brightness == Brightness.dark;
   final scheme = _buildScheme(brightness, dynamicScheme);
   final text = _buildTextTheme(scheme);
+  final glass = isDark ? GlassTheme.dark : GlassTheme.light;
 
   WidgetStateProperty<Color?> stateColor(Color selected, Color unselected) {
     return WidgetStateProperty.resolveWith(
@@ -633,6 +656,13 @@ ThemeData buildAppTheme(Brightness brightness, {ColorScheme? dynamicScheme}) {
       ),
       textStyle: text.bodyLarge,
     ),
-    extensions: [isDark ? GlassTheme.dark : GlassTheme.light],
+    extensions: [
+      tier == PerformanceTier.low
+          ? glass.copyWith(
+              blurRadius: isDark ? 14 : 10,
+              reducedEffects: true,
+            )
+          : glass,
+    ],
   );
 }

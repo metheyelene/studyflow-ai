@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
 
@@ -257,6 +259,86 @@ void main() {
       expect(find.text('This episode failed to generate'), findsOneWidget);
       expect(find.textContaining('no indexed sources'), findsOneWidget);
       expect(find.textContaining('Exception'), findsNothing);
+    });
+
+    testWidgets('low tier renders a flat artwork and unshadowed play button', (
+      tester,
+    ) async {
+      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
+      final player = FakePodcastPlayer();
+      final router = buildAppRouter();
+      await pumpApp(
+        tester,
+        audio: audio,
+        router: router,
+        podcastPlayer: player,
+        tier: PerformanceTier.low,
+      );
+      router.go('/audio/ep-1');
+      await tester.pumpAndSettle();
+
+      // Episode hero: solid primary tile, no gradient, no drop shadow.
+      final artwork = tester
+          .widgetList<Container>(find.byType(Container))
+          .firstWhere(
+            (c) =>
+                c.decoration is BoxDecoration &&
+                (c.decoration! as BoxDecoration).borderRadius ==
+                    BorderRadius.circular(30),
+          );
+      final deco = artwork.decoration! as BoxDecoration;
+      expect(deco.gradient, isNull);
+      expect(deco.boxShadow, isNull);
+      expect(deco.color, isNotNull);
+
+      // Play button: no elevation on the low tier.
+      final playButton = tester.widget<Material>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.pause_rounded),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(playButton.elevation, 0);
+    });
+
+    testWidgets('standard tier keeps the artwork gradient and play elevation', (
+      tester,
+    ) async {
+      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
+      final player = FakePodcastPlayer();
+      final router = buildAppRouter();
+      await pumpApp(
+        tester,
+        audio: audio,
+        router: router,
+        podcastPlayer: player,
+      );
+      router.go('/audio/ep-1');
+      await tester.pumpAndSettle();
+
+      final artwork = tester
+          .widgetList<Container>(find.byType(Container))
+          .firstWhere(
+            (c) =>
+                c.decoration is BoxDecoration &&
+                (c.decoration! as BoxDecoration).borderRadius ==
+                    BorderRadius.circular(30),
+          );
+      final deco = artwork.decoration! as BoxDecoration;
+      expect(deco.gradient, isNotNull);
+      expect(deco.boxShadow, isNotNull);
+
+      final playButton = tester.widget<Material>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.pause_rounded),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(playButton.elevation, 4);
     });
   });
 }

@@ -6,6 +6,7 @@ import 'package:flutter/semantics.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/capture_seed.dart';
+import 'core/performance/device_tier.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
@@ -56,13 +57,22 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
     // The theme mode (light / dark / system) is user-controlled from
     // Settings → Appearance and persisted locally.
     final themeMode = ref.watch(themeModeProvider);
+    final tier = ref.watch(performanceTierProvider);
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
         return MaterialApp.router(
           title: 'StudyFlow AI',
           debugShowCheckedModeBanner: false,
-          theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
-          darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
+          theme: buildAppTheme(
+            Brightness.light,
+            dynamicScheme: lightDynamic,
+            tier: tier,
+          ),
+          darkTheme: buildAppTheme(
+            Brightness.dark,
+            dynamicScheme: darkDynamic,
+            tier: tier,
+          ),
           themeMode: themeMode,
           routerConfig: appRouter,
         );

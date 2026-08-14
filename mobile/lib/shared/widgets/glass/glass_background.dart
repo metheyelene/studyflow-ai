@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/performance/device_tier.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Context mood for the ambient background. Each mood shifts the tint and
@@ -10,10 +12,21 @@ import '../../../core/theme/app_theme.dart';
 /// drift loop would hang every `pumpAndSettle`).
 enum BackgroundMood { ambient, study, ai, audio, premium }
 
+/// The flat low-tier fallback surface (keyed so tests can assert the
+/// ambient layer is swapped out).
+const kStudyFlowBackgroundBase = Key('studyflow-bg-base');
+
+/// The ambient light-field layer (keyed so tests can assert it is present
+/// on the standard tier and absent on the low tier).
+const kStudyFlowBackgroundBlobs = Key('studyflow-bg-blobs');
+
 /// Layered ambient background: base surface + soft color fields, with
 /// content on top. Purely decorative — blobs are IgnorePointer with no
 /// semantics — so it can wrap any screen without affecting interaction.
-class StudyFlowBackground extends StatelessWidget {
+/// On the low performance tier the ambient layer is disabled entirely and
+/// the base flattens to a solid fill: every blob and gradient is a shader
+/// pass, and low-end GPUs win by skipping them.
+class StudyFlowBackground extends ConsumerWidget {
   const StudyFlowBackground({
     super.key,
     required this.child,
@@ -58,8 +71,16 @@ class StudyFlowBackground extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
+    if (ref.watch(performanceTierProvider) == PerformanceTier.low) {
+      // Low-end tier: solid background, no ambient fields, no sheen.
+      return DecoratedBox(
+        key: kStudyFlowBackgroundBase,
+        decoration: BoxDecoration(color: g.background),
+        child: child,
+      );
+    }
     final dark = Theme.of(context).brightness == Brightness.dark;
     final p = _palette(context);
 
@@ -112,6 +133,7 @@ class StudyFlowBackground extends StatelessWidget {
         ),
         // Ambient light fields.
         LayoutBuilder(
+          key: kStudyFlowBackgroundBlobs,
           builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;

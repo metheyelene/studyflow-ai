@@ -47,6 +47,53 @@ class GlassCard extends StatelessWidget {
         };
 
     final sheen = glossy ? 1.0 : 0.75;
+    // Low tier: no ambient/hero gradients and much lighter shadows — the
+    // fill + border + a hairline top lip stay, so the glass language reads
+    // but the GPU work (gradient overdraw, big shadow blur) drops.
+    final effects = !g.reducedEffects;
+    final content = Padding(padding: padding, child: child);
+    final finished = effects
+        ? DecoratedBox(
+            // Specular finish: diagonal light sweep + a brighter top edge
+            // (a literal top border reads as a thin glass lip).
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              border: Border(
+                top: BorderSide(
+                  color: g.highlight.withValues(alpha: 0.55 * sheen),
+                  width: 1.2,
+                ),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: glossy
+                    ? [
+                        g.highlight.withValues(alpha: 0.9),
+                        g.highlight.withValues(alpha: 0.25),
+                        Colors.transparent,
+                      ]
+                    : [g.highlight, Colors.transparent],
+                stops: glossy ? const [0, 0.28, 0.5] : const [0, 0.45],
+              ),
+            ),
+            child: DecoratedBox(
+              // Faint bottom reflection so the surface reads as physical.
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topCenter,
+                  colors: [
+                    g.primary.withValues(alpha: glossy ? 0.05 : 0.0),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: content,
+            ),
+          )
+        : content;
     final container = Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -55,16 +102,16 @@ class GlassCard extends StatelessWidget {
         border: Border.all(color: g.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 20,
+            color: Colors.black.withValues(alpha: effects ? 0.06 : 0.03),
+            blurRadius: effects ? 20 : 8,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
+            color: Colors.black.withValues(alpha: effects ? 0.04 : 0.02),
+            blurRadius: effects ? 6 : 3,
             offset: const Offset(0, 2),
           ),
-          if (glossy)
+          if (glossy && effects)
             BoxShadow(
               color: g.primary.withValues(alpha: 0.10),
               blurRadius: 26,
@@ -72,46 +119,7 @@ class GlassCard extends StatelessWidget {
             ),
         ],
       ),
-      child: DecoratedBox(
-        // Specular finish: diagonal light sweep + a brighter top edge
-        // (a literal top border reads as a thin glass lip).
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          border: Border(
-            top: BorderSide(
-              color: g.highlight.withValues(alpha: 0.55 * sheen),
-              width: 1.2,
-            ),
-          ),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: glossy
-                ? [
-                    g.highlight.withValues(alpha: 0.9),
-                    g.highlight.withValues(alpha: 0.25),
-                    Colors.transparent,
-                  ]
-                : [g.highlight, Colors.transparent],
-            stops: glossy ? const [0, 0.28, 0.5] : const [0, 0.45],
-          ),
-        ),
-        child: DecoratedBox(
-          // Faint bottom reflection so the surface reads as physical.
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            gradient: LinearGradient(
-              begin: Alignment.bottomLeft,
-              end: Alignment.topCenter,
-              colors: [
-                g.primary.withValues(alpha: glossy ? 0.05 : 0.0),
-                Colors.transparent,
-              ],
-            ),
-          ),
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
+      child: finished,
     );
 
     final surface = blurred

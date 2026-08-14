@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
 import 'package:studyflow_mobile/core/theme/theme_controller.dart';
@@ -709,6 +710,11 @@ Future<FakeAuthRepository> pumpApp(
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
+
+  /// Pin the rendering-performance tier (overrides auto-detection). When
+  /// null the real [performanceTierProvider] chain runs: auto-detection,
+  /// with the manual Settings → Reduce visual effects switch winning.
+  PerformanceTier? tier,
 }) async {
   authEvents.reset();
   onboardingEvents.reset();
@@ -758,6 +764,7 @@ Future<FakeAuthRepository> pumpApp(
         playBillingRepositoryProvider.overrideWithValue(
           premium ?? FakePlayBillingRepository(),
         ),
+        if (tier != null) performanceTierProvider.overrideWithValue(tier),
       ],
       child: _TestApp(router: router ?? buildAppRouter()),
     ),
@@ -777,8 +784,14 @@ class _TestApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       routerConfig: router,
-      theme: buildAppTheme(Brightness.light),
-      darkTheme: buildAppTheme(Brightness.dark),
+      theme: buildAppTheme(
+        Brightness.light,
+        tier: ref.watch(performanceTierProvider),
+      ),
+      darkTheme: buildAppTheme(
+        Brightness.dark,
+        tier: ref.watch(performanceTierProvider),
+      ),
       themeMode: ref.watch(themeModeProvider),
     );
   }

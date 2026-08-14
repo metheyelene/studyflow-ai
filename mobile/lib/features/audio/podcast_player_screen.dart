@@ -355,23 +355,31 @@ class _Artwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    // The gradient + glow are the episode's hero moment; the low tier
+    // renders a flat primary tile with no drop shadow instead.
+    final effects = !g.reducedEffects;
     return Container(
       width: 168,
       height: 168,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [g.primary, g.primary.withValues(alpha: 0.55)],
-        ),
+        gradient: effects
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [g.primary, g.primary.withValues(alpha: 0.55)],
+              )
+            : null,
+        color: effects ? null : g.primary,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: g.primary.withValues(alpha: 0.25),
-            blurRadius: 32,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        boxShadow: effects
+            ? [
+                BoxShadow(
+                  color: g.primary.withValues(alpha: 0.25),
+                  blurRadius: 32,
+                  offset: const Offset(0, 14),
+                ),
+              ]
+            : null,
       ),
       child: Center(
         child: Icon(
@@ -557,11 +565,12 @@ class _PlayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    final effects = !g.reducedEffects;
     return Material(
       color: g.primary,
       shape: const CircleBorder(),
-      elevation: 4,
-      shadowColor: g.primary.withValues(alpha: 0.4),
+      elevation: effects ? 4 : 0,
+      shadowColor: g.primary.withValues(alpha: effects ? 0.4 : 0),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),

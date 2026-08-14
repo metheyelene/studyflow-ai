@@ -146,7 +146,7 @@ class _GlassButtonState extends State<GlassButton> {
                     color: bg,
                     borderRadius: BorderRadius.circular(AppShapes.button),
                     border: Border.all(color: border),
-                    boxShadow: shadowed && !disabled
+                    boxShadow: shadowed && !disabled && !g.reducedEffects
                         ? [
                             BoxShadow(
                               color: (widget.variant ==

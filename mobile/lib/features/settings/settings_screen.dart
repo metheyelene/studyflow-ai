@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/performance/device_tier.dart';
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_controller.dart';
@@ -25,6 +26,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final g = context.glass;
     final themeMode = ref.watch(themeModeProvider);
+    final reduceEffects = ref.watch(reduceEffectsProvider);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -136,6 +138,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               onSelectionChanged: (selection) => ref
                                   .read(themeModeProvider.notifier)
                                   .setMode(selection.first),
+                            ),
+                          ),
+                        if (_showAppearance)
+                          GlassListTile(
+                            title: 'Reduce visual effects',
+                            subtitle:
+                                'Smaller blur and a plainer background — '
+                                'smoother on low-end devices.',
+                            leading: Icon(
+                              Icons.animation_outlined,
+                              size: 22,
+                              color: g.primary,
+                            ),
+                            trailing: Switch(
+                              value: reduceEffects,
+                              onChanged: (value) => ref
+                                  .read(reduceEffectsProvider.notifier)
+                                  .setEnabled(value),
                             ),
                           ),
                       ],
