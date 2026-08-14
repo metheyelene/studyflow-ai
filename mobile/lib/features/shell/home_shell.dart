@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/responsive.dart';
+import '../../shared/widgets/glass/glass_background.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 
 const kHomeNavItems = [
@@ -48,10 +49,21 @@ class HomeShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The ambient background responds to the active tab: Home gets the
+    // default calm glow, Notebooks/Study the study mood, Audio the deep
+    // media wash, Premium-ish Profile a warmer sheen.
+    final mood = switch (currentIndex) {
+      0 => BackgroundMood.ambient,
+      1 || 2 => BackgroundMood.study,
+      3 => BackgroundMood.ai,
+      _ => BackgroundMood.ambient,
+    };
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(child: child),
+      body: StudyFlowBackground(
+        mood: mood,
+        child: Stack(
+          children: [
+            Positioned.fill(child: child),
           if (context.isPhone)
             Positioned(
               left: 0,
@@ -77,7 +89,8 @@ class HomeShell extends StatelessWidget {
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

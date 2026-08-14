@@ -36,6 +36,19 @@ abstract final class AppMotion {
 
   /// Long, expressive transitions — sheets, hero-style morphs.
   static const Duration slow = Duration(milliseconds: 400);
+
+  /// Press physics: compress quickly with a sharp ease-out…
+  static const Curve pressIn = Curves.easeOut;
+  static const Duration pressInDuration = Duration(milliseconds: 80);
+
+  /// …then spring back with a physical overshoot. Physical controls
+  /// (buttons, cards, chips) release through these tokens.
+  static const Curve pressOut = Curves.easeOutBack;
+  static const Duration pressOutDuration = Duration(milliseconds: 320);
+
+  /// Subtle idle drift for ambient background light (very slow, GPU-cheap
+  /// opacity/position tween — never a per-frame transform on content).
+  static const Duration ambient = Duration(seconds: 12);
 }
 
 /// Shape tokens — the single source for corner radii. Shape communicates

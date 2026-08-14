@@ -18,6 +18,7 @@ class GlassCard extends StatelessWidget {
     this.radius = GlassTheme.radiusCard,
     this.blurred = false,
     this.color,
+    this.glossy = false,
   });
 
   final Widget child;
@@ -27,6 +28,11 @@ class GlassCard extends StatelessWidget {
   final double radius;
   final bool blurred;
   final Color? color;
+
+  /// Specular finish for hero surfaces: a stronger diagonal sheen, a
+  /// brighter top edge, and a faint bottom reflection. Purely gradients —
+  /// no extra blur, so heroes stay GPU-cheap.
+  final bool glossy;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +46,7 @@ class GlassCard extends StatelessWidget {
           GlassTone.floating => g.floating,
         };
 
+    final sheen = glossy ? 1.0 : 0.75;
     final container = Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -57,19 +64,53 @@ class GlassCard extends StatelessWidget {
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
+          if (glossy)
+            BoxShadow(
+              color: g.primary.withValues(alpha: 0.10),
+              blurRadius: 26,
+              offset: const Offset(0, 10),
+            ),
         ],
       ),
       child: DecoratedBox(
+        // Specular finish: diagonal light sweep + a brighter top edge
+        // (a literal top border reads as a thin glass lip).
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
+          border: Border(
+            top: BorderSide(
+              color: g.highlight.withValues(alpha: 0.55 * sheen),
+              width: 1.2,
+            ),
+          ),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [g.highlight, Colors.transparent],
-            stops: const [0, 0.45],
+            colors: glossy
+                ? [
+                    g.highlight.withValues(alpha: 0.9),
+                    g.highlight.withValues(alpha: 0.25),
+                    Colors.transparent,
+                  ]
+                : [g.highlight, Colors.transparent],
+            stops: glossy ? const [0, 0.28, 0.5] : const [0, 0.45],
           ),
         ),
-        child: Padding(padding: padding, child: child),
+        child: DecoratedBox(
+          // Faint bottom reflection so the surface reads as physical.
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topCenter,
+              colors: [
+                g.primary.withValues(alpha: glossy ? 0.05 : 0.0),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
 

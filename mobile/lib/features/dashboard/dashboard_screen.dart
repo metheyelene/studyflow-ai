@@ -47,19 +47,22 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Text(
                   _greeting(),
-                  style: AppText.small.copyWith(color: g.textMuted),
+                  style: AppText.small.copyWith(
+                    color: g.textMuted,
+                    letterSpacing: 0.4,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Ready to study?',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
                 _UsageHero(dashboard: dashboard),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle(title: 'QUICK ACTIONS'),
                 const SizedBox(height: 10),
-                const _QuickActionsGrid(),
+                const _QuickActionsChips(),
                 const SizedBox(height: AppSpacing.lg),
                 const _SectionTitle(title: 'YOUR PROGRESS'),
                 const SizedBox(height: 10),
@@ -108,7 +111,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Today's Focus hero with the real AI-usage meter.
+/// Today's Focus hero with the real AI-usage meter — the flagship surface
+/// on Home: large translucent hero, specular sheen, big type, animated ring.
 class _UsageHero extends ConsumerWidget {
   const _UsageHero({required this.dashboard});
 
@@ -118,16 +122,33 @@ class _UsageHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GlassCard(
       tone: GlassTone.floating,
+      glossy: true,
+      radius: AppShapes.hero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(title: "TODAY'S FOCUS"),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "TODAY'S FOCUS",
+                  style: AppText.eyebrow.copyWith(
+                    color: context.glass.primary,
+                  ),
+                ),
+              ),
+              GlassBadge(
+                label: 'AI workspace',
+                icon: Icons.auto_awesome,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             'Upload your first note to start building a study system.',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           dashboard.when(
             loading: () => const _UsageSkeleton(),
             error: (_, _) => _UsageError(
@@ -157,9 +178,19 @@ class _UsageMeter extends StatelessWidget {
     };
     return Row(
       children: [
-        GlassRing(
-          value: usage.limit > 0 ? usage.percent / 100 : 0,
-          label: '${usage.used}/${usage.limit}',
+        // Animate 0 → current on first appearance; further changes tween
+        // from the previous value instead of snapping.
+        TweenAnimationBuilder<double>(
+          tween: Tween(
+            begin: 0,
+            end: usage.limit > 0 ? usage.percent / 100 : 0,
+          ),
+          duration: AppMotion.medium,
+          curve: AppMotion.emphasized,
+          builder: (context, value, _) => GlassRing(
+            value: value,
+            label: '${usage.used}/${usage.limit}',
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -386,14 +417,14 @@ class _StatRow extends StatelessWidget {
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
-  const _QuickActionsGrid();
+/// Floating glossy action chips. Same destinations as the old grid — tabs
+/// go() (shell tabs), detail routes push() so back returns to Home — but
+/// the chips read as elevated translucent objects instead of a flat grid.
+class _QuickActionsChips extends StatelessWidget {
+  const _QuickActionsChips();
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    // Tabs navigate with go(); pushed detail routes (flashcards) use push()
-    // so back returns to the dashboard instead of hitting an empty stack.
     const actions = [
       (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
       (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
@@ -402,51 +433,110 @@ class _QuickActionsGrid extends StatelessWidget {
       (Icons.mic_none, 'Podcast', AppRoutes.audio, true),
       (Icons.event_available_outlined, 'Study plan', AppRoutes.study, false),
     ];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = context.isPhone ? 2 : 3;
-        final width = (constraints.maxWidth - 10 * (columns - 1)) / columns;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final a in actions)
-              SizedBox(
-                width: width,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => a.$4 ? context.push(a.$3) : context.go(a.$3),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Ink(
-                      padding: const EdgeInsets.all(14),
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final a in actions)
+          _GlossyActionChip(
+            icon: a.$1,
+            label: a.$2,
+            onTap: () => a.$4 ? context.push(a.$3) : context.go(a.$3),
+          ),
+      ],
+    );
+  }
+}
+
+class _GlossyActionChip extends StatefulWidget {
+  const _GlossyActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_GlossyActionChip> createState() => _GlossyActionChipState();
+}
+
+class _GlossyActionChipState extends State<_GlossyActionChip> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: _pressed
+            ? AppMotion.pressInDuration
+            : AppMotion.pressOutDuration,
+        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
+        child: Material(
+          color: Colors.transparent,
+          child: Listener(
+            onPointerDown: (_) => setState(() => _pressed = true),
+            onPointerUp: (_) => setState(() => _pressed = false),
+            onPointerCancel: (_) => setState(() => _pressed = false),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 11,
+                ),
+                decoration: BoxDecoration(
+                  color: g.floating,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: g.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: g.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: g.border),
+                        color: g.primarySoft,
+                        shape: BoxShape.circle,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(a.$1, size: 20, color: g.primary),
-                          const SizedBox(height: 10),
-                          Text(
-                            a.$2,
-                            style: TextStyle(
-                              color: g.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      child: Icon(
+                        widget.icon,
+                        size: 16,
+                        color: g.primary,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        color: g.textPrimary,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 
-/// Button hierarchy (web parity): [GlassButtonVariant.primary] solid
-/// accent, [GlassButtonVariant.glass] translucent material, and
-/// [GlassButtonVariant.text] for tertiary actions — never all equal.
+/// Button hierarchy. Five glass materials, never all equal:
 ///
-/// Subtle press feedback: the whole button scales down ~3% while held
-/// (spring-like via [AnimatedScale]), so taps feel physical without
-/// bouncing.
+///  - [GlassButtonVariant.primary]  — solid accent CTA
+///  - [GlassButtonVariant.glossy]   — primary with a specular sheen (hero
+///    CTAs, premium, major AI actions)
+///  - [GlassButtonVariant.glass]    — clear/frosted translucent utility
+///  - [GlassButtonVariant.dark]     — dark glass (immersive: media player,
+///    audio, AI mode)
+///  - [GlassButtonVariant.elevated] — floating elevated control (FAB-style
+///    actions, contextual actions)
+///  - [GlassButtonVariant.text]     — tertiary, no surface
+///
+/// Press physics: the button compresses quickly (80ms ease-out), then
+/// springs back with a physical overshoot (320ms ease-out-back). Primary
+/// and glossy variants also give a light haptic tick on activation.
 class GlassButton extends StatefulWidget {
   const GlassButton({
     super.key,
@@ -36,11 +45,26 @@ class GlassButton extends StatefulWidget {
 class _GlassButtonState extends State<GlassButton> {
   bool _pressed = false;
 
+  void _activate() {
+    // Light tick on meaningful activation; a no-op in tests.
+    HapticFeedback.lightImpact();
+    widget.onPressed?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
     final onPressed = widget.onPressed;
     final disabled = onPressed == null;
+
+    final filled = switch (widget.variant) {
+      GlassButtonVariant.primary ||
+      GlassButtonVariant.glossy ||
+      GlassButtonVariant.glass ||
+      GlassButtonVariant.dark ||
+      GlassButtonVariant.elevated => true,
+      GlassButtonVariant.text => false,
+    };
 
     final (fg, bg, border) = switch (widget.variant) {
       GlassButtonVariant.primary => (
@@ -48,7 +72,24 @@ class _GlassButtonState extends State<GlassButton> {
         g.primary,
         Colors.transparent,
       ),
+      GlassButtonVariant.glossy => (
+        g.textOnPrimary,
+        g.primary,
+        Colors.transparent,
+      ),
       GlassButtonVariant.glass => (g.textPrimary, g.surface, g.border),
+      GlassButtonVariant.dark => (
+        Theme.of(context).brightness == Brightness.dark
+            ? g.textPrimary
+            : Colors.white,
+        const Color(0xCC14141C),
+        Colors.white.withValues(alpha: 0.14),
+      ),
+      GlassButtonVariant.elevated => (
+        g.textPrimary,
+        g.floating,
+        g.border,
+      ),
       GlassButtonVariant.text => (
         g.primary,
         Colors.transparent,
@@ -62,20 +103,31 @@ class _GlassButtonState extends State<GlassButton> {
       GlassButtonSize.large => (52.0, 24.0, 15.0),
     };
 
+    final glossy = widget.variant == GlassButtonVariant.glossy;
+    final shadowed =
+        widget.variant == GlassButtonVariant.primary ||
+        glossy ||
+        widget.variant == GlassButtonVariant.elevated;
+
     return Semantics(
       button: true,
       label: widget.semanticLabel ?? widget.label,
       child: Opacity(
         opacity: disabled ? 0.45 : 1,
         child: AnimatedScale(
-          scale: _pressed && !disabled ? 0.97 : 1.0,
-          duration: const Duration(milliseconds: 90),
-          curve: Curves.easeOut,
+          // Press: compress fast (ease-out); release: spring back with a
+          // physical overshoot. AnimatedScale re-reads curve/duration each
+          // build, so the direction is inherently asymmetric.
+          scale: _pressed && !disabled ? 0.965 : 1.0,
+          duration: _pressed && !disabled
+              ? AppMotion.pressInDuration
+              : AppMotion.pressOutDuration,
+          curve: _pressed && !disabled
+              ? AppMotion.pressIn
+              : AppMotion.pressOut,
           child: Material(
             color: Colors.transparent,
             child: Listener(
-              // Keep the press feel even when the button is triggered
-              // from elsewhere (e.g. keyboard submit).
               onPointerDown: disabled
                   ? null
                   : (_) => setState(() => _pressed = true),
@@ -86,55 +138,95 @@ class _GlassButtonState extends State<GlassButton> {
                   ? null
                   : (_) => setState(() => _pressed = false),
               child: InkWell(
-                onTap: disabled ? null : onPressed,
-                borderRadius: BorderRadius.circular(14),
+                onTap: disabled ? null : _activate,
+                borderRadius: BorderRadius.circular(AppShapes.button),
                 splashColor: g.primary.withValues(alpha: 0.12),
                 child: Ink(
                   decoration: BoxDecoration(
                     color: bg,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppShapes.button),
                     border: Border.all(color: border),
-                    boxShadow:
-                        widget.variant == GlassButtonVariant.primary &&
-                            !disabled
+                    boxShadow: shadowed && !disabled
                         ? [
                             BoxShadow(
-                              color: g.primary.withValues(alpha: 0.25),
-                              blurRadius: 14,
-                              offset: const Offset(0, 6),
+                              color: (widget.variant ==
+                                          GlassButtonVariant.elevated
+                                      ? Colors.black
+                                      : g.primary)
+                                  .withValues(
+                                    alpha:
+                                        widget.variant ==
+                                                GlassButtonVariant.elevated
+                                            ? 0.18
+                                            : 0.25,
+                                  ),
+                              blurRadius: 16,
+                              offset: const Offset(0, 7),
                             ),
                           ]
                         : null,
                   ),
-                  child: Container(
-                    height: height,
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    constraints: widget.expand
-                        ? const BoxConstraints(minWidth: double.infinity)
-                        : null,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: widget.expand
-                          ? MainAxisSize.max
-                          : MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (widget.icon != null) ...[
-                          Icon(widget.icon, size: 18, color: fg),
-                          const SizedBox(width: 8),
-                        ],
-                        Flexible(
-                          child: Text(
-                            widget.label,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: fg,
-                              fontSize: font,
-                              fontWeight: FontWeight.w600,
+                  child: DecoratedBox(
+                    // Specular sweep across filled materials — a soft
+                    // light sheet that makes the button read as glass.
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppShapes.button),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: filled
+                            ? [
+                                Colors.white.withValues(
+                                  alpha: glossy
+                                      ? 0.28
+                                      : widget.variant ==
+                                                GlassButtonVariant.primary
+                                            ? 0.18
+                                            : widget.variant ==
+                                                      GlassButtonVariant.dark
+                                                  ? 0.10
+                                                  : 0.08,
+                                ),
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.03),
+                              ]
+                            : const [Colors.transparent, Colors.transparent],
+                        stops: filled
+                            ? const [0, 0.45, 1]
+                            : const [0, 1],
+                      ),
+                    ),
+                    child: Container(
+                      height: height,
+                      padding: EdgeInsets.symmetric(horizontal: hPad),
+                      constraints: widget.expand
+                          ? const BoxConstraints(minWidth: double.infinity)
+                          : null,
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: widget.expand
+                            ? MainAxisSize.max
+                            : MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.icon != null) ...[
+                            Icon(widget.icon, size: 18, color: fg),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Text(
+                              widget.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: fg,
+                                fontSize: font,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.1,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -147,6 +239,6 @@ class _GlassButtonState extends State<GlassButton> {
   }
 }
 
-enum GlassButtonVariant { primary, glass, text }
+enum GlassButtonVariant { primary, glossy, glass, dark, elevated, text }
 
 enum GlassButtonSize { small, medium, large }

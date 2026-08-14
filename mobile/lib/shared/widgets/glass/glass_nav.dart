@@ -81,22 +81,44 @@ class _NavButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            duration: AppMotion.medium,
+            curve: AppMotion.standard,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
             decoration: BoxDecoration(
               color: selected ? g.primarySoft : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
+              border: selected
+                  ? Border.all(color: g.primary.withValues(alpha: 0.22))
+                  : null,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: g.primary.withValues(alpha: 0.16),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  size: 22,
-                  color: selected ? g.primary : g.textMuted,
+                AnimatedSwitcher(
+                  duration: AppMotion.fast,
+                  switchInCurve: AppMotion.pressOut,
+                  switchOutCurve: AppMotion.pressIn,
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: Icon(
+                    selected ? item.selectedIcon : item.icon,
+                    key: ValueKey(selected),
+                    size: 22,
+                    color: selected ? g.primary : g.textMuted,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 FittedBox(
