@@ -25,7 +25,13 @@ import 'notebooks_controller.dart';
 import 'notebooks_repository.dart';
 
 /// The notebook workspace — sources, AI chat, and study tools.
-class NotebookDetailPane extends StatefulWidget {
+///
+/// The workspace header is a glossy hero surface: the notebook title and
+/// source count sit on a specular glass panel, and a row of floating AI
+/// action controls (Chat, Flashcards, Quiz, Podcast) floats beneath it.
+/// The generation actions live here — one source of truth shared by the
+/// header controls and the Study tools tab.
+class NotebookDetailPane extends ConsumerStatefulWidget {
   const NotebookDetailPane({
     super.key,
     required this.notebook,
@@ -36,47 +42,153 @@ class NotebookDetailPane extends StatefulWidget {
   final bool showBack;
 
   @override
-  State<NotebookDetailPane> createState() => _NotebookDetailPaneState();
+  ConsumerState<NotebookDetailPane> createState() => _NotebookDetailPaneState();
 }
 
-class _NotebookDetailPaneState extends State<NotebookDetailPane> {
+class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
   int _tab = 0;
+  bool _flashcardBusy = false;
+  bool _quizBusy = false;
+  bool _podcastBusy = false;
+
+  Future<void> _generateFlashcards() async {
+    setState(() => _flashcardBusy = true);
+    try {
+      final detail = await ref
+          .read(flashcardsControllerProvider.notifier)
+          .generate(widget.notebook.id);
+      if (!mounted) return;
+      context.push('${AppRoutes.flashcards}/${detail.deck.id}');
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is FlashcardsException
+          ? e.message
+          : 'Could not generate that deck. Please try again.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _flashcardBusy = false);
+    }
+  }
+
+  Future<void> _generateQuiz() async {
+    setState(() => _quizBusy = true);
+    try {
+      final detail = await ref
+          .read(quizzesControllerProvider.notifier)
+          .generate(widget.notebook.id);
+      if (!mounted) return;
+      context.push('${AppRoutes.quizzes}/${detail.quiz.id}');
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is QuizzesException
+          ? e.message
+          : 'Could not generate that quiz. Please try again.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _quizBusy = false);
+    }
+  }
+
+  Future<void> _createPodcast() async {
+    setState(() => _podcastBusy = true);
+    try {
+      final episode = await ref
+          .read(audioControllerProvider.notifier)
+          .createPodcast(
+            widget.notebook.id,
+            style: 'focused',
+            length: 'standard',
+          );
+      if (!mounted) return;
+      if (episode.isReady) {
+        context.push('${AppRoutes.audio}/${episode.id}');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is AudioException
+          ? e.message
+          : 'Could not create that podcast. Please try again.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _podcastBusy = false);
+    }
+  }
+
+  void _openAskAi() => setState(() => _tab = 1);
 
   @override
   Widget build(BuildContext context) {
+    final g = context.glass;
     final notebook = widget.notebook;
 
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Glass workspace header — a glossy hero surface with the title,
+          // source count, and the floating AI action controls.
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Row(
-              children: [
-                if (widget.showBack) ...[
-                  IconButton(
-                    onPressed: () => context.popOrHome(),
-                    icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Back',
+            child: GlassCard(
+              tone: GlassTone.floating,
+              glossy: true,
+              radius: AppShapes.hero,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (widget.showBack) ...[
+                        IconButton(
+                          onPressed: () => context.popOrHome(),
+                          icon: const Icon(Icons.arrow_back),
+                          tooltip: 'Back',
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Expanded(
+                        child: Text(
+                          notebook.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      GlassBadge(
+                        label: notebook.sourceCount == 0
+                            ? '0 sources'
+                            : '${notebook.sourceCount} sources',
+                        icon: Icons.description_outlined,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                ],
-                Expanded(
-                  child: Text(
-                    notebook.title,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Your notes, grounded AI, and study tools in one workspace.',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppText.small.copyWith(color: g.textMuted),
                   ),
-                ),
-                GlassBadge(
-                  label: notebook.sourceCount == 0
-                      ? '0 sources'
-                      : '${notebook.sourceCount} sources',
-                  icon: Icons.description_outlined,
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  // Floating AI action controls — glossy elevated actions
+                  // that mirror the Study tools tab, always reachable.
+                  _FloatingAiActions(
+                    onAskAi: _openAskAi,
+                    flashcardBusy: _flashcardBusy,
+                    onFlashcards: _flashcardBusy ? null : _generateFlashcards,
+                    quizBusy: _quizBusy,
+                    onQuiz: _quizBusy ? null : _generateQuiz,
+                    podcastBusy: _podcastBusy,
+                    onPodcast: _podcastBusy ? null : _createPodcast,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -94,8 +206,13 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
               0 => _SourcesTab(notebookId: notebook.id),
               1 => _AskAiTab(notebookId: notebook.id),
               _ => _StudyToolsTab(
-                notebookId: notebook.id,
-                onAskAi: () => setState(() => _tab = 1),
+                onAskAi: _openAskAi,
+                flashcardBusy: _flashcardBusy,
+                onFlashcards: _flashcardBusy ? null : _generateFlashcards,
+                quizBusy: _quizBusy,
+                onQuiz: _quizBusy ? null : _generateQuiz,
+                podcastBusy: _podcastBusy,
+                onPodcast: _podcastBusy ? null : _createPodcast,
               ),
             },
           ),
@@ -105,7 +222,170 @@ class _NotebookDetailPaneState extends State<NotebookDetailPane> {
   }
 }
 
-/// Shared empty-state scaffold for the tab panes.
+/// The four floating AI actions: glossy elevated buttons that compress on
+/// press and spring back, with an inline spinner while a generation runs.
+class _FloatingAiActions extends StatelessWidget {
+  const _FloatingAiActions({
+    required this.onAskAi,
+    required this.flashcardBusy,
+    required this.onFlashcards,
+    required this.quizBusy,
+    required this.onQuiz,
+    required this.podcastBusy,
+    required this.onPodcast,
+  });
+
+  final VoidCallback onAskAi;
+  final bool flashcardBusy;
+  final VoidCallback? onFlashcards;
+  final bool quizBusy;
+  final VoidCallback? onQuiz;
+  final bool podcastBusy;
+  final VoidCallback? onPodcast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _AiActionChip(
+          icon: Icons.auto_awesome,
+          label: 'Chat',
+          onTap: onAskAi,
+        ),
+        _AiActionChip(
+          icon: Icons.style_outlined,
+          label: 'Flashcards',
+          busy: flashcardBusy,
+          onTap: onFlashcards,
+        ),
+        _AiActionChip(
+          icon: Icons.quiz_outlined,
+          label: 'Quiz',
+          busy: quizBusy,
+          onTap: onQuiz,
+        ),
+        _AiActionChip(
+          icon: Icons.mic_none,
+          label: 'Podcast',
+          busy: podcastBusy,
+          onTap: onPodcast,
+        ),
+      ],
+    );
+  }
+}
+
+class _AiActionChip extends StatefulWidget {
+  const _AiActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.busy = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool busy;
+
+  @override
+  State<_AiActionChip> createState() => _AiActionChipState();
+}
+
+class _AiActionChipState extends State<_AiActionChip> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: AnimatedScale(
+        scale: _pressed && widget.onTap != null ? 0.95 : 1.0,
+        duration: _pressed
+            ? AppMotion.pressInDuration
+            : AppMotion.pressOutDuration,
+        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
+        child: Material(
+          color: Colors.transparent,
+          child: Listener(
+            onPointerDown: widget.onTap == null
+                ? null
+                : (_) => setState(() => _pressed = true),
+            onPointerUp: widget.onTap == null
+                ? null
+                : (_) => setState(() => _pressed = false),
+            onPointerCancel: widget.onTap == null
+                ? null
+                : (_) => setState(() => _pressed = false),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 11,
+                ),
+                decoration: BoxDecoration(
+                  color: g.floating,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: g.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: g.primarySoft,
+                        shape: BoxShape.circle,
+                      ),
+                      child: widget.busy
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(g.primary),
+                              ),
+                            )
+                          : Icon(widget.icon, size: 16, color: g.primary),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        color: g.textPrimary,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shared empty-state scaffold for the tab panes. The card is vertically
+/// centered in the available content area (so the CTA stays reachable above
+/// the floating nav on phones) and scrolls when space runs out.
 class _TabScaffold extends StatelessWidget {
   const _TabScaffold({
     required this.icon,
@@ -122,32 +402,59 @@ class _TabScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 40),
-      child: GlassCard(
-        child: Column(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: g.primarySoft,
-                borderRadius: BorderRadius.circular(16),
+    final bottomPad = context.isPhone ? 110.0 : 40.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: (constraints.maxHeight - 16 - bottomPad).clamp(
+                0.0,
+                double.infinity,
               ),
-              child: Icon(icon, size: 24, color: g.primary),
             ),
-            const SizedBox(height: 14),
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.45),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomPad),
+                child: GlassCard(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: g.primarySoft,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(icon, size: 24, color: g.primary),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: g.textMuted,
+                          fontSize: 14,
+                          height: 1.45,
+                        ),
+                      ),
+                      if (actions.isNotEmpty) ...[const SizedBox(height: 16), ...actions],
+                    ],
+                  ),
+                ),
+              ),
             ),
-            if (actions.isNotEmpty) ...[const SizedBox(height: 16), ...actions],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -227,9 +534,9 @@ class _SourcesTabState extends ConsumerState<_SourcesTab> {
             icon: Icons.description_outlined,
             title: 'No sources yet',
             description:
-                'Paste your notes and StudyFlow AI will index them — then answers, '
-                'flashcards, and quizzes come straight from your material, with '
-                'citations back to the source.',
+                'Paste your notes and StudyFlow AI indexes them — answers, '
+                'flashcards, and quizzes then come straight from your material, '
+                'with citations back to the source.',
             actions: [
               GlassButton(
                 label: 'Paste text',
@@ -284,6 +591,9 @@ class _SourcesLoading extends StatelessWidget {
   }
 }
 
+/// A source as an intelligent glass object: kind-tinted icon tile, honest
+/// processing status, size metadata, and — once Ready — a subtle "grounded
+/// for AI" sheen so sources read as knowledge objects, not file rows.
 class _SourceCard extends StatelessWidget {
   const _SourceCard({required this.source, this.onAddAnother});
 
@@ -299,7 +609,12 @@ class _SourceCard extends StatelessWidget {
       SourceStatus.failed => ('Failed', g.danger),
       SourceStatus.unknown => ('—', g.textMuted),
     };
+    final isPasted = source.kind == 'pasted';
+
     return GlassCard(
+      tone: source.status == SourceStatus.ready
+          ? GlassTone.floating
+          : GlassTone.surface,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -307,48 +622,95 @@ class _SourceCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                // Kind-tinted icon tile: pasted notes vs documents. The tint
+                // shifts with processing state so the object reads as alive.
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: g.primarySoft,
+                    color: statusColor.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.28),
+                    ),
                   ),
                   child: Icon(
-                    source.kind == 'pasted'
+                    isPasted
                         ? Icons.notes
                         : Icons.picture_as_pdf_outlined,
                     size: 20,
-                    color: g.primary,
+                    color: statusColor,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    source.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: g.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        source.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: g.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        source.sizeLabel,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: g.textMuted,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 GlassBadge(label: statusLabel, color: statusColor),
               ],
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    source.sizeLabel,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: g.textMuted, fontSize: 12.5),
+            if (source.status == SourceStatus.ready) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 13,
+                    color: g.primary.withValues(alpha: 0.85),
                   ),
-                ),
-                if (onAddAnother != null)
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      'Grounded for AI — answers cite this source',
+                      style: TextStyle(
+                        color: g.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  if (onAddAnother != null)
+                    TextButton.icon(
+                      onPressed: onAddAnother,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Paste another'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: g.primary,
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ] else if (onAddAnother != null) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
                   TextButton.icon(
                     onPressed: onAddAnother,
                     icon: const Icon(Icons.add, size: 16),
@@ -361,8 +723,9 @@ class _SourceCard extends StatelessWidget {
                       ),
                     ),
                   ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -823,91 +1186,26 @@ class _CitationChip extends StatelessWidget {
 // ─────────────────────────── Study tools ───────────────────────────
 
 /// Honest study-tools tab: tools are generated from a notebook's sources
-/// via the AI. Flashcards is wired end-to-end (generate → study session);
-/// the rest route to asking the notebook.
-class _StudyToolsTab extends ConsumerStatefulWidget {
-  const _StudyToolsTab({required this.notebookId, required this.onAskAi});
+/// via the AI. The generation actions are owned by the workspace header
+/// (single source of truth) and surfaced here as the same actions.
+class _StudyToolsTab extends StatelessWidget {
+  const _StudyToolsTab({
+    required this.onAskAi,
+    required this.flashcardBusy,
+    required this.onFlashcards,
+    required this.quizBusy,
+    required this.onQuiz,
+    required this.podcastBusy,
+    required this.onPodcast,
+  });
 
-  final String notebookId;
   final VoidCallback onAskAi;
-
-  @override
-  ConsumerState<_StudyToolsTab> createState() => _StudyToolsTabState();
-}
-
-class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
-  bool _flashcardBusy = false;
-  bool _quizBusy = false;
-  bool _podcastBusy = false;
-
-  Future<void> _generateFlashcards() async {
-    setState(() => _flashcardBusy = true);
-    try {
-      final detail = await ref
-          .read(flashcardsControllerProvider.notifier)
-          .generate(widget.notebookId);
-      if (!mounted) return;
-      context.push('${AppRoutes.flashcards}/${detail.deck.id}');
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is FlashcardsException
-          ? e.message
-          : 'Could not generate that deck. Please try again.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } finally {
-      if (mounted) setState(() => _flashcardBusy = false);
-    }
-  }
-
-  Future<void> _generateQuiz() async {
-    setState(() => _quizBusy = true);
-    try {
-      final detail = await ref
-          .read(quizzesControllerProvider.notifier)
-          .generate(widget.notebookId);
-      if (!mounted) return;
-      context.push('${AppRoutes.quizzes}/${detail.quiz.id}');
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is QuizzesException
-          ? e.message
-          : 'Could not generate that quiz. Please try again.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } finally {
-      if (mounted) setState(() => _quizBusy = false);
-    }
-  }
-
-  Future<void> _createPodcast() async {
-    setState(() => _podcastBusy = true);
-    try {
-      final episode = await ref
-          .read(audioControllerProvider.notifier)
-          .createPodcast(
-            widget.notebookId,
-            style: 'focused',
-            length: 'standard',
-          );
-      if (!mounted) return;
-      if (episode.isReady) {
-        context.push('${AppRoutes.audio}/${episode.id}');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is AudioException
-          ? e.message
-          : 'Could not create that podcast. Please try again.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } finally {
-      if (mounted) setState(() => _podcastBusy = false);
-    }
-  }
+  final bool flashcardBusy;
+  final VoidCallback? onFlashcards;
+  final bool quizBusy;
+  final VoidCallback? onQuiz;
+  final bool podcastBusy;
+  final VoidCallback? onPodcast;
 
   @override
   Widget build(BuildContext context) {
@@ -933,7 +1231,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
               GlassButton(
                 label: 'Ask your notebook',
                 icon: Icons.auto_awesome,
-                onPressed: widget.onAskAi,
+                onPressed: onAskAi,
               ),
             ],
           ),
@@ -945,10 +1243,10 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
             children: [
               GlassListTile(
                 title: 'Flashcards',
-                subtitle: _flashcardBusy
+                subtitle: flashcardBusy
                     ? 'Reading your sources…'
                     : 'Source-grounded front/back cards from your notes',
-                leading: _flashcardBusy
+                leading: flashcardBusy
                     ? Padding(
                         padding: const EdgeInsets.all(2),
                         child: SizedBox(
@@ -966,7 +1264,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                   size: 20,
                   color: g.textMuted,
                 ),
-                onTap: _flashcardBusy ? null : _generateFlashcards,
+                onTap: onFlashcards,
               ),
               Divider(
                 color: g.textPrimary.withValues(alpha: 0.06),
@@ -975,10 +1273,10 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
               ),
               GlassListTile(
                 title: 'Quizzes',
-                subtitle: _quizBusy
+                subtitle: quizBusy
                     ? 'Reading your sources…'
                     : 'MCQs generated from your material',
-                leading: _quizBusy
+                leading: quizBusy
                     ? Padding(
                         padding: const EdgeInsets.all(2),
                         child: SizedBox(
@@ -996,7 +1294,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                   size: 20,
                   color: g.textMuted,
                 ),
-                onTap: _quizBusy ? null : _generateQuiz,
+                onTap: onQuiz,
               ),
               Divider(
                 color: g.textPrimary.withValues(alpha: 0.06),
@@ -1005,10 +1303,10 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
               ),
               GlassListTile(
                 title: 'Study Podcast',
-                subtitle: _podcastBusy
+                subtitle: podcastBusy
                     ? 'Organizing your notes…'
                     : 'Turn this notebook into a narrated audio episode',
-                leading: _podcastBusy
+                leading: podcastBusy
                     ? Padding(
                         padding: const EdgeInsets.all(2),
                         child: SizedBox(
@@ -1026,7 +1324,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                   size: 20,
                   color: g.textMuted,
                 ),
-                onTap: _podcastBusy ? null : _createPodcast,
+                onTap: onPodcast,
               ),
               Divider(
                 color: g.textPrimary.withValues(alpha: 0.06),
@@ -1042,7 +1340,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                   size: 22,
                   color: g.primary,
                 ),
-                onTap: widget.onAskAi,
+                onTap: onAskAi,
               ),
               Divider(
                 color: g.textPrimary.withValues(alpha: 0.06),
@@ -1057,7 +1355,7 @@ class _StudyToolsTabState extends ConsumerState<_StudyToolsTab> {
                   size: 22,
                   color: g.primary,
                 ),
-                onTap: widget.onAskAi,
+                onTap: onAskAi,
               ),
             ],
           ),
