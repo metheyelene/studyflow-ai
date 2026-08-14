@@ -404,6 +404,12 @@ export const subscriptions = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     stripeCustomerId: text("stripe_customer_id").unique(),
     stripeSubscriptionId: text("stripe_subscription_id").unique(),
+    // Google Play (Android) purchase identifiers — one channel per
+    // platform; the same entitlement is derived from this single row.
+    playPackageName: text("play_package_name"),
+    playSubscriptionId: text("play_subscription_id").unique(),
+    playPurchaseToken: text("play_purchase_token").unique(),
+    playOrderId: text("play_order_id"),
     status: subscriptionStatusEnum("status").notNull().default("incomplete"),
     plan: text("plan").notNull().default("premium"),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
@@ -436,10 +442,11 @@ export const foundingMembers = pgTable(
       .notNull()
       .unique()
       .references(() => user.id, { onDelete: "cascade" }),
-    subscriptionId: text("subscription_id")
-      .notNull()
-      .unique()
-      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    // Provider subscription identifier (Stripe "sub_...", Play purchase
+    // token). Historically this was an FK to subscriptions.id, but the
+    // payment webhooks only know provider ids — the FK was never
+    // satisfiable in production and is dropped in migration 0009.
+    subscriptionId: text("subscription_id").notNull().unique(),
     status: text("status").notNull().default("active"), // active | canceled
     claimedAt: timestamp("claimed_at", { withTimezone: true })
       .notNull()

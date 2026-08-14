@@ -7,4 +7,8 @@ export const FOUNDING_TERMS = {
   planLabel: "Founding Member",
   /** Value stored in subscriptions.plan. */
   planStorage: "founding_member",
+  /** Google Play subscription product (product id / base plan). */
+  playProductId: "founding_member_monthly",
+  /** Android application id (matches Flutter applicationId). */
+  playPackageName: "ai.studyflow.studyflow_mobile",
 } as const;
