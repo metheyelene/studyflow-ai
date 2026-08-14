@@ -334,8 +334,9 @@ describe("PATCH /api/study-plans/[planId]", () => {
         })),
       })),
     }));
+    const taskId = (plan.planJson as { tasks: { id: string }[] }).tasks[0]!.id;
     const res = await PATCH(
-      new Request("http://x", { method: "PATCH", body: JSON.stringify({ taskId: "2026-08-12-0", status: "done" }) }),
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ taskId, status: "done" }) }),
       { params: Promise.resolve({ planId: "plan_1" }) },
     );
     expect(res.status).toBe(200);
