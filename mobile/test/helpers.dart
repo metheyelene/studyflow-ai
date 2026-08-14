@@ -27,6 +27,8 @@ import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart'
 import 'package:studyflow_mobile/features/study/study_planner.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
+import 'package:studyflow_mobile/features/premium/play_billing_repository.dart';
+import 'package:studyflow_mobile/features/premium/premium_models.dart';
 
 const testUser = AuthUser(
   id: 'user_1',
@@ -620,6 +622,74 @@ class FakeDashboardRepository implements DashboardRepository {
   Future<List<UpcomingExam>> exams() async => List.of(currentExams);
 }
 
+/// In-memory premium/billing repository: controllable plan, founding
+/// status, price, and purchase outcome. The purchase result is whatever
+/// the test sets it to — exactly how the real repository behaves after
+/// the backend verification response — so tests can prove that a failed
+/// verification never changes the plan (no client-side unlock).
+class FakePlayBillingRepository implements PlayBillingRepository {
+  FakePlayBillingRepository({
+    this.plan = 'free',
+    FoundingStatus? founding,
+    this.priceLabel = '\$2',
+    this.purchaseResult = const PurchaseResult(ok: true, plan: 'founding_member'),
+    this.restoredPlans = const [],
+  }) : founding = founding ??
+           const FoundingStatus(
+             offerActive: true,
+             claimed: 12,
+             cap: 35,
+             available: true,
+             remaining: 23,
+           );
+
+  String plan;
+  FoundingStatus founding;
+  String? priceLabel;
+  PurchaseResult purchaseResult;
+  List<String> restoredPlans;
+  bool playSupportedOverride = false;
+  int purchaseCalls = 0;
+  int restoreCalls = 0;
+  int statusCalls = 0;
+
+  @override
+  bool get playBillingSupported => playSupportedOverride;
+
+  @override
+  Future<FoundingStatus> foundingStatus() async {
+    statusCalls++;
+    return founding;
+  }
+
+  @override
+  Future<String> currentPlan() async => plan;
+
+  @override
+  Future<String?> foundingPriceLabel() async => priceLabel;
+
+  @override
+  Future<PurchaseResult> purchaseFounding() async {
+    purchaseCalls++;
+    // Mirrors the real flow: the backend verifies the token and the next
+    // plan fetch reflects the granted entitlement. A failed verification
+    // leaves the plan untouched.
+    if (purchaseResult.ok && purchaseResult.plan != null) {
+      plan = purchaseResult.plan!;
+    }
+    return purchaseResult;
+  }
+
+  @override
+  Future<List<String>> restorePurchases() async {
+    restoreCalls++;
+    return restoredPlans;
+  }
+
+  @override
+  Future<String> webCheckoutUrl() async => 'https://checkout.example.com/session';
+}
+
 /// Pump the app router with fake repositories. When [signedIn] is true
 /// the router starts authenticated (skipping the splash/login); when
 /// false it lands on /login. Returns the auth fake for assertions.
@@ -635,6 +705,7 @@ Future<FakeAuthRepository> pumpApp(
   FakeAudioRepository? audio,
   FakePodcastPlayer? podcastPlayer,
   FakeStudyPlannerRepository? planner,
+  FakePlayBillingRepository? premium,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -681,6 +752,9 @@ Future<FakeAuthRepository> pumpApp(
         ),
         studyPlannerRepositoryProvider.overrideWithValue(
           planner ?? FakeStudyPlannerRepository(),
+        ),
+        playBillingRepositoryProvider.overrideWithValue(
+          premium ?? FakePlayBillingRepository(),
         ),
       ],
       child: _TestApp(router: router ?? buildAppRouter()),

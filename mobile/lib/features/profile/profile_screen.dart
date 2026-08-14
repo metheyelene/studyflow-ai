@@ -9,6 +9,7 @@ import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
+import '../premium/premium_controller.dart';
 
 /// Profile tab: signed-in identity and sign-out, plan card, and the
 /// Settings / About StudyFlow → Creator paths.
@@ -39,50 +40,7 @@ class ProfileScreen extends ConsumerWidget {
                 else
                   const _SignedOutCard(),
                 const SizedBox(height: 16),
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.workspace_premium_outlined,
-                            size: 20,
-                            color: g.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Your plan',
-                                  style: TextStyle(
-                                    color: g.textPrimary,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Free · founding-member offer arrives with payments.',
-                                  style: TextStyle(
-                                    color: g.textMuted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GlassBadge(
-                            label: 'Free',
-                            icon: Icons.check_circle_outline,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                _PlanCard(),
                 const SizedBox(height: 16),
                 GlassCard(
                   padding: EdgeInsets.zero,
@@ -141,6 +99,83 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Live plan card: reads the user's plan from the backend and links to
+/// the Premium screen. Honest loading/error fallbacks — no hard-coded
+/// plan state.
+class _PlanCard extends ConsumerWidget {
+  const _PlanCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = context.glass;
+    final state = ref.watch(premiumControllerProvider);
+    final (plan, badge) = state.when(
+      loading: () => ('Loading…', 'Free'),
+      error: (_, _) => ('Unavailable', 'Free'),
+      data: (s) => (
+        switch (s.plan) {
+          'founding_member' => 'Founding Member',
+          'premium' => 'Premium',
+          _ => 'Free',
+        },
+        switch (s.plan) {
+          'founding_member' => 'Founding Member',
+          'premium' => 'Premium',
+          _ => 'Free',
+        },
+      ),
+    );
+    final premium = state.value?.isPremium ?? false;
+    return GlassCard(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => context.go(AppRoutes.premium),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(
+                premium
+                    ? Icons.workspace_premium
+                    : Icons.workspace_premium_outlined,
+                size: 20,
+                color: premium ? g.primary : g.textMuted,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'StudyFlow Premium',
+                      style: TextStyle(
+                        color: g.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      plan,
+                      style: TextStyle(color: g.textMuted, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              GlassBadge(
+                label: badge,
+                icon: premium ? Icons.workspace_premium : null,
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, size: 20, color: g.textMuted),
+            ],
           ),
         ),
       ),

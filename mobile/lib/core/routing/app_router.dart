@@ -17,6 +17,7 @@ import '../../features/notebooks/notebooks_screen.dart';
 import '../../features/onboarding/onboarding_controller.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/premium/premium_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/quizzes/quiz_session_screen.dart';
 import '../../features/quizzes/quizzes_screen.dart';
@@ -50,6 +51,7 @@ abstract final class AppRoutes {
   static const studyPlanDetail = '/study/plans/:examId';
   static const progress = '/progress';
   static const profile = '/profile';
+  static const premium = '/premium';
   static const settings = '/settings';
   static const aboutCreator = '/about/creator';
 }
@@ -185,6 +187,10 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.premium,
+        builder: (context, state) => const PremiumScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,
