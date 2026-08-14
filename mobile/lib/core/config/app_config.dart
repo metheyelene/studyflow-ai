@@ -20,6 +20,14 @@ abstract final class AppConfig {
     defaultValue: false,
   );
 
+  /// The web app origin (Next.js), used for links from the app — e.g. the
+  /// founder dashboard at `<webAppUrl>/admin`. Override with
+  /// `--dart-define=WEB_APP_URL=https://studyflow-ai.vercel.app`.
+  static const String webAppUrl = String.fromEnvironment(
+    'WEB_APP_URL',
+    defaultValue: 'http://127.0.0.1:3000',
+  );
+
   /// Better-auth session cookie (cookiePrefix "studyflow" + session_token).
   static const String sessionCookieName = 'studyflow.session_token';
 

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/constants/app_info.dart';
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/glass/glass_card.dart';
@@ -84,6 +87,31 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (auth is AuthAuthenticated &&
+                    auth.user.email == AppInfo.founderEmail) ...[
+                  const SizedBox(height: 16),
+                  GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: GlassListTile(
+                      title: 'Founder Dashboard',
+                      subtitle: 'Users, subscriptions, revenue',
+                      leading: Icon(
+                        Icons.query_stats,
+                        size: 22,
+                        color: g.primary,
+                      ),
+                      trailing: Icon(
+                        Icons.open_in_new,
+                        size: 18,
+                        color: g.textMuted,
+                      ),
+                      onTap: () => launchUrl(
+                        Uri.parse('${AppConfig.webAppUrl}/admin'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                    ),
+                  ),
+                ],
                 if (auth is AuthAuthenticated) ...[
                   const SizedBox(height: 16),
                   GlassCard(

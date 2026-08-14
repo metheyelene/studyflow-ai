@@ -16,6 +16,11 @@ abstract final class AppInfo {
   static const String creatorEmail = 'mithilviswask@gmail.com';
   static const String feedbackSubject = 'StudyFlow AI — Feedback';
 
+  /// Founder identity. The mobile app shows the founder-dashboard entry
+  /// only to this account; it must match the backend's ADMIN_EMAILS env
+  /// (the real security boundary lives server-side on /admin).
+  static const String founderEmail = creatorEmail;
+
   static const List<String> features = [
     'Source-grounded AI study assistance',
     'Smart notes',

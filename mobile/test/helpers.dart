@@ -718,7 +718,9 @@ Future<FakeAuthRepository> pumpApp(
   final authFake =
       auth ?? FakeAuthRepository(current: signedIn ? testUser : null);
   authEvents.debugSet(
-    signedIn ? const AuthAuthenticated(testUser) : const AuthUnauthenticated(),
+    signedIn
+        ? AuthAuthenticated(authFake.current ?? testUser)
+        : const AuthUnauthenticated(),
   );
 
   tester.view.physicalSize = size;
