@@ -25,6 +25,56 @@ const kStudyFlowBackgroundBase = Key('studyflow-bg-base');
 /// on the standard tier and absent on the low tier).
 const kStudyFlowBackgroundBlobs = Key('studyflow-bg-blobs');
 
+/// How much the mood accent leans into the base-surface gradient at the
+/// bottom of the canvas, and at what accent alpha. Dark blends 10% toward
+/// the accent at half opacity; light uses a quarter of that weight (4%)
+/// because a tint shift is far more visible on white — the canvas must
+/// stay black-dominant / paper-dominant in both modes, with the visible
+/// color living in the light fields. Exported so the atmosphere is locked
+/// by the token snapshot test.
+const double kAmbientBaseWeightDark = 0.10;
+const double kAmbientBaseWeightLight = 0.04;
+const double kAmbientBaseAccentAlphaDark = 0.50;
+const double kAmbientBaseAccentAlphaLight = 0.30;
+
+/// The two accent tints + light-field alpha for a mood. Alphas stay low
+/// (≤0.20 light, ≤0.24 dark) so text contrast on top is unaffected.
+/// Top-level so the atmosphere tokens are testable — the widget calls this
+/// and the snapshot test locks it.
+({Color a, Color b, double alpha}) ambientPalette(
+  BackgroundMood mood, {
+  required bool dark,
+}) {
+  final a = dark ? 0.20 : 0.12;
+  return switch (mood) {
+    BackgroundMood.ambient => (
+      a: const Color(0xFF0F766E),
+      b: const Color(0xFF06B6D4),
+      alpha: a,
+    ),
+    BackgroundMood.study => (
+      a: const Color(0xFF0F766E),
+      b: const Color(0xFF10B981),
+      alpha: a,
+    ),
+    BackgroundMood.ai => (
+      a: const Color(0xFF22D3EE),
+      b: const Color(0xFF3B82F6),
+      alpha: dark ? 0.22 : 0.14,
+    ),
+    BackgroundMood.audio => (
+      a: const Color(0xFFFB7185),
+      b: const Color(0xFFF59E0B),
+      alpha: dark ? 0.24 : 0.14,
+    ),
+    BackgroundMood.premium => (
+      a: const Color(0xFFF59E0B),
+      b: const Color(0xFFFB7185),
+      alpha: a,
+    ),
+  };
+}
+
 /// Layered ambient background: base surface + soft color fields, with
 /// content on top. Purely decorative — blobs are IgnorePointer with no
 /// semantics — so it can wrap any screen without affecting interaction.
@@ -41,38 +91,9 @@ class StudyFlowBackground extends ConsumerWidget {
   final Widget child;
   final BackgroundMood mood;
 
-  /// Two accent tints per mood: primary + a companion hue. Alphas stay low
-  /// (≤0.20 light, ≤0.24 dark) so text contrast on top is unaffected.
   ({Color a, Color b, double alpha}) _palette(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final a = dark ? 0.20 : 0.12;
-    return switch (mood) {
-      BackgroundMood.ambient => (
-        a: const Color(0xFF0F766E),
-        b: const Color(0xFF06B6D4),
-        alpha: a,
-      ),
-      BackgroundMood.study => (
-        a: const Color(0xFF0F766E),
-        b: const Color(0xFF10B981),
-        alpha: a,
-      ),
-      BackgroundMood.ai => (
-        a: const Color(0xFF22D3EE),
-        b: const Color(0xFF3B82F6),
-        alpha: dark ? 0.22 : 0.14,
-      ),
-      BackgroundMood.audio => (
-        a: const Color(0xFFFB7185),
-        b: const Color(0xFFF59E0B),
-        alpha: dark ? 0.24 : 0.14,
-      ),
-      BackgroundMood.premium => (
-        a: const Color(0xFFF59E0B),
-        b: const Color(0xFFFB7185),
-        alpha: a,
-      ),
-    };
+    return ambientPalette(mood, dark: dark);
   }
 
   @override
@@ -162,8 +183,12 @@ class StudyFlowBackground extends ConsumerWidget {
                 g.background,
                 Color.lerp(
                   g.background,
-                  p.a.withValues(alpha: dark ? 0.5 : 0.30),
-                  dark ? 0.10 : 0.04,
+                  p.a.withValues(
+                    alpha: dark
+                        ? kAmbientBaseAccentAlphaDark
+                        : kAmbientBaseAccentAlphaLight,
+                  ),
+                  dark ? kAmbientBaseWeightDark : kAmbientBaseWeightLight,
                 )!,
               ],
             ),

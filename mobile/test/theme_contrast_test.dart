@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
+import 'package:studyflow_mobile/shared/widgets/glass/glass_background.dart';
 
 /// WCAG relative luminance of an sRGB color (WCAG 2.x definition).
 double _luminance(Color c) {
@@ -249,5 +250,58 @@ void main() {
       'surfaceContainerHigh': const Color(0xFFE6EAEA),
       'surfaceContainerHighest': const Color(0xFFDFE4E4),
     });
+  });
+
+  // The atmosphere, locked the same way: every mood's light-field palette
+  // (both accent tints + the blob alpha per mode) and the base-surface
+  // blend (gradient weight + accent alpha per mode). The ambient is what
+  // makes each destination feel different — Home teal-cyan, Audio coral,
+  // Premium gold — so its tokens must not drift silently either. Update
+  // the snapshot in the same commit as any intentional atmosphere change.
+  test('ambient atmosphere snapshot locks mood palettes and base blend', () {
+    const moods = [
+      BackgroundMood.ambient,
+      BackgroundMood.study,
+      BackgroundMood.ai,
+      BackgroundMood.audio,
+      BackgroundMood.premium,
+    ];
+    final expected =
+        <BackgroundMood, Map<bool, ({Color a, Color b, double alpha})>>{
+      BackgroundMood.ambient: {
+        true: (a: const Color(0xFF0F766E), b: const Color(0xFF06B6D4), alpha: 0.20),
+        false: (a: const Color(0xFF0F766E), b: const Color(0xFF06B6D4), alpha: 0.12),
+      },
+      BackgroundMood.study: {
+        true: (a: const Color(0xFF0F766E), b: const Color(0xFF10B981), alpha: 0.20),
+        false: (a: const Color(0xFF0F766E), b: const Color(0xFF10B981), alpha: 0.12),
+      },
+      BackgroundMood.ai: {
+        true: (a: const Color(0xFF22D3EE), b: const Color(0xFF3B82F6), alpha: 0.22),
+        false: (a: const Color(0xFF22D3EE), b: const Color(0xFF3B82F6), alpha: 0.14),
+      },
+      BackgroundMood.audio: {
+        true: (a: const Color(0xFFFB7185), b: const Color(0xFFF59E0B), alpha: 0.24),
+        false: (a: const Color(0xFFFB7185), b: const Color(0xFFF59E0B), alpha: 0.14),
+      },
+      BackgroundMood.premium: {
+        true: (a: const Color(0xFFF59E0B), b: const Color(0xFFFB7185), alpha: 0.20),
+        false: (a: const Color(0xFFF59E0B), b: const Color(0xFFFB7185), alpha: 0.12),
+      },
+    };
+    for (final mood in moods) {
+      for (final dark in [true, false]) {
+        final mode = dark ? 'dark' : 'light';
+        final p = ambientPalette(mood, dark: dark);
+        final e = expected[mood]![dark]!;
+        expect(p.a, e.a, reason: 'ambient $mood $mode accent a');
+        expect(p.b, e.b, reason: 'ambient $mood $mode accent b');
+        expect(p.alpha, e.alpha, reason: 'ambient $mood $mode blob alpha');
+      }
+    }
+    expect(kAmbientBaseWeightDark, 0.10, reason: 'dark base gradient weight');
+    expect(kAmbientBaseWeightLight, 0.04, reason: 'light base gradient weight');
+    expect(kAmbientBaseAccentAlphaDark, 0.50, reason: 'dark base accent alpha');
+    expect(kAmbientBaseAccentAlphaLight, 0.30, reason: 'light base accent alpha');
   });
 }
