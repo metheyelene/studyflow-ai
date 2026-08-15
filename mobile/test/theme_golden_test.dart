@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
@@ -59,7 +60,12 @@ Future<void> _loadAppFonts() async {
 }
 
 void main() {
-  setUpAll(_loadAppFonts);
+  setUpAll(() async {
+    await _loadAppFonts();
+    // Settings reads/writes the appearance preference; pin an empty store
+    // so the golden renders the deterministic defaults.
+    SharedPreferences.setMockInitialValues({});
+  });
 
   const size = Size(390, 844);
 
@@ -272,6 +278,18 @@ void main() {
     (
       name: 'profile',
       path: AppRoutes.profile,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'settings',
+      path: AppRoutes.settings,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'about_creator',
+      path: AppRoutes.aboutCreator,
       signedIn: true,
       onboardingNeeded: false,
     ),
