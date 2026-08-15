@@ -231,14 +231,22 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   // Dark mode is a cinematic deep-charcoal environment with a blue-green
   // cast (never pure black): translucent layers pick up the teal/cyan
   // accents and soft warm highlights keep it from feeling cold.
+  //
+  // The glass highlights and edges are LIT BY the teal brand glow instead
+  // of raw white: a white sweep over translucent dark fills reads as a
+  // gray fog (the "washed" dark look), while a low-alpha teal-cyan sweep
+  // keeps surfaces deep while the glass still catches light at the top lip
+  // and diagonal sheen. Surface fills stay darker and slightly less opaque
+  // than before so the nav shell and sheets composite as dark glass over
+  // the ambient glow rather than milky panels.
   static const dark = GlassTheme(
     background: Color(0xFF0E1213),
-    surface: Color(0xB3151B1D),
-    surfaceStrong: Color(0xE6182022),
+    surface: Color(0xC2141B1E),
+    surfaceStrong: Color(0xDA151C1E),
     surfaceSubtle: Color(0x80182022),
-    floating: Color(0xCC1B2325),
-    border: Color(0x1AFFFFFF),
-    highlight: Color(0x14FFFFFF),
+    floating: Color(0xD01A2123),
+    border: Color(0x1F99F6E4),
+    highlight: Color(0x2699F6E4),
     primary: Color(0xFF2DD4BF),
     primarySoft: Color(0x1A2DD4BF),
     secondary: Color(0xFF38BDF8),
@@ -395,6 +403,15 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
     inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
     surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
     surface: isDark ? const Color(0xFF161C1E) : AppColors.paper,
+    // Dark neutral ramp stays in the StudyFlow deep-charcoal family (with
+    // a faint green cast) instead of the seed's neutral grays, so system
+    // components (dialogs, chips, popups, input fills, progress tracks)
+    // share the same dark-glass environment as the custom surfaces.
+    surfaceContainerLowest: isDark ? const Color(0xFF0C1112) : null,
+    surfaceContainerLow: isDark ? const Color(0xFF111718) : null,
+    surfaceContainer: isDark ? const Color(0xFF161C1E) : null,
+    surfaceContainerHigh: isDark ? const Color(0xFF1B2325) : null,
+    surfaceContainerHighest: isDark ? const Color(0xFF212A2C) : null,
     onSurface: isDark ? const Color(0xFFF0F4F3) : AppColors.ink,
     onSurfaceVariant: isDark
         ? const Color(0xFF97A5A3)

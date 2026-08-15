@@ -99,6 +99,20 @@ void main() {
         }
       });
 
+      if (brightness == Brightness.dark) {
+        test('dark glass is lit by the brand glow, not raw white', () {
+          // The highlight/edge tokens carry a teal-cyan cast (green channel
+          // dominates red) instead of pure white: a white sweep over
+          // translucent dark fills reads as a washed gray fog, while the
+          // teal-lit glass keeps surfaces deep and on-brand. Alphas stay
+          // low so the cast is a glow, never a tint that hurts contrast.
+          expect(g.highlight.g, greaterThan(g.highlight.r));
+          expect(g.border.g, greaterThan(g.border.r));
+          expect(g.highlight.a, lessThan(0.3));
+          expect(g.border.a, lessThan(0.3));
+        });
+      }
+
       test('M3 scheme pairs', () {
         expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(_aa));
         expect(
