@@ -481,6 +481,10 @@ class FakePodcastPlayer implements PodcastPlayer {
 
   void emitPosition(Duration d) => _position.add(d);
 
+  void emitDuration(Duration d) => _duration.add(d);
+
+  void emitCompleted() => _completed.add(null);
+
   @override
   Future<void> load(Uint8List bytes) async {
     loadedBytes = bytes;

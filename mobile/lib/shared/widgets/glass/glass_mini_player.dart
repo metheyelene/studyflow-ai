@@ -1,0 +1,205 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_theme.dart';
+import 'glass_card.dart';
+
+/// Floating glass mini-player shown above navigation while an episode
+/// plays after the user has left the full-screen player. Dumb surface:
+/// state and controls are wired by the shell from `nowPlayingProvider`.
+///
+/// Two visual states:
+///  * playing/paused — artwork, title, subtitle, play/pause and a thin
+///    glass progress bar fed by real playback position;
+///  * completed — auto-collapsed to a compact pill with a replay action.
+class GlassMiniPlayer extends StatelessWidget {
+  const GlassMiniPlayer({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.playing,
+    required this.progress,
+    required this.completed,
+    required this.onPlayPause,
+    required this.onReplay,
+    required this.onOpen,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool playing;
+
+  /// 0..1 real playback progress.
+  final double progress;
+
+  /// True when the episode finished — renders the collapsed pill.
+  final bool completed;
+  final VoidCallback onPlayPause;
+  final VoidCallback onReplay;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    if (completed) return _CollapsedPill(title: title, onReplay: onReplay, onOpen: onOpen);
+    return GlassCard(
+      tone: GlassTone.surfaceStrong,
+      blurred: g.blurEnabled,
+      radius: 18,
+      padding: const EdgeInsets.fromLTRB(10, 8, 6, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              _Artwork(size: 42, audio: g.audio, background: g.background),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: g.textPrimary,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: g.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: onPlayPause,
+                tooltip: playing ? 'Pause' : 'Play',
+                icon: Icon(
+                  playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  size: 26,
+                  color: g.primary,
+                ),
+              ),
+            ],
+          ),
+          // Thin glass progress bar: real position, not a clock.
+          Padding(
+            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: SizedBox(
+                height: 3,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(color: g.border),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: progress.clamp(0.0, 1.0),
+                        child: ColoredBox(color: g.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact pill shown when the episode has finished: artwork, title and a
+/// replay action. Tapping anywhere reopens the full player.
+class _CollapsedPill extends StatelessWidget {
+  const _CollapsedPill({
+    required this.title,
+    required this.onReplay,
+    required this.onOpen,
+  });
+
+  final String title;
+  final VoidCallback onReplay;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return GlassCard(
+      tone: GlassTone.surfaceStrong,
+      blurred: g.blurEnabled,
+      radius: 16,
+      padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Artwork(size: 34, audio: g.audio, background: g.background),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: g.textPrimary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: onReplay,
+              tooltip: 'Replay',
+              icon: Icon(Icons.replay_rounded, size: 22, color: g.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Artwork extends StatelessWidget {
+  const _Artwork({
+    required this.size,
+    required this.audio,
+    required this.background,
+  });
+
+  final double size;
+  final Color audio;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [audio, Color.lerp(audio, background, 0.35)!],
+        ),
+      ),
+      child: Icon(
+        Icons.graphic_eq_rounded,
+        size: size * 0.48,
+        color: Colors.white.withValues(alpha: 0.92),
+      ),
+    );
+  }
+}

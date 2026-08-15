@@ -12,6 +12,7 @@ import 'audio_controller.dart';
 import 'audio_export.dart';
 import 'audio_models.dart';
 import 'audio_playback_service.dart';
+import 'now_playing.dart';
 import 'audio_repository.dart';
 
 const _speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
@@ -37,6 +38,8 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
   String? _error;
   Timer? _pollTimer;
   Timer? _saveTimer;
+  StreamSubscription<Duration>? _positionSub;
+  Duration _lastPosition = Duration.zero;
   bool _ended = false;
 
   AudioRepository get _repo => ref.read(audioRepositoryProvider);
@@ -51,31 +54,31 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _saveTimer?.cancel();
+    _positionSub?.cancel();
     final ep = _episode;
-    final player = _player;
-    if (ep != null && ep.isReady && player != null) {
+    if (ep != null && ep.isReady && _lastPosition.inSeconds > 0) {
       // Best-effort final position save; never blocks teardown.
-      unawaited(_savePosition(player));
+      unawaited(_savePosition());
     }
-    unawaited(player?.dispose());
+    // Intentionally do NOT dispose the player: it is a provider singleton,
+    // and playback must continue after this screen pops so the shell's
+    // mini-player can take over control (play/pause, reopen).
     super.dispose();
   }
 
-  Future<void> _savePosition(PodcastPlayer player) async {
+  /// Save the latest tracked position (listener-fed, so no stream read or
+  /// dangling timeout timer at teardown).
+  Future<void> _savePosition() async {
     final ep = _episode;
     if (ep == null || !ep.isReady) return;
+    final sec = _lastPosition.inSeconds;
+    if (sec <= 0) return;
     try {
-      final pos = await player.positionStream.first.timeout(
-        const Duration(milliseconds: 300),
-      );
-      final sec = pos.inSeconds;
-      if (sec > 0) {
-        await _repo.savePosition(ep.id, sec);
-        if (mounted) {
-          ref
-              .read(audioControllerProvider.notifier)
-              .upsert(ep.copyWith(playbackPositionSec: sec));
-        }
+      await _repo.savePosition(ep.id, sec);
+      if (mounted) {
+        ref
+            .read(audioControllerProvider.notifier)
+            .upsert(ep.copyWith(playbackPositionSec: sec));
       }
     } catch (_) {
       // Offline/best-effort: resume sync is non-critical.
@@ -134,16 +137,22 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
       }
       await player.play();
       if (!mounted) return;
+      ref.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: episode.id,
+            title: episode.title,
+            subtitle: episode.notebookTitle ?? 'Study podcast',
+          );
       setState(() {
         _player = player;
         _bytes = bytes;
         _downloadProgress = 1;
       });
-      // Persist position while listening (every 5s) so a crash or swipe
-      // away never loses the spot.
+      // Track position continuously and persist every 5s while listening,
+      // so a crash or swipe away never loses the spot.
+      _positionSub = player.positionStream.listen((p) => _lastPosition = p);
       _saveTimer = Timer.periodic(const Duration(seconds: 5), (_) {
         final p = _player;
-        if (p != null && p.playing) unawaited(_savePosition(p));
+        if (p != null && p.playing) unawaited(_savePosition());
       });
     } catch (e) {
       if (!mounted) return;
@@ -167,6 +176,7 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
       }
       await player.play();
     }
+    ref.read(nowPlayingProvider.notifier).setPlaying(player.playing);
     if (mounted) setState(() {});
   }
 
