@@ -36,35 +36,46 @@ void main() {
     router.go('/progress');
     await tester.pumpAndSettle();
 
-    expect(find.text('FLASHCARD REVIEWS'), findsOneWidget);
-    expect(find.textContaining('No flashcard reviews yet'), findsOneWidget);
-    expect(find.text('Review'), findsOneWidget);
-    // Nothing fabricated: no "Cards reviewed" total is shown.
-    expect(find.text('Cards reviewed'), findsNothing);
+    // The screen asks one question and answers it honestly: no ring
+    // percentage, no weak-topic list, one recommended action.
+    expect(find.text('How am I doing?'), findsOneWidget);
+    expect(find.text('—'), findsOneWidget); // ring shows no mastery yet
+    expect(
+      find.textContaining('Review a deck and your mastery builds'),
+      findsOneWidget,
+    );
+    expect(find.text('Review flashcards'), findsOneWidget);
+    expect(find.text('WEAKEST TOPICS FIRST'), findsNothing);
   });
 
-  testWidgets('shows total cards reviewed and per-deck accuracy', (
-    tester,
-  ) async {
-    final flashcards = FakeFlashcardsRepository()
-      ..progressData = sampleProgress;
-    final router = buildAppRouter();
-    await pumpApp(tester, router: router, flashcards: flashcards);
-    router.go('/progress');
-    await tester.pumpAndSettle();
+  testWidgets(
+    'shows weighted mastery, weakest-first topics, and a real action',
+    (tester) async {
+      final flashcards = FakeFlashcardsRepository()
+        ..progressData = sampleProgress;
+      final router = buildAppRouter();
+      await pumpApp(tester, router: router, flashcards: flashcards);
+      router.go('/progress');
+      await tester.pumpAndSettle();
 
-    expect(find.text('FLASHCARD REVIEWS'), findsOneWidget);
-    expect(find.text('Cards reviewed'), findsOneWidget);
-    expect(find.text('6'), findsOneWidget); // total reviews
-    expect(find.textContaining('3 cards'), findsOneWidget); // unique cards
+      // Mastery = weighted average accuracy: (75*4 + 0*2) / 6 = 50%.
+      expect(find.text('50%'), findsOneWidget); // ring
+      expect(find.textContaining('2 decks'), findsOneWidget);
+      expect(find.textContaining('6 reviews'), findsOneWidget);
 
-    // Per-deck rows with accuracy.
-    expect(find.text('VLSI Unit 3'), findsOneWidget);
-    expect(find.text('75%'), findsOneWidget);
-    expect(find.text('Thermo'), findsOneWidget);
-    expect(find.text('0%'), findsOneWidget);
-    expect(find.textContaining('4 revs'), findsOneWidget);
-  });
+      // Weakest first: Thermo (0%) sits above VLSI Unit 3 (75%).
+      expect(find.text('WEAKEST TOPICS FIRST'), findsOneWidget);
+      final thermoY = tester.getTopLeft(find.text('Thermo')).dy;
+      final vlsiY = tester.getTopLeft(find.text('VLSI Unit 3')).dy;
+      expect(thermoY, lessThan(vlsiY));
+      expect(find.text('0%'), findsOneWidget);
+      expect(find.text('75%'), findsOneWidget);
+      expect(find.textContaining('4 revs'), findsOneWidget);
+
+      // The weakest deck drives the single recommended action.
+      expect(find.text('Reinforce Thermo'), findsOneWidget);
+    },
+  );
 
   testWidgets('surfaces a load failure with a retry that recovers', (
     tester,
@@ -82,7 +93,8 @@ void main() {
     failNext = false;
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
-    expect(find.text('Cards reviewed'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget); // mastery ring recovered
+    expect(find.text('Reinforce Thermo'), findsOneWidget);
   });
 }
 

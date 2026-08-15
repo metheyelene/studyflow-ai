@@ -8,15 +8,20 @@ import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
+import '../../shared/widgets/glass/glass_progress.dart';
 import '../dashboard/dashboard_controller.dart';
 import '../flashcards/flashcard_models.dart';
 import '../notebooks/notebooks_controller.dart';
 import 'flashcard_progress.dart';
 
-/// Progress tab — live stats only (notebooks, sources, AI actions used),
-/// plus real flashcard review history (cards reviewed, per-deck accuracy).
-/// Learning insights (quiz trends, weak topics) render as an honest state
-/// until there is real study history to show.
+/// Progress tab — answers one question: "How am I doing?".
+///
+/// The composition leads with a single primary moment (the mastery hero:
+/// a large ring + one recommended next action), supports it with the
+/// weakest-topics-first list, and demotes raw counts (notebooks, sources,
+/// AI actions) to a quiet metadata line — the old three-stat-card wall is
+/// gone. Every number is derived from real study history; with no reviews
+/// the screen says so instead of showing fabricated percentages.
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
 
@@ -28,6 +33,8 @@ class ProgressScreen extends ConsumerWidget {
     final dashboard = ref.watch(dashboardControllerProvider).valueOrNull;
     final sourceCount = notebooks.fold<int>(0, (sum, n) => sum + n.sourceCount);
     final aiUsed = dashboard?.usage.used;
+    final progress = ref.watch(flashcardProgressControllerProvider);
+    final notebookCount = notebooks.length;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -44,93 +51,35 @@ class ProgressScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Progress',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  'YOUR LEARNING',
+                  style: AppText.eyebrow.copyWith(color: g.primary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'How am I doing?',
+                  style: Theme.of(context).textTheme.displaySmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Your study activity, honestly measured.',
+                  'Mastery from your real review history — nothing invented.',
                   style: AppText.small.copyWith(color: g.textMuted),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.library_books_outlined,
-                        label: 'Notebooks',
-                        value: '${notebooks.length}',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.description_outlined,
-                        label: 'Sources',
-                        value: '$sourceCount',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.auto_awesome,
-                        label: 'AI actions',
-                        value: aiUsed == null ? '—' : '$aiUsed',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                const _SectionTitle(title: 'FLASHCARD REVIEWS'),
-                const SizedBox(height: 10),
-                _FlashcardProgressSection(
-                  progress: ref.watch(flashcardProgressControllerProvider),
+                const SizedBox(height: AppSpacing.xl),
+                _MasteryHero(
+                  progress: progress,
                   onRetry: () => ref
                       .read(flashcardProgressControllerProvider.notifier)
                       .refresh(),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                const _SectionTitle(title: 'LEARNING INSIGHTS'),
-                const SizedBox(height: 10),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      Icon(
-                        Icons.insights_outlined,
-                        size: 26,
-                        color: g.textMuted.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your insights appear as you study',
-                        style: TextStyle(
-                          color: g.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Quiz trends, weakest topics, and review recommendations '
-                        'build up from real study history — nothing is invented.',
-                        textAlign: TextAlign.center,
-                        style: AppText.small.copyWith(
-                          color: g.textMuted,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      GlassButton(
-                        label: notebooks.isEmpty
-                            ? 'Create a notebook'
-                            : 'Open notebooks',
-                        icon: Icons.library_books_outlined,
-                        onPressed: () => context.go(AppRoutes.notebooks),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+                const SizedBox(height: AppSpacing.xxl),
+                _WeakTopics(progress: progress),
+                const SizedBox(height: AppSpacing.xxl),
+                Text(
+                  '$notebookCount '
+                  '${notebookCount == 1 ? 'notebook' : 'notebooks'}'
+                  ' · $sourceCount ${sourceCount == 1 ? 'source' : 'sources'}'
+                  ' · ${aiUsed ?? '—'} AI actions',
+                  style: AppText.small.copyWith(color: g.textMuted),
                 ),
               ],
             ),
@@ -141,75 +90,50 @@ class ProgressScreen extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+/// The single primary moment: a large mastery ring fed by real review
+/// accuracy, one honest subline, and exactly one recommended next action.
+class _MasteryHero extends StatelessWidget {
+  const _MasteryHero({required this.progress, required this.onRetry});
 
-  final IconData icon;
-  final String label;
-  final String value;
+  final AsyncValue<FlashcardProgress> progress;
+  final VoidCallback onRetry;
+
+  /// Weighted average accuracy across decks — real data, never a guess.
+  static int? mastery(List<DeckAccuracy> decks, int totalReviews) {
+    if (decks.isEmpty || totalReviews <= 0) return null;
+    final weight = decks.fold<num>(0, (s, d) => s + d.reviews);
+    if (weight <= 0) return null;
+    final acc = decks.fold<num>(0, (s, d) => s + d.accuracy * d.reviews);
+    return (acc / weight).round();
+  }
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
     return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: g.primary),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              color: g.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
+      tone: GlassTone.floating,
+      glossy: true,
+      radius: AppShapes.hero,
+      child: progress.when(
+        loading: () => const Row(
+          children: [
+            GlassSkeleton(width: 120, height: 120, radius: 60),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GlassSkeleton(width: 120, height: 18),
+                  SizedBox(height: 8),
+                  GlassSkeleton(width: 180, height: 13),
+                  SizedBox(height: 14),
+                  GlassSkeleton(width: 140, height: 36, radius: 18),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(label, style: AppText.small.copyWith(color: g.textMuted)),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: AppText.eyebrow.copyWith(color: context.glass.textMuted),
-    );
-  }
-}
-
-/// Flashcard review history from the backend: totals + per-deck accuracy.
-/// Renders an honest empty state until real reviews exist.
-class _FlashcardProgressSection extends StatelessWidget {
-  const _FlashcardProgressSection({
-    required this.progress,
-    required this.onRetry,
-  });
-
-  final AsyncValue<FlashcardProgress> progress;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return progress.when(
-      loading: () => const GlassSkeleton(height: 96, radius: 20),
-      error: (err, _) => GlassCard(
-        child: Padding(
+          ],
+        ),
+        error: (_, _) => Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
@@ -225,140 +149,180 @@ class _FlashcardProgressSection extends StatelessWidget {
             ],
           ),
         ),
-      ),
-      data: (p) {
-        if (p.totalReviews == 0) {
-          return GlassCard(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.style_outlined, size: 22, color: g.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'No flashcard reviews yet. Review a deck and your accuracy history will appear here.',
-                      style: AppText.small.copyWith(
-                        color: g.textMuted,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  GlassButton(
-                    label: 'Review',
-                    icon: Icons.style_outlined,
-                    variant: GlassButtonVariant.glass,
-                    size: GlassButtonSize.small,
-                    onPressed: () => context.go(AppRoutes.flashcards),
-                  ),
-                ],
-              ),
+        data: (p) {
+          final value = mastery(p.decks, p.totalReviews);
+          final decks = [...p.decks]
+            ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
+          final weakest = decks.firstOrNull;
+          final deckWord = p.decks.length == 1 ? 'deck' : 'decks';
+          final reviewWord = p.totalReviews == 1 ? 'review' : 'reviews';
+
+          final (ctaLabel, ctaIcon, ctaAction) = switch ((value, weakest)) {
+            (null, _) => (
+              'Review flashcards',
+              Icons.style_outlined,
+              () => context.go(AppRoutes.flashcards),
             ),
-          );
-        }
-        return GlassCard(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            (final int v, final DeckAccuracy w) when w.accuracy < 70 => (
+              'Reinforce ${w.title}',
+              Icons.replay,
+              () => context.go(AppRoutes.flashcards),
+            ),
+            _ => (
+              'Start a quiz',
+              Icons.quiz_outlined,
+              () => context.go(AppRoutes.quizzes),
+            ),
+          };
+
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.style_outlined, size: 20, color: g.primary),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Cards reviewed',
-                        style: TextStyle(
-                          color: g.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                GlassRing(
+                  value: value == null ? 0 : value / 100,
+                  label: value == null ? '—' : '$value%',
+                  size: 120,
+                  strokeWidth: 9,
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mastery',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value == null
+                            ? 'Review a deck and your mastery builds from '
+                                  'real accuracy.'
+                            : '$value% average accuracy across '
+                                  '${p.decks.length} $deckWord'
+                                  ' · ${p.totalReviews} $reviewWord',
+                        style: AppText.small.copyWith(
+                          color: g.textMuted,
+                          height: 1.4,
                         ),
                       ),
-                    ),
-                    Text(
-                      '${p.totalReviews}',
-                      style: TextStyle(
-                        color: g.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                      const SizedBox(height: 14),
+                      GlassButton(
+                        label: ctaLabel,
+                        icon: ctaIcon,
+                        size: GlassButtonSize.small,
+                        onPressed: ctaAction,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Padding(
-                  padding: const EdgeInsets.only(left: 30),
-                  child: Text(
-                    '${p.uniqueCards} card${p.uniqueCards == 1 ? '' : 's'} · accuracy from your review history',
-                    style: AppText.small.copyWith(color: g.textMuted),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                for (final deck in p.decks) ...[
-                  _DeckAccuracyRow(deck: deck),
-                  const SizedBox(height: 10),
-                ],
               ],
             ),
-          ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Weakest decks first — the list answers "what should I fix?" with the
+/// real accuracy data, banded by how urgent each topic is. Hidden entirely
+/// when there is no review history (the hero already explains that state).
+class _WeakTopics extends StatelessWidget {
+  const _WeakTopics({required this.progress});
+
+  final AsyncValue<FlashcardProgress> progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return progress.when(
+      loading: () => const GlassSkeleton(height: 120, radius: 20),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (p) {
+        final decks = [...p.decks]
+          ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
+        if (decks.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'WEAKEST TOPICS FIRST',
+              style: AppText.eyebrow.copyWith(color: g.textMuted),
+            ),
+            const SizedBox(height: 10),
+            for (var i = 0; i < decks.length; i++) ...[
+              _TopicRow(deck: decks[i]),
+              if (i != decks.length - 1)
+                Divider(
+                  color: g.textPrimary.withValues(alpha: 0.06),
+                  height: 1,
+                ),
+            ],
+          ],
         );
       },
     );
   }
 }
 
-class _DeckAccuracyRow extends StatelessWidget {
-  const _DeckAccuracyRow({required this.deck});
+class _TopicRow extends StatelessWidget {
+  const _TopicRow({required this.deck});
 
   final DeckAccuracy deck;
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                deck.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: g.textPrimary,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
+    final band = deck.accuracy < 60
+        ? g.danger
+        : deck.accuracy < 75
+        ? g.warning
+        : g.success;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  deck.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodyMedium.copyWith(color: g.textPrimary),
                 ),
               ),
-            ),
-            Text(
-              '${deck.accuracy}%',
-              style: TextStyle(
-                color: g.primary,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+              Text(
+                '${deck.accuracy}%',
+                style: TextStyle(
+                  color: band,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '· ${deck.reviews} rev${deck.reviews == 1 ? '' : 's'}',
-              style: AppText.small.copyWith(color: g.textMuted),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            value: deck.reviews == 0 ? 0 : deck.accuracy / 100,
-            minHeight: 5,
-            backgroundColor: g.surfaceSubtle,
-            color: g.primary,
+              const SizedBox(width: 6),
+              Text(
+                '· ${deck.reviews} rev${deck.reviews == 1 ? '' : 's'}',
+                style: AppText.small.copyWith(color: g.textMuted),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: deck.reviews == 0 ? 0 : deck.accuracy / 100,
+              minHeight: 5,
+              backgroundColor: g.surfaceSubtle,
+              color: band,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

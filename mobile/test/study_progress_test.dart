@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Notebooks'), findsWidgets);
   });
 
-  testWidgets('Progress tab shows live notebook and source counts', (
+  testWidgets('Progress tab asks the question and demotes raw counts', (
     tester,
   ) async {
     final notebooks = FakeNotebooksRepository();
@@ -78,18 +78,16 @@ void main() {
     await tester.tap(find.text('Progress'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2'), findsOneWidget); // notebooks
-    expect(find.text('3'), findsOneWidget); // sources
-    expect(find.text('5'), findsOneWidget); // AI actions used
-    expect(find.text('AI actions'), findsOneWidget);
-    expect(find.text('Your insights appear as you study'), findsOneWidget);
+    // One question, honest empty mastery, and the counts demoted to a
+    // single quiet metadata line instead of a three-stat-card wall.
+    expect(find.text('How am I doing?'), findsOneWidget);
+    expect(find.text('—'), findsOneWidget); // no reviews yet
+    expect(find.text('2 notebooks · 3 sources · 5 AI actions'), findsOneWidget);
+    expect(find.text('AI actions'), findsNothing); // no stat card label
 
-    // CTA goes somewhere real. The insights card sits below the new
-    // flashcard-history section, so scroll it into view first.
-    await tester.ensureVisible(find.text('Open notebooks'));
+    // The single recommended action goes somewhere real.
+    await tester.tap(find.text('Review flashcards'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Open notebooks'));
-    await tester.pumpAndSettle();
-    expect(find.text('Cell Biology'), findsOneWidget);
+    expect(find.text('No decks yet'), findsOneWidget);
   });
 }
