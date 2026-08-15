@@ -22,8 +22,12 @@ class GlassMiniPlayer extends StatelessWidget {
     required this.onPlayPause,
     required this.onReplay,
     required this.onOpen,
+    required this.heroTag,
   });
 
+  /// Shared-element tag pairing the mini-player artwork with the full
+  /// player screen's artwork, so tapping the card morphs into the player.
+  final String heroTag;
   final String title;
   final String subtitle;
   final bool playing;
@@ -40,79 +44,99 @@ class GlassMiniPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    if (completed) return _CollapsedPill(title: title, onReplay: onReplay, onOpen: onOpen);
+    if (completed) {
+      return _CollapsedPill(
+        heroTag: heroTag,
+        title: title,
+        onReplay: onReplay,
+        onOpen: onOpen,
+      );
+    }
     return GlassCard(
       tone: GlassTone.surfaceStrong,
       blurred: g.blurEnabled,
       radius: 18,
       padding: const EdgeInsets.fromLTRB(10, 8, 6, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _Artwork(size: 42, audio: g.audio, background: g.background),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: g.textPrimary,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: g.textMuted, fontSize: 12),
-                    ),
-                  ],
+      // Tapping anywhere on the card opens the full player; the play/pause
+      // button keeps its own tap inside.
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Hero(
+                  tag: heroTag,
+                  child: _Artwork(
+                    size: 42,
+                    audio: g.audio,
+                    background: g.background,
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: onPlayPause,
-                tooltip: playing ? 'Pause' : 'Play',
-                icon: Icon(
-                  playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  size: 26,
-                  color: g.primary,
-                ),
-              ),
-            ],
-          ),
-          // Thin glass progress bar: real position, not a clock.
-          Padding(
-            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: SizedBox(
-                height: 3,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ColoredBox(color: g.border),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: progress.clamp(0.0, 1.0),
-                        child: ColoredBox(color: g.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: g.textPrimary,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: g.textMuted, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: onPlayPause,
+                  tooltip: playing ? 'Pause' : 'Play',
+                  icon: Icon(
+                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    size: 26,
+                    color: g.primary,
+                  ),
+                ),
+              ],
+            ),
+            // Thin glass progress bar: real position, not a clock.
+            Padding(
+              padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: SizedBox(
+                  height: 3,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ColoredBox(color: g.border),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: progress.clamp(0.0, 1.0),
+                          child: ColoredBox(color: g.primary),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -122,11 +146,13 @@ class GlassMiniPlayer extends StatelessWidget {
 /// replay action. Tapping anywhere reopens the full player.
 class _CollapsedPill extends StatelessWidget {
   const _CollapsedPill({
+    required this.heroTag,
     required this.title,
     required this.onReplay,
     required this.onOpen,
   });
 
+  final String heroTag;
   final String title;
   final VoidCallback onReplay;
   final VoidCallback onOpen;
@@ -145,7 +171,14 @@ class _CollapsedPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _Artwork(size: 34, audio: g.audio, background: g.background),
+            Hero(
+              tag: heroTag,
+              child: _Artwork(
+                size: 34,
+                audio: g.audio,
+                background: g.background,
+              ),
+            ),
             const SizedBox(width: 10),
             Flexible(
               child: Text(

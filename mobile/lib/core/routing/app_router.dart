@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/theme/app_theme.dart';
 import '../../features/about/creator_screen.dart';
 import '../../features/authentication/auth_controller.dart';
 import '../../features/authentication/auth_models.dart';
@@ -228,13 +229,34 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
             QuizSessionScreen(quizId: state.pathParameters['quizId'] ?? ''),
       ),
       GoRoute(
-        path: AppRoutes.audio,
-        builder: (context, state) => const PodcastLibraryScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.audioEpisode,
-        builder: (context, state) => PodcastPlayerScreen(
-          episodeId: state.pathParameters['episodeId'] ?? '',
+        // Expansion-style push: the mini-player artwork flies to the
+        // player's artwork (shared hero), while the page itself eases in
+        // with a gentle rise — a morph, not a plain slide.
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: AppMotion.medium,
+          reverseTransitionDuration: AppMotion.medium,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.04),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+          child: PodcastPlayerScreen(
+            episodeId: state.pathParameters['episodeId'] ?? '',
+          ),
         ),
       ),
     ],

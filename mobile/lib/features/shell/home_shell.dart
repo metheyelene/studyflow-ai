@@ -169,6 +169,7 @@ class HomeShell extends ConsumerWidget {
       playing: nowPlaying.playing,
       progress: nowPlaying.progress,
       completed: nowPlaying.completed,
+      heroTag: 'podcast-artwork-${nowPlaying.episodeId}',
       onPlayPause: () => _togglePlay(ref, nowPlaying),
       onReplay: () => ref.read(nowPlayingProvider.notifier).replay(),
       onOpen: () => context.push(

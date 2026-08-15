@@ -316,7 +316,13 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 32),
             child: Column(
               children: [
-                _Artwork(title: episode.title),
+                // Shared element: this artwork is the flight destination
+                // of the shell mini-player's artwork (same hero tag), so
+                // tapping the mini-player morphs it into the player.
+                Hero(
+                  tag: 'podcast-artwork-${episode.id}',
+                  child: _Artwork(title: episode.title),
+                ),
                 const SizedBox(height: 18),
                 Text(
                   episode.title,
