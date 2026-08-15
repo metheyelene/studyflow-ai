@@ -146,7 +146,12 @@ class StudyFlowBackground extends ConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Base surface.
+        // Base surface: the canvas stays dominant in both modes — obsidian
+        // black with a whisper of the mood tint in dark, near-white paper
+        // with an even fainter hint in light (a tint shift is far more
+        // visible on white, so light uses a quarter of dark's blend). The
+        // visible color lives in the light fields below, which read as
+        // light illuminating the environment instead of a color wash.
         DecoratedBox(
           decoration: BoxDecoration(
             color: g.background,
@@ -157,8 +162,8 @@ class StudyFlowBackground extends ConsumerWidget {
                 g.background,
                 Color.lerp(
                   g.background,
-                  p.a.withValues(alpha: dark ? 0.5 : 0.35),
-                  0.5,
+                  p.a.withValues(alpha: dark ? 0.5 : 0.30),
+                  dark ? 0.10 : 0.04,
                 )!,
               ],
             ),

@@ -199,10 +199,15 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
 
   static const light = GlassTheme(
     background: Color(0xFFF4F6F6),
-    surface: Color(0xE6FFFFFF),
-    surfaceStrong: Color(0xF2FFFFFF),
+    // Light glass mirrors dark's luminance physics: surfaces are the base
+    // family catching light, translucent enough for the ambient mood to
+    // bleed through (85% cards, 92% shell) so they read as glass over the
+    // environment, not flat white panels. Depth ordering matches dark —
+    // floating ≈ surfaceStrong (closest to the user = strongest fill).
+    surface: Color(0xD9FFFFFF),
+    surfaceStrong: Color(0xECFFFFFF),
     surfaceSubtle: Color(0xB3FFFFFF),
-    floating: Color(0xE0FFFFFF),
+    floating: Color(0xE9FFFFFF),
     // Light glass is lit by the same brand glow as dark: the edge and the
     // top-lip highlight carry a soft teal cast instead of neutral
     // white/gray. On near-white fills a pure-white sweep is invisible
@@ -406,16 +411,30 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
         : const Color(0xFF7F1D1D),
     inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
     surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
-    surface: isDark ? const Color(0xFF111314) : AppColors.paper,
-    // Dark neutral ramp sits in the obsidian family (near-black, neutral)
-    // so system components (dialogs, chips, popups, input fills, progress
-    // tracks) share the same black-dominant environment as the custom
-    // surfaces — the brand accent never tints whole surfaces.
-    surfaceContainerLowest: isDark ? const Color(0xFF080A0B) : null,
-    surfaceContainerLow: isDark ? const Color(0xFF0D0F10) : null,
-    surfaceContainer: isDark ? const Color(0xFF111314) : null,
-    surfaceContainerHigh: isDark ? const Color(0xFF16181A) : null,
-    surfaceContainerHighest: isDark ? const Color(0xFF1C1E20) : null,
+    surface: isDark
+        ? const Color(0xFF111314)
+        : const Color(0xFFF9FBFB),
+    // Both modes get an explicit neutral container ramp so system
+    // components (dialogs, chips, popups, input fills, progress tracks)
+    // share the same environment as the custom surfaces: dark steps the
+    // obsidian family (near-black, neutral), light steps the paper family
+    // (near-white, neutral) — the brand accent never tints whole surfaces
+    // in either mode.
+    surfaceContainerLowest: isDark
+        ? const Color(0xFF080A0B)
+        : const Color(0xFFFFFFFF),
+    surfaceContainerLow: isDark
+        ? const Color(0xFF0D0F10)
+        : const Color(0xFFF4F7F7),
+    surfaceContainer: isDark
+        ? const Color(0xFF111314)
+        : const Color(0xFFEDF1F1),
+    surfaceContainerHigh: isDark
+        ? const Color(0xFF16181A)
+        : const Color(0xFFE6EAEA),
+    surfaceContainerHighest: isDark
+        ? const Color(0xFF1C1E20)
+        : const Color(0xFFDFE4E4),
     onSurface: isDark ? const Color(0xFFF2F3F3) : AppColors.ink,
     onSurfaceVariant: isDark
         ? const Color(0xFF9BA3A3)
