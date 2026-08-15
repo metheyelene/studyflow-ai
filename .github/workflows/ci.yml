@@ -83,11 +83,25 @@ jobs:
       # files drifted. When a change is intentional, commit the regenerated
       # PNGs (or the diff from the CI log) with the change.
       - name: Golden baselines (regenerate + diff)
+        id: golden-gate
         working-directory: mobile
         run: |
           flutter test test/theme_golden_test.dart --update-goldens
           git diff --stat -- test/goldens test/theme_golden_test.dart
           git diff --exit-code -- test/goldens test/theme_golden_test.dart
+
+      # On drift, the step above left the fresh baselines in the workspace
+      # — publish them so a maintainer can download the artifact and commit
+      # the regenerated PNGs without rerunning locally (the images are the
+      # authoritative Linux-rendered output of the pinned container).
+      - name: Upload regenerated goldens (on drift)
+        if: steps.golden-gate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-goldens
+          path: mobile/test/goldens/
+          retention-days: 7
+          if-no-files-found: warn
 
   security:
     name: Security scan
