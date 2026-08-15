@@ -28,6 +28,11 @@ const kHomeNavItems = [
     selectedIcon: Icons.school,
   ),
   GlassNavItem(
+    label: 'Audio',
+    icon: Icons.headphones_outlined,
+    selectedIcon: Icons.headphones,
+  ),
+  GlassNavItem(
     label: 'Progress',
     icon: Icons.insights_outlined,
     selectedIcon: Icons.insights,
@@ -38,6 +43,18 @@ const kHomeNavItems = [
     selectedIcon: Icons.person,
   ),
 ];
+
+/// Each shell destination gets its own atmosphere, so the ambient
+/// environment quietly matches what the user is doing: Home a calm glow,
+/// Notebooks/Study the teal focus wash, Audio a warm coral field, Progress
+/// cyan intelligence, and Profile a golden premium sheen.
+BackgroundMood moodForTab(int index) => switch (index) {
+  0 => BackgroundMood.ambient,
+  1 || 2 => BackgroundMood.study,
+  3 => BackgroundMood.audio,
+  4 => BackgroundMood.ai,
+  _ => BackgroundMood.premium,
+};
 
 /// Adaptive navigation shell: floating bottom bar on phones, floating
 /// rail on tablet/desktop. The branch body is provided by the router
@@ -56,15 +73,7 @@ class HomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // The ambient background responds to the active tab: Home gets the
-    // default calm glow, Notebooks/Study the study mood, Audio the deep
-    // media wash, Premium-ish Profile a warmer sheen.
-    final mood = switch (currentIndex) {
-      0 => BackgroundMood.ambient,
-      1 || 2 => BackgroundMood.study,
-      3 => BackgroundMood.ai,
-      _ => BackgroundMood.ambient,
-    };
+    final mood = moodForTab(currentIndex);
     final nowPlaying = ref.watch(nowPlayingProvider);
     return Scaffold(
       body: StudyFlowBackground(

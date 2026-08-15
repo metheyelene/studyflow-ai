@@ -64,6 +64,17 @@ void main() {
     });
   });
 
+  group('per-tab atmospheres', () {
+    test('every destination has its own dedicated mood', () {
+      expect(moodForTab(0), BackgroundMood.ambient); // Home: calm glow
+      expect(moodForTab(1), BackgroundMood.study); // Notebooks
+      expect(moodForTab(2), BackgroundMood.study); // Study
+      expect(moodForTab(3), BackgroundMood.audio); // Audio: warm coral
+      expect(moodForTab(4), BackgroundMood.ai); // Progress: cyan
+      expect(moodForTab(5), BackgroundMood.premium); // Profile: golden
+    });
+  });
+
   group('HomeShell navigation', () {
     testWidgets('tab switches slide+fade instead of snapping', (
       tester,
@@ -100,6 +111,25 @@ void main() {
         find.byKey(const Key('shell-branch-rise')),
       );
       expect(settled.transform.getTranslation().y, 0);
+    });
+
+    testWidgets('Audio is a first-class tab destination', (tester) async {
+      var index = 0;
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) => shell(
+            index: index,
+            onDestinationSelected: (i) => setState(() => index = i),
+            child: Text('tab $index'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(kHomeNavItems.length, 6);
+
+      await tester.tap(find.byIcon(Icons.headphones_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('tab 3'), findsOneWidget);
     });
   });
 

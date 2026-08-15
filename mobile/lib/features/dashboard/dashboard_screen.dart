@@ -527,7 +527,9 @@ class _QuickActionsChips extends StatelessWidget {
       (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
       (Icons.style_outlined, 'Flashcards', AppRoutes.flashcards, true),
       (Icons.quiz_outlined, 'Quiz', AppRoutes.quizzes, true),
-      (Icons.mic_none, 'Podcast', AppRoutes.audio, true),
+      // Audio is a shell tab now, so go to it (like Upload notes/Study
+      // plan) rather than pushing a full-screen route over the shell.
+      (Icons.mic_none, 'Podcast', AppRoutes.audio, false),
       (Icons.event_available_outlined, 'Study plan', AppRoutes.study, false),
     ];
     return Wrap(

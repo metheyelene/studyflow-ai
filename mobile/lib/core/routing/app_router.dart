@@ -173,6 +173,14 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: AppRoutes.audio,
+                builder: (context, state) => const PodcastLibraryScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: AppRoutes.progress,
                 builder: (context, state) => const ProgressScreen(),
               ),
