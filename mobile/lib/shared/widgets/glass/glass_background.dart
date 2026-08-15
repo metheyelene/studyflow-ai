@@ -7,10 +7,15 @@ import '../../../core/theme/app_theme.dart';
 /// Context mood for the ambient background. Each mood shifts the tint and
 /// weight of the light fields so the atmosphere quietly matches what the
 /// user is doing — AI work glows cyan, study a teal/emerald wash, audio a
-/// warm coral field, Premium a golden sheen. The mood never animates:
-/// static radial gradients are GPU-cheap and keep tests deterministic (an
-/// infinite drift loop would hang every `pumpAndSettle`).
+/// warm coral field, Premium a golden sheen. Mood changes cross-fade over
+/// [kAtmosphereTransition] — a finite tween, so `pumpAndSettle` still
+/// settles (no infinite drift loop) while the atmosphere eases between
+/// contexts instead of snapping.
 enum BackgroundMood { ambient, study, ai, audio, premium }
+
+/// How long a mood change takes to cross-fade the atmosphere. Slow on
+/// purpose — this is the ambient environment, not a UI state change.
+const Duration kAtmosphereTransition = Duration(milliseconds: 900);
 
 /// The flat low-tier fallback surface (keyed so tests can assert the
 /// ambient layer is swapped out).
@@ -84,6 +89,34 @@ class StudyFlowBackground extends ConsumerWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final p = _palette(context);
 
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Mood changes cross-fade the whole atmosphere. Finite, so it
+        // settles in tests; the old palette lingers during the fade, which
+        // is exactly the slow atmospheric shift the design calls for.
+        AnimatedSwitcher(
+          duration: kAtmosphereTransition,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          child: KeyedSubtree(
+            key: ValueKey(mood),
+            child: SizedBox.expand(
+              child: _ambientLayers(context: context, dark: dark, p: p),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+
+  Widget _ambientLayers({
+    required BuildContext context,
+    required bool dark,
+    required ({Color a, Color b, double alpha}) p,
+  }) {
+    final g = context.glass;
     Widget blob({
       required Alignment alignment,
       required double size,
@@ -185,7 +218,6 @@ class StudyFlowBackground extends ConsumerWidget {
             );
           },
         ),
-        child,
       ],
     );
   }
