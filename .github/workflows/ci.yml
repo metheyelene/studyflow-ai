@@ -41,8 +41,11 @@ jobs:
           BETTER_AUTH_SECRET: ci-placeholder-secret-not-a-real-secret
 
   flutter:
+    # Pinned runner image (not `-latest`, which retags when GitHub promotes
+    # a new Ubuntu): the golden rasterizer can differ across OS versions,
+    # so the goldens must always render on the same OS as their baselines.
     name: Flutter · format · analyze · test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,7 +53,10 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          # Pinned to the SDK the goldens were generated with — the software
+          # rasterizer is engine-version-sensitive, so an unpinned `stable`
+          # can drift baselines on a routine SDK bump.
+          flutter-version: 3.44.9
           cache: true
 
       - name: Install dependencies
@@ -68,6 +74,20 @@ jobs:
       - name: Test
         working-directory: mobile
         run: flutter test
+
+      # Golden-image gate: regenerate the baselines on the pinned Linux
+      # container (ubuntu-24.04 + Flutter 3.44.9 — the OS/engine the
+      # baselines belong to), then fail if the result differs from what is
+      # committed. `flutter test` above already diffs them read-only; this
+      # step both produces the fresh images and surfaces exactly which
+      # files drifted. When a change is intentional, commit the regenerated
+      # PNGs (or the diff from the CI log) with the change.
+      - name: Golden baselines (regenerate + diff)
+        working-directory: mobile
+        run: |
+          flutter test test/theme_golden_test.dart --update-goldens
+          git diff --stat -- test/goldens test/theme_golden_test.dart
+          git diff --exit-code -- test/goldens test/theme_golden_test.dart
 
   security:
     name: Security scan
