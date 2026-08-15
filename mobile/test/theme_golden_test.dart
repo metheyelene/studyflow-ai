@@ -8,6 +8,7 @@ import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
 import 'package:studyflow_mobile/features/flashcards/flashcard_models.dart';
+import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
@@ -157,44 +158,61 @@ void main() {
         ],
       );
     }
-    if (screen == 'audio_player') {
-      // A ready episode: the player screen downloads it, plays it through
-      // the fake player, and shows artwork + progress + chapters. Playback
-      // emits no position events, so the frame is stable.
+    if (screen == 'podcast_library' || screen == 'audio_player') {
+      // Ready episodes only — a processing episode's spinner animates
+      // forever and would break pumpAndSettle. The library lists both;
+      // the player screen downloads the first one, plays it through the
+      // fake player (no position events, so the frame is stable), and
+      // shows artwork + progress + chapters.
+      final ready = [
+        AudioEpisode(
+          id: 'ep-1',
+          title: 'VLSI Unit 3 — Study Podcast',
+          style: 'focused',
+          length: 'standard',
+          status: 'ready',
+          pipelineStage: 'ready',
+          audioUrl: '/api/audio/ep-1/stream',
+          notebookId: 'nb-1',
+          notebookTitle: 'VLSI Unit 3',
+          durationSec: 300,
+          wordCount: 900,
+          createdAt: now,
+          transcript: const [
+            TranscriptSection(
+              heading: 'Introduction',
+              text: 'Welcome to your study session.',
+              startSec: 0,
+            ),
+            TranscriptSection(
+              heading: 'Core concepts',
+              text:
+                  'Threshold voltage is the gate voltage at which a channel forms.',
+              startSec: 30,
+              sources: ['VLSI Notes'],
+            ),
+          ],
+        ),
+        AudioEpisode(
+          id: 'ep-2',
+          title: 'Signals — Convolution Basics',
+          style: 'friendly',
+          length: 'quick',
+          status: 'ready',
+          pipelineStage: 'ready',
+          audioUrl: '/api/audio/ep-2/stream',
+          notebookId: 'nb-2',
+          notebookTitle: 'Signals & Systems',
+          durationSec: 180,
+          wordCount: 540,
+          createdAt: now,
+        ),
+      ];
       audio = FakeAudioRepository(
-        episodes: [
-          AudioEpisode(
-            id: 'ep-1',
-            title: 'VLSI Unit 3 — Study Podcast',
-            style: 'focused',
-            length: 'standard',
-            status: 'ready',
-            pipelineStage: 'ready',
-            audioUrl: '/api/audio/ep-1/stream',
-            notebookId: 'nb-1',
-            notebookTitle: 'VLSI Unit 3',
-            durationSec: 300,
-            wordCount: 900,
-            createdAt: now,
-            transcript: const [
-              TranscriptSection(
-                heading: 'Introduction',
-                text: 'Welcome to your study session.',
-                startSec: 0,
-              ),
-              TranscriptSection(
-                heading: 'Core concepts',
-                text:
-                    'Threshold voltage is the gate voltage at which a channel forms.',
-                startSec: 30,
-                sources: ['VLSI Notes'],
-              ),
-            ],
-          ),
-        ],
+        episodes: screen == 'podcast_library' ? ready : [ready[0]],
       );
     }
-    // premium needs no special seeding: pumpApp's default
+    // premium and profile need no special seeding: pumpApp's default
     // FakePlayBillingRepository shows the active founding offer ($2,
     // 23 of 35 remaining) on a free plan — the real Premium presentation.
     return (
@@ -205,13 +223,60 @@ void main() {
     );
   }
 
+  // `path` null means the screen is reached through pumpApp's own router
+  // state (login needs signedIn false; onboarding needs the needed gate)
+  // rather than a post-pump navigation.
   final screens = const [
-    (name: 'home', path: AppRoutes.home),
-    (name: 'study_space', path: '/notebooks/nb-1'),
-    (name: 'flashcards', path: '/flashcards/deck-1'),
-    (name: 'quiz', path: '/quizzes/quiz-1'),
-    (name: 'audio_player', path: '/audio/ep-1'),
-    (name: 'premium', path: AppRoutes.premium),
+    (
+      name: 'home',
+      path: AppRoutes.home,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'study_space',
+      path: '/notebooks/nb-1',
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'flashcards',
+      path: '/flashcards/deck-1',
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'quiz',
+      path: '/quizzes/quiz-1',
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'podcast_library',
+      path: AppRoutes.audio,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'audio_player',
+      path: '/audio/ep-1',
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'premium',
+      path: AppRoutes.premium,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'profile',
+      path: AppRoutes.profile,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (name: 'login', path: null, signedIn: false, onboardingNeeded: false),
+    (name: 'onboarding', path: null, signedIn: true, onboardingNeeded: true),
   ];
 
   for (final dark in [true, false]) {
@@ -237,13 +302,18 @@ void main() {
           router: router,
           size: size,
           tier: PerformanceTier.standard,
+          signedIn: screen.signedIn,
+          onboardingStatus: screen.onboardingNeeded
+              ? OnboardingStatus.needed
+              : null,
           notebooks: seed.notebooks,
           flashcards: seed.flashcards,
           quizzes: seed.quizzes,
           audio: seed.audio,
         );
-        if (screen.path != AppRoutes.home) {
-          router.go(screen.path);
+        final path = screen.path;
+        if (path != null && path != AppRoutes.home) {
+          router.go(path);
           // Let the route's finite entrance motion settle.
           await tester.pumpAndSettle(const Duration(milliseconds: 100));
         }
