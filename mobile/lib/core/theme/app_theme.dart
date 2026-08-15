@@ -228,25 +228,23 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     reducedEffects: false,
   );
 
-  // Dark mode is a cinematic deep-charcoal environment with a blue-green
-  // cast (never pure black): translucent layers pick up the teal/cyan
-  // accents and soft warm highlights keep it from feeling cold.
-  //
-  // The glass highlights and edges are LIT BY the teal brand glow instead
-  // of raw white: a white sweep over translucent dark fills reads as a
-  // gray fog (the "washed" dark look), while a low-alpha teal-cyan sweep
-  // keeps surfaces deep while the glass still catches light at the top lip
-  // and diagonal sheen. Surface fills stay darker and slightly less opaque
-  // than before so the nav shell and sheets composite as dark glass over
-  // the ambient glow rather than milky panels.
+  // Dark mode is an OBSIDIAN environment: near-black neutral surfaces
+  // dominate (~80% of the screen), and color is precious — reserved for
+  // controls, progress, AI states, and contextual indicators, never for
+  // painting whole surfaces. The glass edge and top-lip highlight are a
+  // subtle NEUTRAL light (≈6-8% white): on near-black fills a low-alpha
+  // neutral catch-light reads as glass catching light, not the gray fog
+  // a white sweep caused over mid-tone teal fills. The vibrant accent
+  // palette (teal primary, cyan AI, coral audio, emerald success, amber
+  // warning) is untouched and now stands out against the black.
   static const dark = GlassTheme(
-    background: Color(0xFF0E1213),
-    surface: Color(0xC2141B1E),
-    surfaceStrong: Color(0xDA151C1E),
-    surfaceSubtle: Color(0x80182022),
-    floating: Color(0xD01A2123),
-    border: Color(0x1F99F6E4),
-    highlight: Color(0x2699F6E4),
+    background: Color(0xFF090B0C),
+    surface: Color(0xC2101214),
+    surfaceStrong: Color(0xE8141618),
+    surfaceSubtle: Color(0x7F16181A),
+    floating: Color(0xE617191B),
+    border: Color(0x12FFFFFF),
+    highlight: Color(0x0FFFFFFF),
     primary: Color(0xFF2DD4BF),
     primarySoft: Color(0x1A2DD4BF),
     secondary: Color(0xFF38BDF8),
@@ -402,21 +400,21 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
         : const Color(0xFF7F1D1D),
     inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
     surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
-    surface: isDark ? const Color(0xFF161C1E) : AppColors.paper,
-    // Dark neutral ramp stays in the StudyFlow deep-charcoal family (with
-    // a faint green cast) instead of the seed's neutral grays, so system
-    // components (dialogs, chips, popups, input fills, progress tracks)
-    // share the same dark-glass environment as the custom surfaces.
-    surfaceContainerLowest: isDark ? const Color(0xFF0C1112) : null,
-    surfaceContainerLow: isDark ? const Color(0xFF111718) : null,
-    surfaceContainer: isDark ? const Color(0xFF161C1E) : null,
-    surfaceContainerHigh: isDark ? const Color(0xFF1B2325) : null,
-    surfaceContainerHighest: isDark ? const Color(0xFF212A2C) : null,
-    onSurface: isDark ? const Color(0xFFF0F4F3) : AppColors.ink,
+    surface: isDark ? const Color(0xFF111314) : AppColors.paper,
+    // Dark neutral ramp sits in the obsidian family (near-black, neutral)
+    // so system components (dialogs, chips, popups, input fills, progress
+    // tracks) share the same black-dominant environment as the custom
+    // surfaces — the brand accent never tints whole surfaces.
+    surfaceContainerLowest: isDark ? const Color(0xFF080A0B) : null,
+    surfaceContainerLow: isDark ? const Color(0xFF0D0F10) : null,
+    surfaceContainer: isDark ? const Color(0xFF111314) : null,
+    surfaceContainerHigh: isDark ? const Color(0xFF16181A) : null,
+    surfaceContainerHighest: isDark ? const Color(0xFF1C1E20) : null,
+    onSurface: isDark ? const Color(0xFFF2F3F3) : AppColors.ink,
     onSurfaceVariant: isDark
-        ? const Color(0xFF97A5A3)
+        ? const Color(0xFF9BA3A3)
         : const Color(0xFF4E5A5A),
-    outlineVariant: isDark ? const Color(0xFF39423F) : const Color(0xFFC9D4D1),
+    outlineVariant: isDark ? const Color(0xFF36393B) : const Color(0xFFC9D4D1),
     error: isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C),
     onError: Colors.white,
     errorContainer: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),

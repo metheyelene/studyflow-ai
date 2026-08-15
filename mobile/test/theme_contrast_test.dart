@@ -100,16 +100,25 @@ void main() {
       });
 
       if (brightness == Brightness.dark) {
-        test('dark glass is lit by the brand glow, not raw white', () {
-          // The highlight/edge tokens carry a teal-cyan cast (green channel
-          // dominates red) instead of pure white: a white sweep over
-          // translucent dark fills reads as a washed gray fog, while the
-          // teal-lit glass keeps surfaces deep and on-brand. Alphas stay
-          // low so the cast is a glow, never a tint that hurts contrast.
-          expect(g.highlight.g, greaterThan(g.highlight.r));
-          expect(g.border.g, greaterThan(g.border.r));
-          expect(g.highlight.a, lessThan(0.3));
-          expect(g.border.a, lessThan(0.3));
+        test('dark glass is obsidian-neutral; color is precious', () {
+          // Obsidian direction: the black canvas dominates and the accent
+          // is precious. Surfaces are near-black (low luminance, neutral —
+          // red ≈ green ≈ blue, no brand tint), and the glass edge/top lip
+          // is a subtle neutral catch-light (low alpha), never a color wash.
+          for (final c in [
+            g.background,
+            g.surface,
+            g.surfaceStrong,
+            g.floating,
+          ]) {
+            expect(c.r, closeTo(c.g, 0.02));
+            expect(c.g, closeTo(c.b, 0.02));
+          }
+          expect(g.background.computeLuminance(), lessThan(0.01));
+          expect(g.highlight.a, lessThan(0.15));
+          expect(g.border.a, lessThan(0.15));
+          expect(g.highlight.r, closeTo(g.highlight.g, 0.02));
+          expect(g.border.r, closeTo(g.border.g, 0.02));
         });
       }
 
