@@ -99,8 +99,16 @@ void main() {
         }
       });
 
-      if (brightness == Brightness.dark) {
-        test('dark glass is obsidian-neutral; color is precious', () {
+      test('dark glass is obsidian-neutral; light keeps the teal cast', () {
+        if (brightness == Brightness.light) {
+          // Light glass is lit by the brand glow: the edge and top lip
+          // carry a teal-cyan cast (green dominates red) instead of
+          // neutral white/gray, which reads flat on near-white fills.
+          expect(g.highlight.g, greaterThan(g.highlight.r));
+          expect(g.border.g, greaterThan(g.border.r));
+          expect(g.highlight.a, lessThan(0.65));
+          expect(g.border.a, lessThan(0.3));
+        } else {
           // Obsidian direction: the black canvas dominates and the accent
           // is precious. Surfaces are near-black (low luminance, neutral —
           // red ≈ green ≈ blue, no brand tint), and the glass edge/top lip
@@ -119,8 +127,8 @@ void main() {
           expect(g.border.a, lessThan(0.15));
           expect(g.highlight.r, closeTo(g.highlight.g, 0.02));
           expect(g.border.r, closeTo(g.border.g, 0.02));
-        });
-      }
+        }
+      });
 
       test('M3 scheme pairs', () {
         expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(_aa));

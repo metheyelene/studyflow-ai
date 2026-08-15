@@ -203,8 +203,14 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     surfaceStrong: Color(0xF2FFFFFF),
     surfaceSubtle: Color(0xB3FFFFFF),
     floating: Color(0xE0FFFFFF),
-    border: Color(0x1A6B7280),
-    highlight: Color(0x66FFFFFF),
+    // Light glass is lit by the same brand glow as dark: the edge and the
+    // top-lip highlight carry a soft teal cast instead of neutral
+    // white/gray. On near-white fills a pure-white sweep is invisible
+    // (cards read flat and foggy), while the faint teal-100 light gives
+    // the surface a cool glassy depth; the slate border becomes a subtle
+    // teal-700 edge that ties the material to the brand.
+    border: Color(0x1F0F766E),
+    highlight: Color(0x73CCFBF1),
     // Light-mode tokens are tuned for WCAG 4.5:1 on the painted surfaces
     // (see the contrast audit in docs/design-quality-audit.md): the teal
     // primary sits at #0F766E (teal-700, ~5.9:1 on white) so white button
