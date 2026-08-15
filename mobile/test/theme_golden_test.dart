@@ -1,49 +1,259 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/core/performance/device_tier.dart';
+import 'package:studyflow_mobile/core/routing/app_router.dart';
+import 'package:studyflow_mobile/features/audio/audio_models.dart';
+import 'package:studyflow_mobile/features/flashcards/flashcard_models.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook.dart';
+import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
+import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
 
 import 'helpers.dart';
 
-/// Golden-image baselines for the Home screen in both modes, rendered at a
-/// fixed phone surface with the real router and fake repositories (see
-/// [pumpApp]). These catch visual regressions the token snapshot can't —
-/// layout drift, glass rendering, ambient composition, spacing, and shadows.
+/// Golden-image baselines for the app's major screens in both modes,
+/// rendered at a fixed phone surface with the real router and fake
+/// repositories (see [pumpApp]). These catch visual regressions the token
+/// snapshot can't — layout drift, glass rendering, ambient composition,
+/// spacing, and shadows.
 ///
 /// Regenerate when a change is intentional:
 ///   flutter test --update-goldens test/theme_golden_test.dart
 ///
-/// Notes:
-///  * Goldens are font-independent in a layout sense — flutter_test renders
-///    text with the blocky FlutterTest font, so these lock composition and
-///    color, not typography.
-///  * Goldens are platform-sensitive (anti-aliasing differs per OS); the
-///    baselines were generated on the machine that owns them.
+/// CI (`.github/workflows/ci.yml`) runs this on the pinned Linux platform
+/// with `--update-goldens` followed by a `git diff --exit-code` gate, so
+/// every push regenerates the baselines deterministically and fails if they
+/// drift from what is committed. Determinism comes from three pins:
+///  * the exact Flutter SDK version in CI (engine rasterizer is version-
+///    sensitive),
+///  * `debugDefaultTargetPlatformOverride = TargetPlatform.android` so the
+///    Material theme requests Roboto rather than a host-specific family,
+///  * the bundled Roboto TTFs below (embedded fonts render with the
+///    engine's own FreeType/Skia rasterizer, independent of the host OS).
+///
+/// Regenerate on Linux (or take the CI golden step's diff) when a visual
+/// change is intentional; macOS and Linux software-render identically for
+/// embedded fonts, so baselines transfer.
+/// Load the real Roboto weights (the Material default family the app uses —
+/// no custom font in pubspec) so goldens render true glyphs and metrics
+/// instead of flutter_test's blocky placeholder font. [FontLoader] has no
+/// weight API; the engine reads the OS/2 weight from each TTF, so the three
+/// static faces cover the theme's 400/500/700 weights and the engine picks
+/// the nearest face for w600.
+Future<void> _loadAppFonts() async {
+  final dir = Directory('test/goldens/fonts');
+  for (final name in [
+    'Roboto-Regular.ttf',
+    'Roboto-Medium.ttf',
+    'Roboto-Bold.ttf',
+  ]) {
+    final bytes = File('${dir.path}/$name').readAsBytesSync();
+    final loader = FontLoader('Roboto')
+      ..addFont(Future.value(ByteData.sublistView(bytes)));
+    await loader.load();
+  }
+}
+
 void main() {
+  setUpAll(_loadAppFonts);
+
   const size = Size(390, 844);
+
+  final now = DateTime(2026, 8, 12);
+
+  // Deterministic seeds per screen so each golden shows real content. Home
+  // keeps the empty-dashboard defaults so its baselines stay stable.
+  ({
+    FakeNotebooksRepository notebooks,
+    FakeFlashcardsRepository flashcards,
+    FakeQuizzesRepository quizzes,
+    FakeAudioRepository audio,
+  })
+  seeds(String screen) {
+    final notebooks = FakeNotebooksRepository();
+    var flashcards = FakeFlashcardsRepository();
+    var quizzes = FakeQuizzesRepository();
+    var audio = FakeAudioRepository();
+
+    if (screen == 'study_space') {
+      notebooks.notebooks.add(
+        Notebook(
+          id: 'nb-1',
+          title: 'VLSI — Unit 3',
+          description: 'Electromagnetics and device physics',
+          createdAt: now,
+          updatedAt: now,
+          sourceCount: 1,
+        ),
+      );
+      notebooks.sources.add(
+        NotebookSource(
+          id: 'src-1',
+          title: 'Lecture 4 — Electromagnetics',
+          kind: 'uploaded',
+          status: SourceStatus.ready,
+          wordCount: 1240,
+          pageCount: 18,
+          createdAt: now,
+        ),
+      );
+    }
+    if (screen == 'flashcards') {
+      flashcards = FakeFlashcardsRepository(
+        decks: [
+          FlashcardDeck(
+            id: 'deck-1',
+            title: 'VLSI Unit 3 — Key Concepts',
+            cardCount: 2,
+            notebookId: 'nb-1',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+        cards: const [
+          Flashcard(
+            id: 'card-1',
+            front: 'What is the switching threshold of a CMOS inverter?',
+            back: 'The input voltage where the output sits between rails.',
+          ),
+          Flashcard(
+            id: 'card-2',
+            front: 'Why is the noise margin important?',
+            back: 'It quantifies immunity to signal degradation.',
+          ),
+        ],
+      );
+    }
+    if (screen == 'quiz') {
+      quizzes = FakeQuizzesRepository(
+        quizzes: [
+          QuizSummary(
+            id: 'quiz-1',
+            title: 'Electromagnetics Checkpoint',
+            questionCount: 2,
+            difficulty: 'medium',
+            notebookId: 'nb-1',
+            createdAt: now,
+          ),
+        ],
+        questions: const [
+          QuizQuestion(
+            id: 'q-1',
+            question: 'Which quantity is conserved in a closed circuit?',
+            options: ['Charge', 'Voltage', 'Resistance', 'Power'],
+            correctIndex: 0,
+            explanation: 'Charge is conserved; energy is converted.',
+          ),
+          QuizQuestion(
+            id: 'q-2',
+            question: 'The electric field inside a perfect conductor is:',
+            options: ['Zero', 'Maximum', 'Constant', 'Infinite'],
+            correctIndex: 0,
+            explanation: 'Free charges redistribute to cancel the field.',
+          ),
+        ],
+      );
+    }
+    if (screen == 'audio_player') {
+      // A ready episode: the player screen downloads it, plays it through
+      // the fake player, and shows artwork + progress + chapters. Playback
+      // emits no position events, so the frame is stable.
+      audio = FakeAudioRepository(
+        episodes: [
+          AudioEpisode(
+            id: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            style: 'focused',
+            length: 'standard',
+            status: 'ready',
+            pipelineStage: 'ready',
+            audioUrl: '/api/audio/ep-1/stream',
+            notebookId: 'nb-1',
+            notebookTitle: 'VLSI Unit 3',
+            durationSec: 300,
+            wordCount: 900,
+            createdAt: now,
+            transcript: const [
+              TranscriptSection(
+                heading: 'Introduction',
+                text: 'Welcome to your study session.',
+                startSec: 0,
+              ),
+              TranscriptSection(
+                heading: 'Core concepts',
+                text:
+                    'Threshold voltage is the gate voltage at which a channel forms.',
+                startSec: 30,
+                sources: ['VLSI Notes'],
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+    // premium needs no special seeding: pumpApp's default
+    // FakePlayBillingRepository shows the active founding offer ($2,
+    // 23 of 35 remaining) on a free plan — the real Premium presentation.
+    return (
+      notebooks: notebooks,
+      flashcards: flashcards,
+      quizzes: quizzes,
+      audio: audio,
+    );
+  }
+
+  final screens = const [
+    (name: 'home', path: AppRoutes.home),
+    (name: 'study_space', path: '/notebooks/nb-1'),
+    (name: 'flashcards', path: '/flashcards/deck-1'),
+    (name: 'quiz', path: '/quizzes/quiz-1'),
+    (name: 'audio_player', path: '/audio/ep-1'),
+    (name: 'premium', path: AppRoutes.premium),
+  ];
 
   for (final dark in [true, false]) {
     final mode = dark ? 'dark' : 'light';
-    testWidgets('Home golden — $mode', (tester) async {
-      // ThemeMode.system → the app follows platform brightness.
-      tester.platformDispatcher.platformBrightnessTestValue =
-          dark ? Brightness.dark : Brightness.light;
-      addTearDown(
-        tester.platformDispatcher.clearPlatformBrightnessTestValue,
-      );
+    for (final screen in screens) {
+      testWidgets('${screen.name} golden — $mode', (tester) async {
+        // Material's default family is platform-dependent: pin Android so
+        // the theme requests Roboto (the app's real font) rather than SF
+        // Pro on the macOS host. Reset inside the test body — the binding's
+        // invariant check runs before addTearDown callbacks.
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
 
-      await pumpApp(
-        tester,
-        size: size,
-        tier: PerformanceTier.standard,
-      );
-      // Router redirects to /home; let the dashboard's finite progress
-      // tween and the atmosphere settle to a stable frame.
-      await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        // ThemeMode.system → the app follows platform brightness.
+        tester.platformDispatcher.platformBrightnessTestValue = dark
+            ? Brightness.dark
+            : Brightness.light;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
-      await expectLater(
-        find.byType(MaterialApp),
-        matchesGoldenFile('goldens/home_$mode.png'),
-      );
-    });
+        final router = buildAppRouter();
+        final seed = seeds(screen.name);
+        await pumpApp(
+          tester,
+          router: router,
+          size: size,
+          tier: PerformanceTier.standard,
+          notebooks: seed.notebooks,
+          flashcards: seed.flashcards,
+          quizzes: seed.quizzes,
+          audio: seed.audio,
+        );
+        if (screen.path != AppRoutes.home) {
+          router.go(screen.path);
+          // Let the route's finite entrance motion settle.
+          await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        }
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('goldens/${screen.name}_$mode.png'),
+        );
+        debugDefaultTargetPlatformOverride = null;
+      });
+    }
   }
 }
