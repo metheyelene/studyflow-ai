@@ -61,6 +61,7 @@ void main() {
     expect(find.text('UPCOMING'), findsOneWidget);
     expect(find.text('No upcoming exams'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Upload notes'));
     await tester.tap(find.text('Upload notes'));
     await tester.pumpAndSettle();
 

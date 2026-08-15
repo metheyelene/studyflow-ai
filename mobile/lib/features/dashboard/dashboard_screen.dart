@@ -6,6 +6,10 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/exam_countdown_card.dart';
+import '../authentication/auth_controller.dart';
+import '../authentication/auth_models.dart';
+import '../notebooks/notebook.dart';
+import '../notebooks/notebooks_controller.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
@@ -19,17 +23,16 @@ import 'dashboard_repository.dart';
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
     final dashboard = ref.watch(dashboardControllerProvider);
+    // Personal, but deterministic: a time-of-day greeting would make the
+    // Home golden (and any regenerated baseline) hour-dependent.
+    final auth = ref.watch(authControllerProvider);
+    final firstName = auth is AuthAuthenticated
+        ? auth.user.name.trim().split(' ').first
+        : null;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -46,7 +49,9 @@ class DashboardScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  _greeting(),
+                  firstName == null
+                      ? 'Welcome back'
+                      : 'Welcome back, $firstName',
                   style: AppText.small.copyWith(
                     color: g.textMuted,
                     letterSpacing: 0.4,
@@ -60,9 +65,9 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 _FocusHero(dashboard: dashboard),
                 const SizedBox(height: AppSpacing.xxl),
-                const _SectionTitle(title: 'YOUR LEARNING'),
+                const _SectionTitle(title: 'RECENT SPACES'),
                 const SizedBox(height: 6),
-                const _LearningRows(),
+                const _RecentSpaces(),
                 const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'QUICK ACTIONS'),
                 const SizedBox(height: 10),
@@ -103,15 +108,10 @@ class _FocusHero extends ConsumerWidget {
               Expanded(
                 child: Text(
                   "TODAY'S FOCUS",
-                  style: AppText.eyebrow.copyWith(
-                    color: context.glass.primary,
-                  ),
+                  style: AppText.eyebrow.copyWith(color: context.glass.primary),
                 ),
               ),
-              GlassBadge(
-                label: 'AI workspace',
-                icon: Icons.auto_awesome,
-              ),
+              GlassBadge(label: 'AI workspace', icon: Icons.auto_awesome),
             ],
           ),
           const SizedBox(height: 14),
@@ -173,15 +173,10 @@ class _HeroCtaState extends State<_HeroCta> {
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      g.primary,
-                      Color.lerp(g.primary, g.ai, 0.35)!,
-                    ],
+                    colors: [g.primary, Color.lerp(g.primary, g.ai, 0.35)!],
                   ),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: g.highlight.withValues(alpha: 0.6),
-                  ),
+                  border: Border.all(color: g.highlight.withValues(alpha: 0.6)),
                   boxShadow: [
                     BoxShadow(
                       color: g.primary.withValues(alpha: 0.3),
@@ -193,11 +188,7 @@ class _HeroCtaState extends State<_HeroCta> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.bolt_rounded,
-                      size: 18,
-                      color: g.textOnPrimary,
-                    ),
+                    Icon(Icons.bolt_rounded, size: 18, color: g.textOnPrimary),
                     const SizedBox(width: 8),
                     Text(
                       'Start studying',
@@ -242,10 +233,8 @@ class _UsageMeter extends StatelessWidget {
           ),
           duration: AppMotion.medium,
           curve: AppMotion.emphasized,
-          builder: (context, value, _) => GlassRing(
-            value: value,
-            label: '${usage.used}/${usage.limit}',
-          ),
+          builder: (context, value, _) =>
+              GlassRing(value: value, label: '${usage.used}/${usage.limit}'),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -439,77 +428,122 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// Your Learning — an open-canvas list (no card box) where each stat row
-/// carries a purpose-coded accent: streak → amber, quizzes → cyan (AI),
-/// notes → emerald (study). Hairline dividers keep the composition calm.
-class _LearningRows extends StatelessWidget {
-  const _LearningRows();
+/// Recent Study Spaces — the real notebook list on the open canvas
+/// (hairline dividers, no card box). Replaces the old hardcoded stat rows
+/// ("0 days / 0 / 0") that presented placeholders as learning data; this
+/// section shows what the user actually has and opens it.
+class _RecentSpaces extends ConsumerWidget {
+  const _RecentSpaces();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = context.glass;
+    final state = ref.watch(notebooksControllerProvider);
+    return state.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          GlassSkeleton(width: 210, height: 16),
+          SizedBox(height: 10),
+          GlassSkeleton(width: 150, height: 13),
+        ],
+      ),
+      error: (_, _) => Text(
+        'Could not load your study spaces.',
+        style: AppText.small.copyWith(color: g.textMuted),
+      ),
+      data: (notebooks) {
+        if (notebooks.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your study spaces will appear here. Add your first PDF or '
+                'notes and StudyFlow will organize them.',
+                style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
+              ),
+              const SizedBox(height: 4),
+              TextButton.icon(
+                onPressed: () => context.go(AppRoutes.notebooks),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Create a study space'),
+                style: TextButton.styleFrom(foregroundColor: g.primary),
+              ),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            for (var i = 0; i < notebooks.length; i++) ...[
+              _SpaceRow(notebook: notebooks[i]),
+              if (i != notebooks.length - 1)
+                Divider(
+                  color: g.textPrimary.withValues(alpha: 0.06),
+                  height: 1,
+                ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One notebook row on the open canvas: accent icon tile, title, source
+/// metadata, and a chevron. Tapping enters the study space.
+class _SpaceRow extends StatelessWidget {
+  const _SpaceRow({required this.notebook});
+
+  final Notebook notebook;
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
-    Widget row({
-      required IconData icon,
-      required Color color,
-      required String label,
-      required String value,
-    }) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 13),
+    final count = notebook.sourceCount;
+    return InkWell(
+      onTap: () => context.push('/notebooks/${notebook.id}'),
+      borderRadius: BorderRadius.circular(AppShapes.card),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 36,
+              height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                color: g.primarySoft,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 17, color: color),
+              child: Icon(Icons.menu_book_outlined, size: 17, color: g.primary),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notebook.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    count == 1 ? '1 source' : '$count sources',
+                    style: AppText.small.copyWith(color: g.textMuted),
+                  ),
+                ],
               ),
             ),
-            Text(
-              value,
-              style: AppText.bodyMedium.copyWith(
-                color: g.textPrimary,
-                fontSize: 15,
-              ),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: g.textMuted.withValues(alpha: 0.5),
             ),
           ],
         ),
-      );
-    }
-
-    return Column(
-      children: [
-        row(
-          icon: Icons.local_fire_department,
-          color: g.amber,
-          label: 'Study streak',
-          value: '0 days',
-        ),
-        Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
-        row(
-          icon: Icons.quiz_outlined,
-          color: g.ai,
-          label: 'Quizzes completed',
-          value: '0',
-        ),
-        Divider(color: g.textPrimary.withValues(alpha: 0.06), height: 1),
-        row(
-          icon: Icons.notes,
-          color: g.success,
-          label: 'Notes created',
-          value: '0',
-        ),
-      ],
+      ),
     );
   }
 }
@@ -614,11 +648,7 @@ class _GlossyActionChipState extends State<_GlossyActionChip> {
                         color: g.primarySoft,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        widget.icon,
-                        size: 16,
-                        color: g.primary,
-                      ),
+                      child: Icon(widget.icon, size: 16, color: g.primary),
                     ),
                     const SizedBox(width: 10),
                     Text(
