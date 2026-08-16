@@ -21,6 +21,7 @@ import { and, eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { getCached, putCached, cacheKey as buildCacheKey } from "@/lib/ai/cache";
+import { preferenceCacheSalt } from "@/lib/ai/preferences";
 import { generate, resolveModel, type GenerateResult } from "@/lib/ai/orchestrator";
 import { systemPrompt, type AiMode } from "@/lib/ai/prompts";
 import { hybridRetrieve, type RetrievableChunk } from "@/lib/ai/retrieval";
@@ -205,6 +206,7 @@ export async function prepareGrounded(
     mode,
     feature,
     model,
+    preferences: await preferenceCacheSalt(userId),
   });
 
   return {
@@ -260,6 +262,7 @@ export async function groundedGenerate(options: GroundedOptions): Promise<Ground
     temperature: 0.3,
     maxOutputTokens: 1200,
     log: { userId },
+    userId,
   });
 
   const { text, stripped } = stripFabricatedMarkers(generated.text, prepared.validMarkers);

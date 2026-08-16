@@ -13,6 +13,7 @@
 import { z } from "zod";
 
 import { getCached, putCached, cacheKey as buildCacheKey } from "@/lib/ai/cache";
+import { preferenceCacheSalt } from "@/lib/ai/preferences";
 import { generate, generateJson, resolveModel } from "@/lib/ai/orchestrator";
 import { hybridRetrieve, type RetrievableChunk } from "@/lib/ai/retrieval";
 import { getSourcesForUser, loadChunks, sourceVersions } from "@/lib/ai/sources";
@@ -306,6 +307,7 @@ export async function runAction<D>(
     mode: "sources",
     feature: action,
     model,
+    preferences: await preferenceCacheSalt(ctx.userId),
   });
 
   const cached = await getCached<D>(ctx.userId, ctx.notebookId, key);
@@ -323,6 +325,7 @@ export async function runAction<D>(
     maxOutputTokens: 2048,
     schema: schemaFor(action),
     log: { userId: ctx.userId },
+    userId: ctx.userId,
   });
 
   const data = validateOutput(action, generated.data as never, refs) as unknown as D;
@@ -422,6 +425,7 @@ export async function runTextAction(
     mode: "sources",
     feature: action,
     model,
+    preferences: await preferenceCacheSalt(ctx.userId),
   });
 
   const cached = await getCached<{ text: string }>(ctx.userId, ctx.notebookId, key);
@@ -438,6 +442,7 @@ export async function runTextAction(
     temperature: 0.4,
     maxOutputTokens: 1500,
     log: { userId: ctx.userId },
+    userId: ctx.userId,
   });
 
   // Strip fabricated citation markers, keep valid ones.

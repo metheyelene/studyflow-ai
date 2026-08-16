@@ -69,6 +69,9 @@ export const profiles = pgTable(
     timezone: text("timezone"), // IANA name, e.g. "Asia/Kolkata"
     goal: text("goal"), // what they want help with
     dailyStudyMinutes: integer("daily_study_minutes").notNull().default(30),
+    aiResponseStyle: text("ai_response_style").notNull().default("balanced"), // concise | balanced | detailed
+    aiStudyLevel: text("ai_study_level").notNull().default("university"), // school | university | professional
+    aiLanguage: text("ai_language").notNull().default("English"),
     onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
     studyStreak: integer("study_streak").notNull().default(0),
     lastStudyDate: timestamp("last_study_date", { withTimezone: true }),

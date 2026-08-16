@@ -100,6 +100,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       prompt: prepared.prompt,
       temperature: 0.3,
       maxOutputTokens: 1200,
+      userId: session.user.id,
       onFinish: ({ text, usage }) => {
         const stripped = stripFabricatedMarkers(text ?? "", prepared.validMarkers).stripped;
         const citations = findCitations(text ?? "", prepared.markerToChunk);

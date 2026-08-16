@@ -169,6 +169,7 @@ export async function generatePodcastScript(
     maxOutputTokens: 4096,
     schema: scriptSchema,
     log: { userId },
+    userId,
   });
 
   const data = generated.data as z.infer<typeof scriptSchema>;

@@ -21,6 +21,8 @@ export interface CacheKeyInput {
   mode: string;
   feature: string;
   model: string;
+  /** AI-preference fingerprint — changing preferences bypasses cached answers. */
+  preferences?: string;
 }
 
 export function cacheKey(input: CacheKeyInput): string {
@@ -34,6 +36,7 @@ export function cacheKey(input: CacheKeyInput): string {
     mode: input.mode,
     feature: input.feature,
     model: input.model,
+    preferences: input.preferences ?? "",
   });
   return createHash("sha256").update(canonical).digest("hex");
 }

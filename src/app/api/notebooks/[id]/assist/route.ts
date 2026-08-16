@@ -108,6 +108,7 @@ export async function POST(
       maxOutputTokens: 900,
       temperature: 0.3,
       log: { userId: session.user.id },
+      userId: session.user.id,
     });
     const answer = result.text.trim();
     if (!answer) {

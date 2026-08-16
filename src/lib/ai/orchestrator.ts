@@ -24,6 +24,7 @@ import type { z } from "zod";
 
 import { getDb, schema } from "@/db";
 import { healthyProviderOrder, recordProviderFailure, recordProviderSuccess } from "./health";
+import { systemWithPreferences } from "./preferences";
 
 export type TaskTier = "simple" | "standard" | "complex";
 export type AIProviderName = "openai" | "anthropic";
@@ -132,6 +133,13 @@ export interface GenerateOptions {
   temperature?: number;
   /** When set, logs an ai_requests row (best-effort, never fatal). */
   log?: { userId: string };
+  /**
+   * When set, the user's AI preferences (style / level / language) are
+   * appended to the system prompt — the one place that shapes every
+   * generation. Cache the resolved prompt per call; prefer passing this
+   * over mutating [system] yourself.
+   */
+  userId?: string;
 }
 
 export interface GenerateResult {
@@ -182,6 +190,7 @@ async function logRequest(
 export async function generate(options: GenerateOptions): Promise<GenerateResult> {
   const startedAt = Date.now();
   const errors: string[] = [];
+  const system = await systemWithPreferences(options.system, options.userId);
 
   for (const name of providerOrder()) {
     const config = PROVIDERS[name];
@@ -190,7 +199,7 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     try {
       const { text, usage } = await generateText({
         model: config.makeModel(model),
-        system: options.system,
+        system,
         prompt: options.prompt,
         maxOutputTokens: options.maxOutputTokens ?? 2048,
         temperature: options.temperature ?? 0.7,
@@ -240,6 +249,7 @@ export async function generateJson<S extends z.ZodType>(
   const startedAt = Date.now();
   const errors: string[] = [];
   const tier = options.tier ?? "standard";
+  const system = await systemWithPreferences(options.system, options.userId);
 
   for (const name of providerOrder()) {
     const config = PROVIDERS[name];
@@ -249,7 +259,7 @@ export async function generateJson<S extends z.ZodType>(
       const { object, usage } = await generateObject({
         model: config.makeModel(model),
         schema: options.schema,
-        system: options.system,
+        system,
         prompt: options.prompt,
         maxOutputTokens: options.maxOutputTokens ?? 2048,
         temperature: options.temperature ?? 0.7,
@@ -286,6 +296,8 @@ export interface StreamOptions {
   prompt: string;
   maxOutputTokens?: number;
   temperature?: number;
+  /** When set, appends the user's AI preferences to the system prompt. */
+  userId?: string;
   /** Called when generation completes (used for citation validation). */
   onFinish?: (info: {
     text?: string;
@@ -302,9 +314,10 @@ export interface StreamOptions {
 export async function stream(options: StreamOptions) {
   const resolved = resolveModel(options.tier ?? "standard");
   const startedAt = Date.now();
+  const system = await systemWithPreferences(options.system, options.userId);
   const result = streamText({
     model: resolved.languageModel,
-    system: options.system,
+    system,
     prompt: options.prompt,
     maxOutputTokens: options.maxOutputTokens ?? 2048,
     temperature: options.temperature ?? 0.7,
