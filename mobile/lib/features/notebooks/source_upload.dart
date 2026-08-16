@@ -76,18 +76,20 @@ IconData fileIconFor(String name) {
   };
 }
 
-/// The accent color used to tint the file glyph per kind.
+/// The accent color used to tint the file glyph per kind. Monochrome:
+/// file type is communicated by iconography and a gray brightness ladder
+/// (never hue) — PDF the lightest, text the darkest.
 Color fileIconColorFor(String name, Color fallback) {
   final ext = name.contains('.')
       ? name.substring(name.lastIndexOf('.') + 1).toLowerCase()
       : '';
   return switch (ext) {
-    'pdf' => const Color(0xFFE2504F),
-    'doc' || 'docx' => const Color(0xFF2B7CD3),
-    'ppt' || 'pptx' => const Color(0xFFD24726),
-    'xls' || 'xlsx' || 'csv' => const Color(0xFF1E7145),
-    'png' || 'jpg' || 'jpeg' || 'webp' || 'heic' => const Color(0xFF7A5AF8),
-    'txt' || 'md' || 'markdown' || 'rtf' => const Color(0xFF5F6368),
+    'pdf' => const Color(0xFFE0E0E0),
+    'doc' || 'docx' => const Color(0xFF9E9E9E),
+    'ppt' || 'pptx' => const Color(0xFFBDBDBD),
+    'xls' || 'xlsx' || 'csv' => const Color(0xFF7A7A7A),
+    'png' || 'jpg' || 'jpeg' || 'webp' || 'heic' => const Color(0xFFD6D6D6),
+    'txt' || 'md' || 'markdown' || 'rtf' => const Color(0xFF4A4A4A),
     _ => fallback,
   };
 }

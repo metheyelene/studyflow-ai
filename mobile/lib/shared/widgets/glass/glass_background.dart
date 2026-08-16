@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/performance/device_tier.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Context mood for the ambient background. Each mood shifts the tint and
-/// weight of the light fields so the atmosphere quietly matches what the
-/// user is doing — AI work glows cyan, study a teal/emerald wash, audio a
-/// warm coral field, Premium a golden sheen. Mood changes cross-fade over
+/// Context mood for the ambient background. Each mood shifts the weight
+/// and tone of the light fields so the atmosphere quietly matches what the
+/// user is doing — AI work a brighter white field, study a cool gray,
+/// audio a warmer gray, Premium the brightest halo. Monochrome by design:
+/// dark mode uses white light fields, light mode soft gray fields, and
+/// moods differ by brightness, never hue. Mood changes cross-fade over
 /// [kAtmosphereTransition] — a finite tween, so `pumpAndSettle` still
 /// settles (no infinite drift loop) while the atmosphere eases between
 /// contexts instead of snapping.
@@ -37,41 +39,29 @@ const double kAmbientBaseWeightLight = 0.04;
 const double kAmbientBaseAccentAlphaDark = 0.50;
 const double kAmbientBaseAccentAlphaLight = 0.30;
 
-/// The two accent tints + light-field alpha for a mood. Alphas stay low
-/// (≤0.20 light, ≤0.24 dark) so text contrast on top is unaffected.
-/// Top-level so the atmosphere tokens are testable — the widget calls this
-/// and the snapshot test locks it.
+/// The two accent tints + light-field alpha for a mood. Monochrome: dark
+/// mode fields are white/light-gray light; light mode fields are mid-gray
+/// shadows (white is invisible on white). Alphas stay low (≤0.20 light,
+/// ≤0.24 dark) so text contrast on top is unaffected. Top-level so the
+/// atmosphere tokens are testable — the widget calls this and the snapshot
+/// test locks it.
 ({Color a, Color b, double alpha}) ambientPalette(
   BackgroundMood mood, {
   required bool dark,
 }) {
   final a = dark ? 0.20 : 0.12;
+  // Dark: white light fields; light: gray fields (visible on paper).
+  final w = dark ? const Color(0xFFFFFFFF) : const Color(0xFF9E9E9E);
+  final g1 = dark ? const Color(0xFFE6E6E6) : const Color(0xFFC9C9C9);
+  final g2 = dark ? const Color(0xFFCCCCCC) : const Color(0xFF7A7A7A);
+  final g3 = dark ? const Color(0xFFBDBDBD) : const Color(0xFFA6A6A6);
+  final g4 = dark ? const Color(0xFFA6A6A6) : const Color(0xFF666666);
   return switch (mood) {
-    BackgroundMood.ambient => (
-      a: const Color(0xFF0F766E),
-      b: const Color(0xFF06B6D4),
-      alpha: a,
-    ),
-    BackgroundMood.study => (
-      a: const Color(0xFF0F766E),
-      b: const Color(0xFF10B981),
-      alpha: a,
-    ),
-    BackgroundMood.ai => (
-      a: const Color(0xFF22D3EE),
-      b: const Color(0xFF3B82F6),
-      alpha: dark ? 0.22 : 0.14,
-    ),
-    BackgroundMood.audio => (
-      a: const Color(0xFFFB7185),
-      b: const Color(0xFFF59E0B),
-      alpha: dark ? 0.24 : 0.14,
-    ),
-    BackgroundMood.premium => (
-      a: const Color(0xFFF59E0B),
-      b: const Color(0xFFFB7185),
-      alpha: a,
-    ),
+    BackgroundMood.ambient => (a: w, b: g1, alpha: a),
+    BackgroundMood.study => (a: w, b: g3, alpha: a),
+    BackgroundMood.ai => (a: w, b: g2, alpha: dark ? 0.22 : 0.14),
+    BackgroundMood.audio => (a: g1, b: g4, alpha: dark ? 0.24 : 0.14),
+    BackgroundMood.premium => (a: w, b: g2, alpha: a),
   };
 }
 

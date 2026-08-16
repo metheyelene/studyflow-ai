@@ -82,7 +82,7 @@ class _GlassButtonState extends State<GlassButton> {
         Theme.of(context).brightness == Brightness.dark
             ? g.textPrimary
             : Colors.white,
-        const Color(0xCC111718),
+        const Color(0xCC1A1A1A),
         g.border,
       ),
       GlassButtonVariant.elevated => (g.textPrimary, g.floating, g.border),

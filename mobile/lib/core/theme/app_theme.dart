@@ -168,13 +168,13 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   final Color primary;
   final Color primarySoft;
 
-  /// Electric blue — secondary actions and links.
+  /// Light gray — secondary actions and links.
   final Color secondary;
 
-  /// Cyan — the AI signal color (orbs, thinking states, AI accents).
+  /// Near-white — the AI signal color (orbs, thinking states, AI accents).
   final Color ai;
 
-  /// Coral — the audio/podcast accent.
+  /// Bright gray — the audio/podcast accent.
   final Color audio;
 
   final Color textPrimary;
@@ -198,76 +198,74 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   static const radiusPill = 999.0;
 
   static const light = GlassTheme(
-    background: Color(0xFFF4F6F6),
+    background: Color(0xFFF5F5F5),
     // Light glass mirrors dark's luminance physics: surfaces are the base
     // family catching light, translucent enough for the ambient mood to
     // bleed through (85% cards, 92% shell) so they read as glass over the
     // environment, not flat white panels. Depth ordering matches dark —
     // floating ≈ surfaceStrong (closest to the user = strongest fill).
-    surface: Color(0xD9FFFFFF),
-    surfaceStrong: Color(0xECFFFFFF),
+    surface: Color(0xE0FFFFFF),
+    surfaceStrong: Color(0xF0FFFFFF),
     surfaceSubtle: Color(0xB3FFFFFF),
-    floating: Color(0xE9FFFFFF),
-    // Light glass is lit by the same brand glow as dark: the edge and the
-    // top-lip highlight carry a soft teal cast instead of neutral
-    // white/gray. On near-white fills a pure-white sweep is invisible
-    // (cards read flat and foggy), while the faint teal-100 light gives
-    // the surface a cool glassy depth; the slate border becomes a subtle
-    // teal-700 edge that ties the material to the brand.
-    border: Color(0x1F0F766E),
-    highlight: Color(0x73CCFBF1),
-    // Light-mode tokens are tuned for WCAG 4.5:1 on the painted surfaces
-    // (see the contrast audit in docs/design-quality-audit.md): the teal
-    // primary sits at #0F766E (teal-700, ~5.9:1 on white) so white button
-    // labels and teal links both clear AA. Purpose accents — electric blue
-    // (secondary), cyan (AI), coral (audio) — are decorative/icon colors;
-    // status colors are darkened to AA on every painted surface.
-    primary: Color(0xFF0F766E),
-    primarySoft: Color(0x140F766E),
-    secondary: Color(0xFF0369A1),
-    ai: Color(0xFF0891B2),
-    audio: Color(0xFFD9563B),
-    textPrimary: Color(0xFF151A1A),
-    textMuted: Color(0xFF4E5A5A),
+    floating: Color(0xECFFFFFF),
+    // Light glass is monochrome too: the edge is a soft neutral gray
+    // (black at low alpha) and the top-lip highlight a white catch-light.
+    // On near-white fills the white lip is faint, so the gray edge does
+    // the material work — the surface reads as glass over the ambient
+    // gray fields instead of a flat white panel.
+    border: Color(0x26000000),
+    highlight: Color(0x59FFFFFF),
+    // Light-mode tokens are tuned for WCAG 4.5:1 on the painted surfaces:
+    // BLACK is the accent (primary/links, ~19:1 on white) so white
+    // button labels and black links both clear AA comfortably. Purpose
+    // accents (secondary, AI, audio) are darker grays; status colors are
+    // grays at AA on every painted surface, separated by brightness and
+    // iconography — never hue.
+    primary: Color(0xFF000000),
+    primarySoft: Color(0x12000000),
+    secondary: Color(0xFF333333),
+    ai: Color(0xFF111111),
+    audio: Color(0xFF262626),
+    textPrimary: Color(0xFF111111),
+    textMuted: Color(0xFF555555),
     textOnPrimary: Color(0xFFFFFFFF),
-    danger: Color(0xFFB91C1C),
-    success: Color(0xFF047857),
-    warning: Color(0xFFB45309),
-    amber: Color(0xFFB45309),
+    danger: Color(0xFF6B6B6B),
+    success: Color(0xFF000000),
+    warning: Color(0xFF3D3D3D),
+    amber: Color(0xFF3D3D3D),
     blurRadius: 24,
     blurEnabled: true,
     reducedEffects: false,
   );
 
-  // Dark mode is an OBSIDIAN environment: near-black neutral surfaces
-  // dominate (~80% of the screen), and color is precious — reserved for
-  // controls, progress, AI states, and contextual indicators, never for
-  // painting whole surfaces. The glass edge and top-lip highlight are a
-  // subtle NEUTRAL light (≈6-8% white): on near-black fills a low-alpha
-  // neutral catch-light reads as glass catching light, not the gray fog
-  // a white sweep caused over mid-tone teal fills. The vibrant accent
-  // palette (teal primary, cyan AI, coral audio, emerald success, amber
-  // warning) is untouched and now stands out against the black.
+  // Dark mode is a MONOCHROME OBSIDIAN environment: near-black neutral
+  // surfaces dominate (~80% of the screen), and WHITE is the accent —
+  // reserved for controls, progress, AI states, and contextual
+  // indicators, never for painting whole surfaces. The glass edge and
+  // top-lip highlight are a subtle neutral light (≈6-8% white): a
+  // low-alpha catch-light reads as glass catching light, not fog. Every
+  // purpose accent (primary, AI, audio, success) is a shade of white;
+  // status separation comes from brightness + iconography, never hue.
   static const dark = GlassTheme(
-    background: Color(0xFF090B0C),
-    surface: Color(0xC2101214),
-    surfaceStrong: Color(0xE8141618),
-    surfaceSubtle: Color(0x7F16181A),
-    floating: Color(0xE617191B),
+    background: Color(0xFF0A0A0A),
+    surface: Color(0xC21B1B1B),
+    surfaceStrong: Color(0xE8242424),
+    surfaceSubtle: Color(0x7F282828),
+    floating: Color(0xE62C2C2C),
     border: Color(0x12FFFFFF),
     highlight: Color(0x0FFFFFFF),
-    primary: Color(0xFF2DD4BF),
-    primarySoft: Color(0x1A2DD4BF),
-    secondary: Color(0xFF38BDF8),
-    ai: Color(0xFF22D3EE),
-    audio: Color(0xFFFB7185),
-    textPrimary: Color(0xFFF0F4F3),
-    textMuted: Color(0xFF97A5A3),
-    textOnPrimary: Color(0xFF04211E),
-    danger: Color(0xFFF87171),
-    success: Color(0xFF34D399),
-    warning: Color(0xFFFBBF24),
-    amber: Color(0xFFFBBF24),
+    primary: Color(0xFFFFFFFF),
+    primarySoft: Color(0x14FFFFFF),
+    secondary: Color(0xFFCCCCCC),
+    ai: Color(0xFFF5F5F5),
+    audio: Color(0xFFE6E6E6),
+    textPrimary: Color(0xFFF5F5F5),
+    textMuted: Color(0xFF9E9E9E),
+    textOnPrimary: Color(0xFF000000),
+    danger: Color(0xFFA3A3A3),
+    success: Color(0xFFFFFFFF),
+    warning: Color(0xFFCBCBCB),
+    amber: Color(0xFFCBCBCB),
     blurRadius: 36,
     blurEnabled: true,
     reducedEffects: false,
@@ -358,24 +356,29 @@ extension GlassBuildContext on BuildContext {
   GlassTheme get glass => Theme.of(this).extension<GlassTheme>()!;
 }
 
-/// StudyFlow brand palette — an "electric study" identity built on a
-/// teal/cyan core instead of the indigo era. Purpose-coded accents:
-/// AI → cyan, audio → coral, exams → amber, success → emerald. The teal
-/// seed stays the primary even when the platform supplies dynamic color.
+/// StudyFlow brand palette — a MONOCHROME identity: black, white, and
+/// neutral grays only. WHITE is the accent in dark mode, BLACK in light
+/// mode; purpose accents (AI, audio, success) are shades of white/gray,
+/// and separation comes from brightness + iconography, never hue. The
+/// neutral seed keeps the scheme gray even when the platform supplies
+/// dynamic color.
 abstract final class AppColors {
-  static const teal = Color(0xFF0F766E);
-  static const tealLight = Color(0xFF2DD4BF);
-  static const cyan = Color(0xFF22D3EE);
-  static const coral = Color(0xFFFB7185);
-  static const ink = Color(0xFF151A1A);
-  static const paper = Color(0xFFFCFEFE);
+  /// Neutral seed (near-black) — dark-mode primary is white, light-mode
+  /// primary is black.
+  static const teal = Color(0xFF000000);
+  static const tealLight = Color(0xFFFFFFFF);
+  static const cyan = Color(0xFFF5F5F5);
+  static const coral = Color(0xFFE6E6E6);
+  static const ink = Color(0xFF111111);
+  static const paper = Color(0xFFFCFCFC);
 }
 
-/// Build the full Material 3 Expressive [ColorScheme]: a branded seed-based
-/// palette as the fallback, optionally harmonized with the platform's dynamic
-/// color scheme (Android 12+) for the neutral/system roles. StudyFlow's
-/// signature indigo always remains the primary so the product keeps its
-/// identity on every platform.
+/// Build the full Material 3 Expressive [ColorScheme]: a neutral seeded
+/// palette as the fallback, optionally harmonized with the platform's
+/// dynamic color scheme (Android 12+) for the neutral/system roles.
+/// StudyFlow is strictly monochrome — white is the dark-mode primary,
+/// black the light-mode primary — and the neutral seed keeps the system
+/// gray even when dynamic color is supplied.
 ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
   final isDark = brightness == Brightness.dark;
   final seed = ColorScheme.fromSeed(
@@ -383,67 +386,65 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
     brightness: brightness,
   );
   return (dynamicScheme ?? seed).copyWith(
-    // Light-mode primary is the AA-tuned teal (4.5:1+ on white); dark mode
-    // uses the lighter teal so it reads against near-black charcoal.
+    // Dark primary is white (the accent); light primary is black.
     primary: isDark ? AppColors.tealLight : AppColors.teal,
-    onPrimary: isDark ? const Color(0xFF04211E) : Colors.white,
+    onPrimary: isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
     primaryContainer: isDark
-        ? const Color(0xFF134E4A)
-        : const Color(0xFFCCFBF1),
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE6E6E6),
     onPrimaryContainer: isDark
-        ? const Color(0xFFCCFBF1)
-        : const Color(0xFF042F2A),
-    secondary: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
-    onSecondary: isDark ? const Color(0xFF04222E) : Colors.white,
+        ? const Color(0xFFFFFFFF)
+        : const Color(0xFF111111),
+    secondary: isDark ? const Color(0xFFCCCCCC) : const Color(0xFF333333),
+    onSecondary: isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
     secondaryContainer: isDark
-        ? const Color(0xFF0C4A6E)
-        : const Color(0xFFE0F2FE),
+        ? const Color(0xFF292929)
+        : const Color(0xFFD9D9D9),
     onSecondaryContainer: isDark
-        ? const Color(0xFFE0F2FE)
-        : const Color(0xFF0C4A6E),
-    tertiary: isDark ? const Color(0xFFFB7185) : const Color(0xFFC2410C),
-    onTertiary: isDark ? const Color(0xFF3D0416) : Colors.white,
+        ? const Color(0xFFE6E6E6)
+        : const Color(0xFF222222),
+    tertiary: isDark ? const Color(0xFFBDBDBD) : const Color(0xFF4A4A4A),
+    onTertiary: isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
     tertiaryContainer: isDark
-        ? const Color(0xFF7F1D1D)
-        : const Color(0xFFFFE4E6),
+        ? const Color(0xFF262626)
+        : const Color(0xFFE0E0E0),
     onTertiaryContainer: isDark
-        ? const Color(0xFFFFE4E6)
-        : const Color(0xFF7F1D1D),
+        ? const Color(0xFFE0E0E0)
+        : const Color(0xFF262626),
     inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
     surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
-    surface: isDark ? const Color(0xFF111314) : const Color(0xFFF9FBFB),
+    surface: isDark ? const Color(0xFF131313) : const Color(0xFFFAFAFA),
     // Both modes get an explicit neutral container ramp so system
     // components (dialogs, chips, popups, input fills, progress tracks)
     // share the same environment as the custom surfaces: dark steps the
     // obsidian family (near-black, neutral), light steps the paper family
-    // (near-white, neutral) — the brand accent never tints whole surfaces
-    // in either mode.
+    // (near-white, neutral) — no hue in either mode.
     surfaceContainerLowest: isDark
-        ? const Color(0xFF080A0B)
+        ? const Color(0xFF0A0A0A)
         : const Color(0xFFFFFFFF),
     surfaceContainerLow: isDark
-        ? const Color(0xFF0D0F10)
-        : const Color(0xFFF4F7F7),
+        ? const Color(0xFF0D0D0D)
+        : const Color(0xFFF4F4F4),
     surfaceContainer: isDark
-        ? const Color(0xFF111314)
-        : const Color(0xFFEDF1F1),
+        ? const Color(0xFF131313)
+        : const Color(0xFFECECEC),
     surfaceContainerHigh: isDark
-        ? const Color(0xFF16181A)
-        : const Color(0xFFE6EAEA),
+        ? const Color(0xFF171717)
+        : const Color(0xFFE5E5E5),
     surfaceContainerHighest: isDark
-        ? const Color(0xFF1C1E20)
-        : const Color(0xFFDFE4E4),
-    onSurface: isDark ? const Color(0xFFF2F3F3) : AppColors.ink,
+        ? const Color(0xFF1D1D1D)
+        : const Color(0xFFDEDEDE),
+    onSurface: isDark ? const Color(0xFFF2F2F2) : AppColors.ink,
     onSurfaceVariant: isDark
-        ? const Color(0xFF9BA3A3)
-        : const Color(0xFF4E5A5A),
-    outlineVariant: isDark ? const Color(0xFF36393B) : const Color(0xFFC9D4D1),
-    error: isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C),
-    onError: Colors.white,
-    errorContainer: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
+        ? const Color(0xFF9E9E9E)
+        : const Color(0xFF555555),
+    outlineVariant: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFCCCCCC),
+    error: isDark ? const Color(0xFFF0F0F0) : const Color(0xFF4D4D4D),
+    onError: isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
+    errorContainer: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE1E1E1),
     onErrorContainer: isDark
-        ? const Color(0xFFFEE2E2)
-        : const Color(0xFF7F1D1D),
+        ? const Color(0xFFE1E1E1)
+        : const Color(0xFF2A2A2A),
   );
 }
 

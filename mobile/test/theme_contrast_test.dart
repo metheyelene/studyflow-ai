@@ -105,7 +105,7 @@ void main() {
         }
       });
 
-      test('brand primary is the teal seed (indigo era removed)', () {
+      test('brand primary is the neutral seed (color removed)', () {
         if (brightness == Brightness.light) {
           expect(g.primary, AppColors.teal);
         } else {
@@ -113,34 +113,29 @@ void main() {
         }
       });
 
-      test('dark glass is obsidian-neutral; light keeps the teal cast', () {
-        if (brightness == Brightness.light) {
-          // Light glass is lit by the brand glow: the edge and top lip
-          // carry a teal-cyan cast (green dominates red) instead of
-          // neutral white/gray, which reads flat on near-white fills.
-          expect(g.highlight.g, greaterThan(g.highlight.r));
-          expect(g.border.g, greaterThan(g.border.r));
-          expect(g.highlight.a, lessThan(0.65));
-          expect(g.border.a, lessThan(0.3));
-        } else {
-          // Obsidian direction: the black canvas dominates and the accent
-          // is precious. Surfaces are near-black (low luminance, neutral —
-          // red ≈ green ≈ blue, no brand tint), and the glass edge/top lip
-          // is a subtle neutral catch-light (low alpha), never a color wash.
-          for (final c in [
-            g.background,
-            g.surface,
-            g.surfaceStrong,
-            g.floating,
-          ]) {
-            expect(c.r, closeTo(c.g, 0.02));
-            expect(c.g, closeTo(c.b, 0.02));
-          }
+      test('glass is strictly neutral in both modes', () {
+        // Monochrome identity: every surface, edge, and catch-light is a
+        // pure neutral — red ≈ green ≈ blue in both modes, so nothing in
+        // the material system carries a hue. Dark keeps the obsidian
+        // low-luminance base; light stays paper-bright.
+        for (final c in [
+          g.background,
+          g.surface,
+          g.surfaceStrong,
+          g.surfaceSubtle,
+          g.floating,
+          g.highlight,
+          g.border,
+        ]) {
+          expect(c.r, closeTo(c.g, 0.02), reason: '$c r≈g');
+          expect(c.g, closeTo(c.b, 0.02), reason: '$c g≈b');
+        }
+        expect(g.highlight.a, lessThan(0.65));
+        expect(g.border.a, lessThan(0.3));
+        if (brightness == Brightness.dark) {
           expect(g.background.computeLuminance(), lessThan(0.01));
-          expect(g.highlight.a, lessThan(0.15));
-          expect(g.border.a, lessThan(0.15));
-          expect(g.highlight.r, closeTo(g.highlight.g, 0.02));
-          expect(g.border.r, closeTo(g.border.g, 0.02));
+        } else {
+          expect(g.background.computeLuminance(), greaterThan(0.9));
         }
       });
 
@@ -169,14 +164,14 @@ void main() {
     });
   }
 
-  // The visual identity, locked as a side-by-side snapshot: the OBSIDIAN
-  // dark ramp (near-black neutral surfaces, neutral catch-light glass)
-  // beside the TEAL-LIT light ramp (paper-family surfaces, teal-cast
-  // glass lighting). Future theme edits that drift either ramp — a
-  // surface gaining a tint, the glass lighting losing its cast, an accent
-  // shifting hue — fail loudly here instead of silently changing how the
-  // whole app looks. When an edit is intentional, update the snapshot in
-  // the same commit.
+  // The visual identity, locked as a side-by-side snapshot: the MONOCHROME
+  // dark ramp (near-black neutral surfaces, white accent, neutral
+  // catch-light glass) beside the MONOCHROME light ramp (paper-family
+  // surfaces, black accent, gray-edged glass). Future theme edits that
+  // drift either ramp — a surface gaining a tint, an accent shifting hue,
+  // the white primary dimming — fail loudly here instead of silently
+  // changing how the whole app looks. When an edit is intentional, update
+  // the snapshot in the same commit.
   void expectGlassRamp(GlassTheme g, Map<String, Color> expected) {
     final actual = <String, Color>{
       'background': g.background,
@@ -215,68 +210,71 @@ void main() {
   }
 
   test('side-by-side token snapshot locks both ramps', () {
-    // OBSIDIAN dark: near-black neutral surfaces, neutral white catch-light.
+    // MONOCHROME dark: near-black neutral surfaces, white accent, neutral
+    // catch-light; status colors are brightness shades, not hues.
     expectGlassRamp(GlassTheme.dark, {
-      'background': const Color(0xFF090B0C),
-      'surface': const Color(0xC2101214),
-      'surfaceStrong': const Color(0xE8141618),
-      'surfaceSubtle': const Color(0x7F16181A),
-      'floating': const Color(0xE617191B),
+      'background': const Color(0xFF0A0A0A),
+      'surface': const Color(0xC21B1B1B),
+      'surfaceStrong': const Color(0xE8242424),
+      'surfaceSubtle': const Color(0x7F282828),
+      'floating': const Color(0xE62C2C2C),
       'border': const Color(0x12FFFFFF),
       'highlight': const Color(0x0FFFFFFF),
-      'primary': const Color(0xFF2DD4BF),
-      'primarySoft': const Color(0x1A2DD4BF),
-      'secondary': const Color(0xFF38BDF8),
-      'ai': const Color(0xFF22D3EE),
-      'audio': const Color(0xFFFB7185),
-      'success': const Color(0xFF34D399),
-      'warning': const Color(0xFFFBBF24),
-      'danger': const Color(0xFFF87171),
+      'primary': const Color(0xFFFFFFFF),
+      'primarySoft': const Color(0x14FFFFFF),
+      'secondary': const Color(0xFFCCCCCC),
+      'ai': const Color(0xFFF5F5F5),
+      'audio': const Color(0xFFE6E6E6),
+      'success': const Color(0xFFFFFFFF),
+      'warning': const Color(0xFFCBCBCB),
+      'danger': const Color(0xFFA3A3A3),
     });
-    // TEAL-LIT light: paper-family surfaces, teal-cast glass lighting.
+    // MONOCHROME light: paper-family surfaces, black accent, gray-edged
+    // glass; status colors are grays separated by brightness + icons.
     expectGlassRamp(GlassTheme.light, {
-      'background': const Color(0xFFF4F6F6),
-      'surface': const Color(0xD9FFFFFF),
-      'surfaceStrong': const Color(0xECFFFFFF),
+      'background': const Color(0xFFF5F5F5),
+      'surface': const Color(0xE0FFFFFF),
+      'surfaceStrong': const Color(0xF0FFFFFF),
       'surfaceSubtle': const Color(0xB3FFFFFF),
-      'floating': const Color(0xE9FFFFFF),
-      'border': const Color(0x1F0F766E),
-      'highlight': const Color(0x73CCFBF1),
-      'primary': const Color(0xFF0F766E),
-      'primarySoft': const Color(0x140F766E),
-      'secondary': const Color(0xFF0369A1),
-      'ai': const Color(0xFF0891B2),
-      'audio': const Color(0xFFD9563B),
-      'success': const Color(0xFF047857),
-      'warning': const Color(0xFFB45309),
-      'danger': const Color(0xFFB91C1C),
+      'floating': const Color(0xECFFFFFF),
+      'border': const Color(0x26000000),
+      'highlight': const Color(0x59FFFFFF),
+      'primary': const Color(0xFF000000),
+      'primarySoft': const Color(0x12000000),
+      'secondary': const Color(0xFF333333),
+      'ai': const Color(0xFF111111),
+      'audio': const Color(0xFF262626),
+      'success': const Color(0xFF000000),
+      'warning': const Color(0xFF3D3D3D),
+      'danger': const Color(0xFF6B6B6B),
     });
     // M3 system ramps: dark steps the obsidian family, light the paper
-    // family — the brand accent never tints whole surfaces in either mode.
+    // family — no hue in either mode.
     expectSchemeRamp(buildAppTheme(Brightness.dark).colorScheme, {
-      'surface': const Color(0xFF111314),
-      'surfaceContainerLowest': const Color(0xFF080A0B),
-      'surfaceContainerLow': const Color(0xFF0D0F10),
-      'surfaceContainer': const Color(0xFF111314),
-      'surfaceContainerHigh': const Color(0xFF16181A),
-      'surfaceContainerHighest': const Color(0xFF1C1E20),
+      'surface': const Color(0xFF131313),
+      'surfaceContainerLowest': const Color(0xFF0A0A0A),
+      'surfaceContainerLow': const Color(0xFF0D0D0D),
+      'surfaceContainer': const Color(0xFF131313),
+      'surfaceContainerHigh': const Color(0xFF171717),
+      'surfaceContainerHighest': const Color(0xFF1D1D1D),
     });
     expectSchemeRamp(buildAppTheme(Brightness.light).colorScheme, {
-      'surface': const Color(0xFFF9FBFB),
+      'surface': const Color(0xFFFAFAFA),
       'surfaceContainerLowest': const Color(0xFFFFFFFF),
-      'surfaceContainerLow': const Color(0xFFF4F7F7),
-      'surfaceContainer': const Color(0xFFEDF1F1),
-      'surfaceContainerHigh': const Color(0xFFE6EAEA),
-      'surfaceContainerHighest': const Color(0xFFDFE4E4),
+      'surfaceContainerLow': const Color(0xFFF4F4F4),
+      'surfaceContainer': const Color(0xFFECECEC),
+      'surfaceContainerHigh': const Color(0xFFE5E5E5),
+      'surfaceContainerHighest': const Color(0xFFDEDEDE),
     });
   });
 
   // The atmosphere, locked the same way: every mood's light-field palette
   // (both accent tints + the blob alpha per mode) and the base-surface
-  // blend (gradient weight + accent alpha per mode). The ambient is what
-  // makes each destination feel different — Home teal-cyan, Audio coral,
-  // Premium gold — so its tokens must not drift silently either. Update
-  // the snapshot in the same commit as any intentional atmosphere change.
+  // blend (gradient weight + accent alpha per mode). Monochrome: moods
+  // differ by brightness, never hue — dark fields are white/light-gray
+  // light, light fields are gray shadows on paper. The ambient must not
+  // drift silently either. Update the snapshot in the same commit as any
+  // intentional atmosphere change.
   test('ambient atmosphere snapshot locks mood palettes and base blend', () {
     const moods = [
       BackgroundMood.ambient,
@@ -289,61 +287,61 @@ void main() {
         <BackgroundMood, Map<bool, ({Color a, Color b, double alpha})>>{
           BackgroundMood.ambient: {
             true: (
-              a: const Color(0xFF0F766E),
-              b: const Color(0xFF06B6D4),
+              a: const Color(0xFFFFFFFF),
+              b: const Color(0xFFE6E6E6),
               alpha: 0.20,
             ),
             false: (
-              a: const Color(0xFF0F766E),
-              b: const Color(0xFF06B6D4),
+              a: const Color(0xFF9E9E9E),
+              b: const Color(0xFFC9C9C9),
               alpha: 0.12,
             ),
           },
           BackgroundMood.study: {
             true: (
-              a: const Color(0xFF0F766E),
-              b: const Color(0xFF10B981),
+              a: const Color(0xFFFFFFFF),
+              b: const Color(0xFFBDBDBD),
               alpha: 0.20,
             ),
             false: (
-              a: const Color(0xFF0F766E),
-              b: const Color(0xFF10B981),
+              a: const Color(0xFF9E9E9E),
+              b: const Color(0xFFA6A6A6),
               alpha: 0.12,
             ),
           },
           BackgroundMood.ai: {
             true: (
-              a: const Color(0xFF22D3EE),
-              b: const Color(0xFF3B82F6),
+              a: const Color(0xFFFFFFFF),
+              b: const Color(0xFFCCCCCC),
               alpha: 0.22,
             ),
             false: (
-              a: const Color(0xFF22D3EE),
-              b: const Color(0xFF3B82F6),
+              a: const Color(0xFF9E9E9E),
+              b: const Color(0xFF7A7A7A),
               alpha: 0.14,
             ),
           },
           BackgroundMood.audio: {
             true: (
-              a: const Color(0xFFFB7185),
-              b: const Color(0xFFF59E0B),
+              a: const Color(0xFFE6E6E6),
+              b: const Color(0xFFA6A6A6),
               alpha: 0.24,
             ),
             false: (
-              a: const Color(0xFFFB7185),
-              b: const Color(0xFFF59E0B),
+              a: const Color(0xFFC9C9C9),
+              b: const Color(0xFF666666),
               alpha: 0.14,
             ),
           },
           BackgroundMood.premium: {
             true: (
-              a: const Color(0xFFF59E0B),
-              b: const Color(0xFFFB7185),
+              a: const Color(0xFFFFFFFF),
+              b: const Color(0xFFCCCCCC),
               alpha: 0.20,
             ),
             false: (
-              a: const Color(0xFFF59E0B),
-              b: const Color(0xFFFB7185),
+              a: const Color(0xFF9E9E9E),
+              b: const Color(0xFF7A7A7A),
               alpha: 0.12,
             ),
           },
