@@ -25,23 +25,27 @@ import 'helpers.dart';
 /// snapshot can't — layout drift, glass rendering, ambient composition,
 /// spacing, and shadows.
 ///
-/// Regenerate when a change is intentional:
-///   flutter test --update-goldens test/theme_golden_test.dart
+/// The baselines are CI-AUTHORITATIVE: the pinned Linux container is the
+/// only environment they are generated on. macOS's Skia build renders the
+/// same scene ~2-5% of pixels differently (font/gradient rasterization
+/// paths differ per OS even for embedded fonts), so local runs skip these
+/// tests — they would only ever report that platform noise. CI
+/// (`.github/workflows/ci.yml`) is their real judge: on every push it
+/// regenerates them on the pinned Linux platform and fails if the result
+/// drifts from what is committed.
 ///
-/// CI (`.github/workflows/ci.yml`) runs this on the pinned Linux platform
-/// with `--update-goldens` followed by a `git diff --exit-code` gate, so
-/// every push regenerates the baselines deterministically and fails if they
-/// drift from what is committed. Determinism comes from three pins:
+/// Regenerate when a visual change is intentional by pushing and taking
+/// the CI golden gate's `regenerated-goldens` artifact (or any Linux host
+/// with Flutter 3.44.9):
+///   flutter test --tags golden --update-goldens
+///
+/// Determinism on the Linux container comes from three pins:
 ///  * the exact Flutter SDK version in CI (engine rasterizer is version-
 ///    sensitive),
 ///  * `debugDefaultTargetPlatformOverride = TargetPlatform.android` so the
 ///    Material theme requests Roboto rather than a host-specific family,
 ///  * the bundled Roboto TTFs below (embedded fonts render with the
 ///    engine's own FreeType/Skia rasterizer, independent of the host OS).
-///
-/// Regenerate on Linux (or take the CI golden step's diff) when a visual
-/// change is intentional; macOS and Linux software-render identically for
-/// embedded fonts, so baselines transfer.
 /// Load the real Roboto weights (the Material default family the app uses —
 /// no custom font in pubspec) so goldens render true glyphs and metrics
 /// instead of flutter_test's blocky placeholder font. [FontLoader] has no
@@ -337,6 +341,12 @@ void main() {
     (name: 'onboarding', path: null, signedIn: true, onboardingNeeded: true),
   ];
 
+  // Baselines are generated on the pinned Linux CI container; other hosts
+  // render 2-5% of pixels differently and can never match them, so skip
+  // (reported as skipped, not failed) outside Linux. CI still enforces the
+  // goldens exactly via its regenerate+diff gate.
+  final goldensEnabled = Platform.isLinux;
+
   for (final dark in [true, false]) {
     final mode = dark ? 'dark' : 'light';
     for (final screen in screens) {
@@ -381,7 +391,7 @@ void main() {
           matchesGoldenFile('goldens/${screen.name}_$mode.png'),
         );
         debugDefaultTargetPlatformOverride = null;
-      });
+      }, skip: !goldensEnabled);
     }
   }
 }
