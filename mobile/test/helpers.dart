@@ -888,6 +888,8 @@ class _TestApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       routerConfig: router,
+      // Mirrors production (main.dart): no debug banner in captures.
+      debugShowCheckedModeBanner: false,
       theme: buildAppTheme(
         Brightness.light,
         tier: ref.watch(performanceTierProvider),
