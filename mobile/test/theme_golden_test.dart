@@ -85,6 +85,31 @@ void main() {
     var quizzes = FakeQuizzesRepository();
     var audio = FakeAudioRepository();
 
+    if (screen == 'progress_history') {
+      // Review history that matches progress_test's sample: weighted
+      // mastery = (75*4 + 0*2) / 6 = 50%, with Thermo the weakest deck.
+      flashcards = FakeFlashcardsRepository()
+        ..progressData = const FlashcardProgress(
+          totalReviews: 6,
+          uniqueCards: 3,
+          decks: [
+            DeckAccuracy(
+              deckId: 'deck_a',
+              title: 'VLSI Unit 3',
+              reviews: 4,
+              remembered: 3,
+              accuracy: 75,
+            ),
+            DeckAccuracy(
+              deckId: 'deck_b',
+              title: 'Thermo',
+              reviews: 2,
+              remembered: 0,
+              accuracy: 0,
+            ),
+          ],
+        );
+    }
     if (screen == 'study_space') {
       notebooks.notebooks.add(
         Notebook(
@@ -278,6 +303,18 @@ void main() {
     (
       name: 'profile',
       path: AppRoutes.profile,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'progress_empty',
+      path: AppRoutes.progress,
+      signedIn: true,
+      onboardingNeeded: false,
+    ),
+    (
+      name: 'progress_history',
+      path: AppRoutes.progress,
       signedIn: true,
       onboardingNeeded: false,
     ),
