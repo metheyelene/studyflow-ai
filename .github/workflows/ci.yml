@@ -71,22 +71,27 @@ jobs:
         working-directory: mobile
         run: flutter analyze
 
+      # Golden tests are excluded here — they are platform-sensitive
+      # (the software rasterizer differs macOS vs Linux), so the golden
+      # GATE below is their only judge. This keeps the main test run
+      # green on any host while the gate enforces the Linux baselines.
       - name: Test
         working-directory: mobile
-        run: flutter test
+        run: flutter test --exclude-tags golden
 
       # Golden-image gate: regenerate the baselines on the pinned Linux
       # container (ubuntu-24.04 + Flutter 3.44.9 — the OS/engine the
       # baselines belong to), then fail if the result differs from what is
-      # committed. `flutter test` above already diffs them read-only; this
-      # step both produces the fresh images and surfaces exactly which
-      # files drifted. When a change is intentional, commit the regenerated
-      # PNGs (or the diff from the CI log) with the change.
+      # committed. The gate BOTH produces the fresh images and surfaces
+      # exactly which files drifted; on drift it uploads them as the
+      # regenerated-goldens artifact so a maintainer can commit the Linux
+      # output without rerunning locally. When a change is intentional,
+      # commit the regenerated PNGs with the change.
       - name: Golden baselines (regenerate + diff)
         id: golden-gate
         working-directory: mobile
         run: |
-          flutter test test/theme_golden_test.dart --update-goldens
+          flutter test --tags golden --update-goldens
           git diff --stat -- test/goldens test/theme_golden_test.dart
           git diff --exit-code -- test/goldens test/theme_golden_test.dart
 
