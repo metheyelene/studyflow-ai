@@ -23,6 +23,7 @@ import { generateObject, generateText, streamText, type LanguageModel } from "ai
 import type { z } from "zod";
 
 import { getDb, schema } from "@/db";
+import { healthyProviderOrder, recordProviderFailure, recordProviderSuccess } from "./health";
 
 export type TaskTier = "simple" | "standard" | "complex";
 export type AIProviderName = "openai" | "anthropic";
@@ -46,6 +47,15 @@ export class AiProviderError extends Error {
     this.name = "AiProviderError";
   }
 }
+
+/**
+ * User-facing copy when no provider is configured. Never reveals which
+ * keys are missing — that detail stays in server logs (zero-config UX:
+ * users see "StudyFlow is temporarily unavailable", never
+ * "OPENAI_API_KEY" or a docs URL).
+ */
+export const AI_NOT_CONFIGURED_MESSAGE =
+  "AI is temporarily unavailable. Please try again shortly.";
 
 interface ProviderConfig {
   keyVar: string;
@@ -80,7 +90,9 @@ function providerOrder(): AIProviderName[] {
   const valid = raw.filter((n): n is AIProviderName => (PROVIDER_NAMES as string[]).includes(n));
   // Preserve configured order, then append any unlisted providers.
   const rest = PROVIDER_NAMES.filter((n) => !valid.includes(n));
-  return [...valid, ...rest];
+  // Adaptive routing: healthy providers first, degraded ones sunk to the
+  // end (still usable as last-resort fallbacks).
+  return healthyProviderOrder([...valid, ...rest]);
 }
 
 function envModelOverride(tier: TaskTier): string | null {
@@ -195,8 +207,10 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
       if (options.log) {
         await logRequest(options.log, options.feature, result, "success");
       }
+      recordProviderSuccess(name);
       return result;
     } catch (err) {
+      recordProviderFailure(name);
       errors.push(`${name}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
@@ -251,8 +265,10 @@ export async function generateJson<S extends z.ZodType>(
         latencyMs: Date.now() - startedAt,
       };
       if (options.log) await logRequest(options.log, options.feature, result, "success");
+      recordProviderSuccess(name);
       return result;
     } catch (err) {
+      recordProviderFailure(name);
       errors.push(`${name}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
