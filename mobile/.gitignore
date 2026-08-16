@@ -4,6 +4,9 @@
 *.pyc
 *.swp
 .DS_Store
+
+# golden test failure artifacts (diff/master/test images)
+test/failures/
 .atom/
 .build/
 .buildlog/
