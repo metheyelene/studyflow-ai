@@ -25,6 +25,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         status: s.status,
         wordCount: s.wordCount,
         pageCount: s.pageCount,
+        sizeBytes:
+          (s.meta as Record<string, unknown> | null | undefined)?.["sizeBytes"] as
+            | number
+            | undefined,
         createdAt: s.createdAt.toISOString(),
         updatedAt: s.updatedAt.toISOString(),
       })),

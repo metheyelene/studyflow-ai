@@ -1,7 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -12,6 +12,12 @@ import '../config/app_config.dart';
 /// stored in secure storage and re-attached as a cookie on boot).
 class ApiClient {
   ApiClient._(this._dio);
+
+  /// Test seam: build a client over an injected [Dio] (e.g. one with a
+  /// recording/mock adapter) so repositories can be unit-tested without
+  /// touching the network or platform channels.
+  @visibleForTesting
+  factory ApiClient.test(Dio dio) => ApiClient._(dio);
 
   final Dio _dio;
   final _secureStorage = const FlutterSecureStorage();
@@ -53,6 +59,20 @@ class ApiClient {
 
   Future<Response<T>> post<T>(String path, {Object? data}) =>
       _dio.post<T>(path, data: data);
+
+  /// POST with a multipart body — file uploads. Dio appends the boundary
+  /// when the content type is left as multipart/form-data.
+  Future<Response<T>> postMultipart<T>(
+    String path, {
+    required FormData data,
+    void Function(int, int?)? onSendProgress,
+  }) =>
+      _dio.post<T>(
+        path,
+        data: data,
+        options: Options(contentType: 'multipart/form-data'),
+        onSendProgress: onSendProgress,
+      );
 
   /// POST that treats the response body as raw text — used by the notebook
   /// chat endpoint, whose body is a streamed answer followed by a citation

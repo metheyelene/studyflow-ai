@@ -6,6 +6,7 @@ import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_controller.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
+import 'package:studyflow_mobile/features/notebooks/source_upload.dart';
 
 import 'helpers.dart';
 
@@ -182,5 +183,19 @@ class _FailingNotebooksRepository implements NotebooksRepository {
     required String text,
   }) {
     throw const NotebooksException('Could not add the source.');
+  }
+
+  @override
+  Future<List<NotebookSource>> uploadFiles(
+    String notebookId, {
+    required List<UploadFile> files,
+    void Function(int done, int total)? onProgress,
+  }) {
+    throw const NotebooksException('Could not upload the files.');
+  }
+
+  @override
+  Future<void> deleteSource(String notebookId, String sourceId) {
+    throw const NotebooksException('Could not remove the source.');
   }
 }

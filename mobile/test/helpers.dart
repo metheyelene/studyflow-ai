@@ -24,6 +24,7 @@ import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
 import 'package:studyflow_mobile/features/quizzes/quizzes_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
+import 'package:studyflow_mobile/features/notebooks/source_upload.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
 import 'package:studyflow_mobile/features/study/study_planner.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
@@ -187,6 +188,33 @@ class FakeNotebooksRepository implements NotebooksRepository {
     );
     sources.insert(0, s);
     return s;
+  }
+
+  @override
+  Future<List<NotebookSource>> uploadFiles(
+    String notebookId, {
+    required List<UploadFile> files,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final created = [
+      for (final f in files)
+        NotebookSource(
+          id: 'src-${++_sourceCounter}',
+          title: f.name,
+          kind: 'uploaded',
+          status: SourceStatus.processing,
+          sizeBytes: f.bytes.length,
+          createdAt: DateTime.now(),
+        ),
+    ];
+    sources.insertAll(0, created);
+    onProgress?.call(files.length, files.length);
+    return created;
+  }
+
+  @override
+  Future<void> deleteSource(String notebookId, String sourceId) async {
+    sources.removeWhere((s) => s.id == sourceId);
   }
 }
 

@@ -10,6 +10,7 @@ dependencies:
   cookie_jar: ^4.0.9
   dio: ^5.11.0
   dio_cookie_manager: ^3.5.0
+  file_picker: ^12.0.0
   dynamic_color: ^1.9.0
   flutter:
     sdk: flutter
@@ -30,8 +31,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   url_launcher_platform_interface: ^2.3.2
+  # Used by the file-import tests to build fake picked files (XFile for the
+  # PlatformFile contract). Already resolved transitively via file_picker.
+  cross_file: ^0.3.4
 
 flutter:
   uses-material-design: true

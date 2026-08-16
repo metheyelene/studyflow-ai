@@ -13,6 +13,7 @@ class NotebookSource {
     required this.status,
     this.wordCount,
     this.pageCount,
+    this.sizeBytes,
     required this.createdAt,
   });
 
@@ -22,6 +23,7 @@ class NotebookSource {
   final SourceStatus status;
   final int? wordCount;
   final int? pageCount;
+  final int? sizeBytes;
   final DateTime createdAt;
 
   factory NotebookSource.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class NotebookSource {
       },
       wordCount: (json['wordCount'] as num?)?.toInt(),
       pageCount: (json['pageCount'] as num?)?.toInt(),
+      sizeBytes: (json['sizeBytes'] as num?)?.toInt(),
       createdAt:
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),

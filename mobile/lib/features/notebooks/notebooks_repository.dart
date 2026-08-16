@@ -5,6 +5,7 @@ import '../../core/networking/api_client.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
+import 'source_upload.dart';
 
 class NotebooksException implements Exception {
   const NotebooksException(this.message);
@@ -34,6 +35,19 @@ abstract class NotebooksRepository {
     required String title,
     required String text,
   });
+
+  /// Upload files as sources; the backend extracts and indexes them before
+  /// returning. [onProgress] receives (filesDone, totalFiles) as each upload
+  /// completes — real network progress from the HTTP layer.
+  Future<List<NotebookSource>> uploadFiles(
+    String notebookId, {
+    required List<UploadFile> files,
+    void Function(int done, int total)? onProgress,
+  });
+
+  /// Deletes a source and its indexed content from the notebook. The
+  /// user's original device file (if any) is never touched.
+  Future<void> deleteSource(String notebookId, String sourceId);
 }
 
 /// Backend-backed implementation. The source of truth is the StudyFlow
@@ -95,6 +109,84 @@ class ApiNotebooksRepository implements NotebooksRepository {
       throw const NotebooksException(
         'Could not load sources. Check your connection and try again.',
       );
+    }
+  }
+
+  @override
+  Future<List<NotebookSource>> uploadFiles(
+    String notebookId, {
+    required List<UploadFile> files,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    if (files.isEmpty) return const [];
+    // The backend accepts one file per request at the sources route
+    // (multipart field `file`, single `{ source }` response), so each file
+    // uploads as its own request. That makes onProgress an honest per-file
+    // counter: it advances only when the server confirms a file.
+    final uploaded = <NotebookSource>[];
+    var done = 0;
+    for (final f in files) {
+      try {
+        final form = FormData.fromMap({
+          'file': MultipartFile.fromBytes(
+            f.bytes,
+            filename: f.name,
+            contentType: f.mimeType == null
+                ? null
+                : DioMediaType.parse(f.mimeType!),
+          ),
+        });
+        final res = await _client.postMultipart<dynamic>(
+          '/api/notebooks/$notebookId/sources',
+          data: form,
+        );
+        final data = res.data;
+        final source = data is Map ? data['source'] : null;
+        if (source is! Map) {
+          throw const NotebooksException(
+            'The file uploaded, but the server did not confirm it. Try again.',
+          );
+        }
+        uploaded.add(NotebookSource.fromJson(Map<String, dynamic>.from(source)));
+      } on DioException catch (e) {
+        final status = e.response?.statusCode;
+        final message = e.response?.data is Map
+            ? (e.response!.data as Map)['error']
+            : null;
+        throw NotebooksException(switch (status) {
+          400 || 422 =>
+            (message is String && message.isNotEmpty)
+                ? message
+                : '“${f.name}” could not be processed. Check the format and try again.',
+          403 =>
+            (message is String && message.isNotEmpty)
+                ? message
+                : "You've reached the source limit for your plan.",
+          401 => 'Your session expired. Please log in again.',
+          null =>
+            'Could not reach the server. Check your connection and try again.',
+          _ => 'Something went wrong. Please try again.',
+        });
+      }
+      done += 1;
+      onProgress?.call(done, files.length);
+    }
+    return uploaded;
+  }
+
+  @override
+  Future<void> deleteSource(String notebookId, String sourceId) async {
+    try {
+      await _client.delete<dynamic>(
+        '/api/notebooks/$notebookId/sources/$sourceId',
+      );
+    } on DioException catch (e) {
+      throw NotebooksException(switch (e.response?.statusCode) {
+        404 => 'This source is no longer available.',
+        401 => 'Your session expired. Please log in again.',
+        null => 'Could not reach the server. Check your connection and try again.',
+        _ => 'Could not remove that source. Please try again.',
+      });
     }
   }
 

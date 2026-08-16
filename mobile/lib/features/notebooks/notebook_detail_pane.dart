@@ -20,6 +20,7 @@ import '../flashcards/flashcards_controller.dart';
 import '../flashcards/flashcards_repository.dart';
 import '../quizzes/quizzes_controller.dart';
 import '../quizzes/quizzes_repository.dart';
+import 'add_source_sheet.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
@@ -85,6 +86,94 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
       // Keep the header source progress in sync with the server. The list
       // updating is the success feedback — no toast needed.
       ref.read(notebooksControllerProvider.notifier).refresh();
+    }
+  }
+
+  /// The Add Source sheet — upload files or paste text. Uploads go through
+  /// the real repository (native picker → validation → multipart upload →
+  /// backend extraction), and the sources list reloads with the returned,
+  /// server-confirmed sources.
+  Future<void> _openAddSourceSheet() async {
+    final repo = ref.read(notebooksRepositoryProvider);
+    final added = await showGlassSheet<bool>(
+      context: context,
+      builder: (sheetContext) => AddSourceSheet(
+        onUpload: (files, onProgress) => repo.uploadFiles(
+          widget.notebook.id,
+          files: files,
+          onProgress: onProgress,
+        ),
+        onPaste: _openPasteSheet,
+      ),
+    );
+    if (added == true && mounted) {
+      _reloadSources();
+      ref.read(notebooksControllerProvider.notifier).refresh();
+    }
+  }
+
+  /// Removes a source after an explicit confirmation. Explains that the
+  /// indexed content leaves the Study Space while the user's original
+  /// device file (if any) is never touched.
+  Future<void> _deleteSource(NotebookSource source) async {
+    final confirmed = await showGlassModal<bool>(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Remove this source?',
+            style: Theme.of(ctx).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '“${source.title}” and its indexed content will be removed from '
+            'this Study Space. Your original file on this device is never '
+            'touched.',
+            style: TextStyle(
+              color: ctx.glass.textMuted,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GlassButton(
+                label: 'Cancel',
+                variant: GlassButtonVariant.text,
+                onPressed: () => Navigator.of(ctx).pop(false),
+              ),
+              const SizedBox(width: 8),
+              GlassButton(
+                label: 'Remove',
+                variant: GlassButtonVariant.primary,
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref
+          .read(notebooksRepositoryProvider)
+          .deleteSource(widget.notebook.id, source.id);
+      if (!mounted) return;
+      _reloadSources();
+      ref.read(notebooksControllerProvider.notifier).refresh();
+    } catch (e) {
+      if (!mounted) return;
+      showGlassToast(
+        context,
+        e is NotebooksException
+            ? e.message
+            : 'Could not remove that source. Please try again.',
+        error: true,
+      );
     }
   }
 
@@ -211,6 +300,15 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
               sourcesFuture: _sourcesFuture,
               onReload: _reloadSources,
               onAskAi: _openAskAi,
+            ),
+          ),
+          SizedBox(height: context.isPhone ? 10 : 16),
+          // Study actions float on the canvas below the anchor — the
+          // glass-contrast rhythm (canvas → glossy anchor → floating
+          // controls) instead of one box stacking progress, CTA, and chips.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _FloatingAiActions(
               flashcardBusy: _flashcardBusy,
               onFlashcards: _flashcardBusy ? null : _generateFlashcards,
               quizBusy: _quizBusy,
@@ -235,6 +333,8 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
                 sourcesFuture: _sourcesFuture,
                 onReload: _reloadSources,
                 onPaste: _openPasteSheet,
+                onAddSource: _openAddSourceSheet,
+                onDeleteSource: _deleteSource,
               ),
               1 => _AskAiTab(notebookId: notebook.id),
               _ => _StudyToolsTab(
@@ -254,36 +354,27 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
   }
 }
 
-/// The workspace hero — a glossy surface carrying the real source progress
-/// (ready/total from the sources list), the primary Ask StudyFlow CTA, and
-/// the floating study actions. Mirrors the dashboard's editorial language:
-/// one big honest moment, then contextual controls.
+/// The workspace anchor — a glossy surface carrying the real source
+/// progress as one large moment (ready/total in the center of a big ring,
+/// with a caption naming the actual workspace state) and the primary Ask
+/// StudyFlow CTA as the anchor's action. The study actions are NOT boxed
+/// here — they float on the canvas below (see [NotebookDetailPane]), so
+/// the workspace reads as canvas → glossy anchor → floating controls.
 class _WorkspaceHero extends StatelessWidget {
   const _WorkspaceHero({
     required this.sourcesFuture,
     required this.onReload,
     required this.onAskAi,
-    required this.flashcardBusy,
-    required this.onFlashcards,
-    required this.quizBusy,
-    required this.onQuiz,
-    required this.podcastBusy,
-    required this.onPodcast,
   });
 
   final Future<List<NotebookSource>> sourcesFuture;
   final VoidCallback onReload;
   final VoidCallback onAskAi;
-  final bool flashcardBusy;
-  final VoidCallback? onFlashcards;
-  final bool quizBusy;
-  final VoidCallback? onQuiz;
-  final bool podcastBusy;
-  final VoidCallback? onPodcast;
 
   @override
   Widget build(BuildContext context) {
     final isPhone = context.isPhone;
+    final ringSize = isPhone ? 96.0 : 112.0;
     return GlassCard(
       tone: GlassTone.floating,
       glossy: true,
@@ -296,28 +387,19 @@ class _WorkspaceHero extends StatelessWidget {
             future: sourcesFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
-                return _SourceProgressSkeleton(ringSize: isPhone ? 64 : 84);
+                return _SourceProgressSkeleton(ringSize: ringSize);
               }
               if (snapshot.hasError) {
                 return _SourceProgressError(onRetry: onReload);
               }
               return _SourceProgress(
                 sources: snapshot.data ?? const [],
-                ringSize: isPhone ? 64 : 84,
+                ringSize: ringSize,
               );
             },
           ),
           SizedBox(height: isPhone ? 10 : 18),
           _AskStudyFlowCta(onTap: onAskAi, compact: isPhone),
-          SizedBox(height: isPhone ? 8 : 14),
-          _FloatingAiActions(
-            flashcardBusy: flashcardBusy,
-            onFlashcards: onFlashcards,
-            quizBusy: quizBusy,
-            onQuiz: onQuiz,
-            podcastBusy: podcastBusy,
-            onPodcast: onPodcast,
-          ),
         ],
       ),
     );
@@ -337,18 +419,16 @@ class _SourceProgress extends StatelessWidget {
     final g = context.glass;
     final total = sources.length;
     final ready = sources.where((s) => s.status == SourceStatus.ready).length;
-    final failed = sources
-        .where((s) => s.status == SourceStatus.failed)
-        .length;
+    final failed = sources.where((s) => s.status == SourceStatus.failed).length;
     final pending = total - ready - failed;
 
     final caption = total == 0
         ? 'Add your first source — paste text and StudyFlow indexes it.'
         : failed > 0
-            ? '$failed ${failed == 1 ? 'source' : 'sources'} failed — delete and paste again.'
-            : pending > 0
-                ? '$pending ${pending == 1 ? 'source' : 'sources'} indexing — ready for AI when done.'
-                : 'All sources grounded — answers cite your material.';
+        ? '$failed ${failed == 1 ? 'source' : 'sources'} failed — delete and paste again.'
+        : pending > 0
+        ? '$pending ${pending == 1 ? 'source' : 'sources'} indexing — ready for AI when done.'
+        : 'All sources grounded — answers cite your material.';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -357,11 +437,8 @@ class _SourceProgress extends StatelessWidget {
           tween: Tween(begin: 0, end: total == 0 ? 0 : ready / total),
           duration: AppMotion.medium,
           curve: AppMotion.emphasized,
-          builder: (context, value, _) => GlassRing(
-            value: value,
-            label: '$ready/$total',
-            size: ringSize,
-          ),
+          builder: (context, value, _) =>
+              GlassRing(value: value, label: '$ready/$total', size: ringSize),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -377,17 +454,11 @@ class _SourceProgress extends StatelessWidget {
                     ),
                   ),
                   if (total > 0 && ready == total)
-                    GlassBadge(
-                      label: 'Grounded',
-                      icon: Icons.auto_awesome,
-                    ),
+                    GlassBadge(label: 'Grounded', icon: Icons.auto_awesome),
                 ],
               ),
               const SizedBox(height: 2),
-              Text(
-                caption,
-                style: AppText.small.copyWith(color: g.textMuted),
-              ),
+              Text(caption, style: AppText.small.copyWith(color: g.textMuted)),
             ],
           ),
         ),
@@ -496,15 +567,10 @@ class _AskStudyFlowCtaState extends State<_AskStudyFlowCta> {
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      g.primary,
-                      Color.lerp(g.primary, g.ai, 0.35)!,
-                    ],
+                    colors: [g.primary, Color.lerp(g.primary, g.ai, 0.35)!],
                   ),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: g.highlight.withValues(alpha: 0.6),
-                  ),
+                  border: Border.all(color: g.highlight.withValues(alpha: 0.6)),
                   boxShadow: [
                     BoxShadow(
                       color: g.primary.withValues(alpha: 0.3),
@@ -516,11 +582,7 @@ class _AskStudyFlowCtaState extends State<_AskStudyFlowCta> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 18,
-                      color: g.textOnPrimary,
-                    ),
+                    Icon(Icons.auto_awesome, size: 18, color: g.textOnPrimary),
                     const SizedBox(width: 8),
                     Text(
                       'Ask StudyFlow',
@@ -766,7 +828,10 @@ class _TabScaffold extends StatelessWidget {
                         height: 1.4,
                       ),
                     ),
-                    if (actions.isNotEmpty) ...[const SizedBox(height: 12), ...actions],
+                    if (actions.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ...actions,
+                    ],
                   ],
                 ),
               ),
@@ -785,11 +850,15 @@ class _SourcesTab extends StatelessWidget {
     required this.sourcesFuture,
     required this.onReload,
     required this.onPaste,
+    required this.onAddSource,
+    required this.onDeleteSource,
   });
 
   final Future<List<NotebookSource>> sourcesFuture;
   final VoidCallback onReload;
   final VoidCallback onPaste;
+  final VoidCallback onAddSource;
+  final ValueChanged<NotebookSource> onDeleteSource;
 
   @override
   Widget build(BuildContext context) {
@@ -825,10 +894,30 @@ class _SourcesTab extends StatelessWidget {
                 'flashcards, and quizzes then come straight from your material, '
                 'with citations back to the source.',
             actions: [
-              GlassButton(
-                label: 'Paste text',
-                icon: Icons.content_paste,
-                onPressed: onPaste,
+              // Two compact actions side by side so the empty state stays
+              // one visual moment (stacked buttons push the second one
+              // below the fold on short viewports).
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Add source',
+                      icon: Icons.add,
+                      expand: true,
+                      onPressed: onAddSource,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Paste text',
+                      icon: Icons.content_paste,
+                      variant: GlassButtonVariant.glass,
+                      expand: true,
+                      onPressed: onPaste,
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -849,9 +938,9 @@ class _SourcesTab extends StatelessWidget {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: onPaste,
+                    onPressed: onAddSource,
                     icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Paste text'),
+                    label: const Text('Add source'),
                     style: TextButton.styleFrom(
                       foregroundColor: g.primary,
                       textStyle: const TextStyle(
@@ -859,6 +948,17 @@ class _SourcesTab extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  TextButton(
+                    onPressed: onPaste,
+                    style: TextButton.styleFrom(
+                      foregroundColor: g.textMuted,
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: const Text('Paste text'),
                   ),
                 ],
               ),
@@ -876,6 +976,7 @@ class _SourcesTab extends StatelessWidget {
                 itemBuilder: (context, i) => _SourceCard(
                   source: sources[i],
                   onAddAnother: i == sources.length - 1 ? onPaste : null,
+                  onDelete: () => onDeleteSource(sources[i]),
                 ),
               ),
             ),
@@ -921,10 +1022,11 @@ class _SourcesLoading extends StatelessWidget {
 /// processing status, size metadata, and — once Ready — a subtle "grounded
 /// for AI" sheen so sources read as knowledge objects, not file rows.
 class _SourceCard extends StatelessWidget {
-  const _SourceCard({required this.source, this.onAddAnother});
+  const _SourceCard({required this.source, this.onAddAnother, this.onDelete});
 
   final NotebookSource source;
   final VoidCallback? onAddAnother;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -961,9 +1063,7 @@ class _SourceCard extends StatelessWidget {
                     ),
                   ),
                   child: Icon(
-                    isPasted
-                        ? Icons.notes
-                        : Icons.picture_as_pdf_outlined,
+                    isPasted ? Icons.notes : Icons.picture_as_pdf_outlined,
                     size: 20,
                     color: statusColor,
                   ),
@@ -987,15 +1087,25 @@ class _SourceCard extends StatelessWidget {
                       Text(
                         source.sizeLabel,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: g.textMuted,
-                          fontSize: 12.5,
-                        ),
+                        style: TextStyle(color: g.textMuted, fontSize: 12.5),
                       ),
                     ],
                   ),
                 ),
                 GlassBadge(label: statusLabel, color: statusColor),
+                if (onDelete != null)
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    color: g.textMuted.withValues(alpha: 0.7),
+                    tooltip: 'Remove source',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 34,
+                      minHeight: 34,
+                    ),
+                  ),
               ],
             ),
             if (source.status == SourceStatus.ready) ...[
@@ -1011,10 +1121,7 @@ class _SourceCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Grounded for AI — answers cite this source',
-                      style: TextStyle(
-                        color: g.textMuted,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: g.textMuted, fontSize: 12),
                     ),
                   ),
                   if (onAddAnother != null)
