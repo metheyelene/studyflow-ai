@@ -99,8 +99,13 @@ jobs:
       # — publish them so a maintainer can download the artifact and commit
       # the regenerated PNGs without rerunning locally (the images are the
       # authoritative Linux-rendered output of the pinned container).
+      # Run whenever the job fails (in practice: the golden gate). If the
+      # gate regenerated baselines before the diff failed, publish them —
+      # the images are the authoritative Linux-rendered output of the
+      # pinned container. If an earlier step failed instead, no files
+      # changed and the upload warns and does nothing.
       - name: Upload regenerated goldens (on drift)
-        if: steps.golden-gate.outcome == 'failure'
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: regenerated-goldens
