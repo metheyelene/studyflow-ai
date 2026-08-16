@@ -36,11 +36,7 @@ class NowPlaying {
   /// True when the player reported completion — the mini-player collapses.
   final bool completed;
 
-  NowPlaying copyWith({
-    bool? playing,
-    double? progress,
-    bool? completed,
-  }) =>
+  NowPlaying copyWith({bool? playing, double? progress, bool? completed}) =>
       NowPlaying(
         episodeId: episodeId,
         title: title,
@@ -177,7 +173,6 @@ class NowPlayingController extends Notifier<NowPlaying?> {
   }
 }
 
-final nowPlayingProvider =
-    NotifierProvider<NowPlayingController, NowPlaying?>(
+final nowPlayingProvider = NotifierProvider<NowPlayingController, NowPlaying?>(
   NowPlayingController.new,
 );

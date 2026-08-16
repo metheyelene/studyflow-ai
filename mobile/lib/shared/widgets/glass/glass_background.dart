@@ -232,7 +232,8 @@ class StudyFlowBackground extends ConsumerWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.white.withValues(
-                              alpha: Theme.of(context).brightness ==
+                              alpha:
+                                  Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? 0.03
                                   : 0.06,

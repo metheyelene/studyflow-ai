@@ -8,7 +8,9 @@ import 'package:studyflow_mobile/shared/widgets/glass/glass_background.dart';
 /// WCAG relative luminance of an sRGB color (WCAG 2.x definition).
 double _luminance(Color c) {
   double f(double v) {
-    return v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4) as double;
+    return v <= 0.03928
+        ? v / 12.92
+        : math.pow((v + 0.055) / 1.055, 2.4) as double;
   }
 
   return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
@@ -26,18 +28,20 @@ double _contrast(Color fg, Color bg) {
 /// Composite a translucent color over an opaque background — the glass
 /// surfaces carry alpha, so the effective painted color is the blend.
 Color _composite(Color fg, Color bg) => Color.fromARGB(
-      255,
-      (fg.r * 255 * fg.a + bg.r * 255 * (1 - fg.a)).round(),
-      (fg.g * 255 * fg.a + bg.g * 255 * (1 - fg.a)).round(),
-      (fg.b * 255 * fg.a + bg.b * 255 * (1 - fg.a)).round(),
-    );
+  255,
+  (fg.r * 255 * fg.a + bg.r * 255 * (1 - fg.a)).round(),
+  (fg.g * 255 * fg.a + bg.g * 255 * (1 - fg.a)).round(),
+  (fg.b * 255 * fg.a + bg.b * 255 * (1 - fg.a)).round(),
+);
 
 const _aa = 4.5; // WCAG AA for normal text.
 
 void main() {
   for (final brightness in [Brightness.light, Brightness.dark]) {
     final label = brightness == Brightness.light ? 'light' : 'dark';
-    final g = brightness == Brightness.light ? GlassTheme.light : GlassTheme.dark;
+    final g = brightness == Brightness.light
+        ? GlassTheme.light
+        : GlassTheme.dark;
     final scheme = ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -59,15 +63,24 @@ void main() {
     group('$label theme contrast (WCAG AA ≥ 4.5:1)', () {
       for (final entry in surfaces.entries) {
         test('textPrimary readable on ${entry.key}', () {
-          expect(_contrast(g.textPrimary, entry.value), greaterThanOrEqualTo(_aa));
+          expect(
+            _contrast(g.textPrimary, entry.value),
+            greaterThanOrEqualTo(_aa),
+          );
         });
         test('textMuted readable on ${entry.key}', () {
-          expect(_contrast(g.textMuted, entry.value), greaterThanOrEqualTo(_aa));
+          expect(
+            _contrast(g.textMuted, entry.value),
+            greaterThanOrEqualTo(_aa),
+          );
         });
       }
 
       test('white-on-primary buttons', () {
-        expect(_contrast(g.textOnPrimary, g.primary), greaterThanOrEqualTo(_aa));
+        expect(
+          _contrast(g.textOnPrimary, g.primary),
+          greaterThanOrEqualTo(_aa),
+        );
       });
 
       test('brand primary as link text on surfaces', () {
@@ -132,12 +145,18 @@ void main() {
       });
 
       test('M3 scheme pairs', () {
-        expect(_contrast(scheme.onSurface, scheme.surface), greaterThanOrEqualTo(_aa));
+        expect(
+          _contrast(scheme.onSurface, scheme.surface),
+          greaterThanOrEqualTo(_aa),
+        );
         expect(
           _contrast(scheme.onSurfaceVariant, scheme.surface),
           greaterThanOrEqualTo(_aa),
         );
-        expect(_contrast(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(_aa));
+        expect(
+          _contrast(scheme.onPrimary, scheme.primary),
+          greaterThanOrEqualTo(_aa),
+        );
         expect(
           _contrast(scheme.onPrimaryContainer, scheme.primaryContainer),
           greaterThanOrEqualTo(_aa),
@@ -268,27 +287,67 @@ void main() {
     ];
     final expected =
         <BackgroundMood, Map<bool, ({Color a, Color b, double alpha})>>{
-      BackgroundMood.ambient: {
-        true: (a: const Color(0xFF0F766E), b: const Color(0xFF06B6D4), alpha: 0.20),
-        false: (a: const Color(0xFF0F766E), b: const Color(0xFF06B6D4), alpha: 0.12),
-      },
-      BackgroundMood.study: {
-        true: (a: const Color(0xFF0F766E), b: const Color(0xFF10B981), alpha: 0.20),
-        false: (a: const Color(0xFF0F766E), b: const Color(0xFF10B981), alpha: 0.12),
-      },
-      BackgroundMood.ai: {
-        true: (a: const Color(0xFF22D3EE), b: const Color(0xFF3B82F6), alpha: 0.22),
-        false: (a: const Color(0xFF22D3EE), b: const Color(0xFF3B82F6), alpha: 0.14),
-      },
-      BackgroundMood.audio: {
-        true: (a: const Color(0xFFFB7185), b: const Color(0xFFF59E0B), alpha: 0.24),
-        false: (a: const Color(0xFFFB7185), b: const Color(0xFFF59E0B), alpha: 0.14),
-      },
-      BackgroundMood.premium: {
-        true: (a: const Color(0xFFF59E0B), b: const Color(0xFFFB7185), alpha: 0.20),
-        false: (a: const Color(0xFFF59E0B), b: const Color(0xFFFB7185), alpha: 0.12),
-      },
-    };
+          BackgroundMood.ambient: {
+            true: (
+              a: const Color(0xFF0F766E),
+              b: const Color(0xFF06B6D4),
+              alpha: 0.20,
+            ),
+            false: (
+              a: const Color(0xFF0F766E),
+              b: const Color(0xFF06B6D4),
+              alpha: 0.12,
+            ),
+          },
+          BackgroundMood.study: {
+            true: (
+              a: const Color(0xFF0F766E),
+              b: const Color(0xFF10B981),
+              alpha: 0.20,
+            ),
+            false: (
+              a: const Color(0xFF0F766E),
+              b: const Color(0xFF10B981),
+              alpha: 0.12,
+            ),
+          },
+          BackgroundMood.ai: {
+            true: (
+              a: const Color(0xFF22D3EE),
+              b: const Color(0xFF3B82F6),
+              alpha: 0.22,
+            ),
+            false: (
+              a: const Color(0xFF22D3EE),
+              b: const Color(0xFF3B82F6),
+              alpha: 0.14,
+            ),
+          },
+          BackgroundMood.audio: {
+            true: (
+              a: const Color(0xFFFB7185),
+              b: const Color(0xFFF59E0B),
+              alpha: 0.24,
+            ),
+            false: (
+              a: const Color(0xFFFB7185),
+              b: const Color(0xFFF59E0B),
+              alpha: 0.14,
+            ),
+          },
+          BackgroundMood.premium: {
+            true: (
+              a: const Color(0xFFF59E0B),
+              b: const Color(0xFFFB7185),
+              alpha: 0.20,
+            ),
+            false: (
+              a: const Color(0xFFF59E0B),
+              b: const Color(0xFFFB7185),
+              alpha: 0.12,
+            ),
+          },
+        };
     for (final mood in moods) {
       for (final dark in [true, false]) {
         final mode = dark ? 'dark' : 'light';
@@ -302,6 +361,10 @@ void main() {
     expect(kAmbientBaseWeightDark, 0.10, reason: 'dark base gradient weight');
     expect(kAmbientBaseWeightLight, 0.04, reason: 'light base gradient weight');
     expect(kAmbientBaseAccentAlphaDark, 0.50, reason: 'dark base accent alpha');
-    expect(kAmbientBaseAccentAlphaLight, 0.30, reason: 'light base accent alpha');
+    expect(
+      kAmbientBaseAccentAlphaLight,
+      0.30,
+      reason: 'light base accent alpha',
+    );
   });
 }

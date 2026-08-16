@@ -165,11 +165,7 @@ class TodayPlanSection extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.track_changes,
-                          size: 14,
-                          color: g.warning,
-                        ),
+                        Icon(Icons.track_changes, size: 14, color: g.warning),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(

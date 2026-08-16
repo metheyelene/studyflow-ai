@@ -165,8 +165,7 @@ class _ScrubBar extends StatelessWidget {
   final ValueChanged<double> onScrub;
   final VoidCallback onScrubEnd;
 
-  double _fraction(double dx, double width) =>
-      (dx / width).clamp(0.0, 1.0);
+  double _fraction(double dx, double width) => (dx / width).clamp(0.0, 1.0);
 
   @override
   Widget build(BuildContext context) {

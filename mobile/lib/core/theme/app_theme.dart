@@ -411,9 +411,7 @@ ColorScheme _buildScheme(Brightness brightness, ColorScheme? dynamicScheme) {
         : const Color(0xFF7F1D1D),
     inversePrimary: isDark ? AppColors.teal : AppColors.tealLight,
     surfaceTint: isDark ? AppColors.tealLight : AppColors.teal,
-    surface: isDark
-        ? const Color(0xFF111314)
-        : const Color(0xFFF9FBFB),
+    surface: isDark ? const Color(0xFF111314) : const Color(0xFFF9FBFB),
     // Both modes get an explicit neutral container ramp so system
     // components (dialogs, chips, popups, input fills, progress tracks)
     // share the same environment as the custom surfaces: dark steps the
@@ -750,10 +748,7 @@ ThemeData buildAppTheme(
     ),
     extensions: [
       tier == PerformanceTier.low
-          ? glass.copyWith(
-              blurRadius: isDark ? 14 : 10,
-              reducedEffects: true,
-            )
+          ? glass.copyWith(blurRadius: isDark ? 14 : 10, reducedEffects: true)
           : glass,
     ],
   );

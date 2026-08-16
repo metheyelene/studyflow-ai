@@ -29,8 +29,7 @@ class FakeFilePickerPlatform extends FilePickerPlatform {
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
-  }) async =>
-      files;
+  }) async => files;
 }
 
 /// A picked file with in-memory bytes.

@@ -205,8 +205,10 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
               const Spacer(),
               // Face state — an eyebrow pill instead of a plain label.
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _flipped
                       ? g.primary.withValues(alpha: 0.14)
@@ -332,8 +334,7 @@ class _StudyCard extends StatefulWidget {
   State<_StudyCard> createState() => _StudyCardState();
 }
 
-class _StudyCardState extends State<_StudyCard>
-    with TickerProviderStateMixin {
+class _StudyCardState extends State<_StudyCard> with TickerProviderStateMixin {
   late final AnimationController _flip = AnimationController(
     vsync: this,
     duration: AppMotion.medium,
@@ -391,16 +392,11 @@ class _StudyCardState extends State<_StudyCard>
     if (!pastThreshold) {
       // Spring back — easeOutBack gives the physical overshoot.
       _dx = 0;
-      _drag.animateTo(
-        0,
-        duration: AppMotion.medium,
-        curve: AppMotion.pressOut,
-      );
+      _drag.animateTo(0, duration: AppMotion.medium, curve: AppMotion.pressOut);
       return;
     }
     final direction = (_dx > 0 || velocity > 0) ? 1 : -1;
-    final rating =
-        direction > 0 ? FlashcardRating.good : FlashcardRating.again;
+    final rating = direction > 0 ? FlashcardRating.good : FlashcardRating.again;
     HapticFeedback.selectionClick();
     _dx = 0;
     _drag

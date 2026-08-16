@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
@@ -80,9 +81,9 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
   Future<String?> foundingPriceLabel() async {
     if (!playBillingSupported) return null;
     try {
-      final details = await _store.queryProductDetails(
-        const {kFoundingProductId},
-      );
+      final details = await _store.queryProductDetails(const {
+        kFoundingProductId,
+      });
       for (final p in details.productDetails) {
         if (p.id == kFoundingProductId && p.price.isNotEmpty) return p.price;
       }
@@ -103,9 +104,9 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
     }
     try {
       final price = await foundingPriceLabel();
-      final details = await _store.queryProductDetails(
-        const {kFoundingProductId},
-      );
+      final details = await _store.queryProductDetails(const {
+        kFoundingProductId,
+      });
       final product = details.productDetails
           .where((p) => p.id == kFoundingProductId)
           .firstOrNull;
@@ -126,7 +127,10 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
 
       final token = purchase.verificationData.serverVerificationData;
       if (token.isEmpty) {
-        return const PurchaseResult(ok: false, message: 'Purchase token missing.');
+        return const PurchaseResult(
+          ok: false,
+          message: 'Purchase token missing.',
+        );
       }
       return await _verifyToken(token, price: price);
     } on PurchaseFlowException catch (e) {
@@ -171,11 +175,14 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
   /// place entitlement is granted — the response's plan is authoritative.
   Future<PurchaseResult> _verifyToken(String token, {String? price}) async {
     try {
-      final res = await _client.post<dynamic>('/api/billing/play/verify', data: {
-        'packageName': kPlayPackageName,
-        'productId': kFoundingProductId,
-        'purchaseToken': token,
-      });
+      final res = await _client.post<dynamic>(
+        '/api/billing/play/verify',
+        data: {
+          'packageName': kPlayPackageName,
+          'productId': kFoundingProductId,
+          'purchaseToken': token,
+        },
+      );
       final data = res.data is Map
           ? Map<String, dynamic>.from(res.data as Map)
           : const <String, dynamic>{};
@@ -183,17 +190,23 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
         return PurchaseResult(
           ok: true,
           plan: data['plan'] as String? ?? 'premium',
-          message: price != null ? 'Welcome to StudyFlow Premium — $price/mo.' : null,
+          message: price != null
+              ? 'Welcome to StudyFlow Premium — $price/mo.'
+              : null,
         );
       }
       final message = switch (res.statusCode) {
-        409 => 'The founding offer is full — you can subscribe to Premium instead.',
+        409 =>
+          'The founding offer is full — you can subscribe to Premium instead.',
         503 => 'Billing is being set up — please try again later.',
         _ => 'We could not verify this purchase. Please try again.',
       };
       return PurchaseResult(ok: false, message: message);
     } on BillingException {
-      return const PurchaseResult(ok: false, message: 'Please check your connection and try again.');
+      return const PurchaseResult(
+        ok: false,
+        message: 'Please check your connection and try again.',
+      );
     }
   }
 
@@ -249,16 +262,20 @@ class ApiPlayBillingRepository implements PlayBillingRepository {
         }
       }
     });
-    return _store.restorePurchases().then((_) async {
-      // Give the platform a moment to deliver restore events.
-      await Future<void>.delayed(const Duration(seconds: 1));
-      await sub.cancel();
-      completer.complete(collected);
-      return completer.future;
-    }).timeout(
-      const Duration(seconds: 20),
-      onTimeout: () => throw const PurchaseFlowException('Restore timed out.'),
-    );
+    return _store
+        .restorePurchases()
+        .then((_) async {
+          // Give the platform a moment to deliver restore events.
+          await Future<void>.delayed(const Duration(seconds: 1));
+          await sub.cancel();
+          completer.complete(collected);
+          return completer.future;
+        })
+        .timeout(
+          const Duration(seconds: 20),
+          onTimeout: () =>
+              throw const PurchaseFlowException('Restore timed out.'),
+        );
   }
 }
 

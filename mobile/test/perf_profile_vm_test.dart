@@ -88,8 +88,9 @@ void main() {
                 heading: 'Section ${i + 1}',
                 text:
                     'Threshold voltage is the gate voltage at which a channel '
-                    'forms. This repeats to give the transcript a realistic '
-                    'body length for scroll profiling.' * 4,
+                        'forms. This repeats to give the transcript a realistic '
+                        'body length for scroll profiling.' *
+                    4,
                 startSec: i * 60,
                 sources: ['VLSI Notes'],
               ),
@@ -119,10 +120,7 @@ void main() {
       }
     }
 
-    Future<void> segment(
-      String label,
-      Future<void> Function() action,
-    ) async {
+    Future<void> segment(String label, Future<void> Function() action) async {
       final beforeRss = memory.currentRssKb();
       final timings = <FrameTiming>[];
       final scheduler = SchedulerBinding.instance;
@@ -135,12 +133,17 @@ void main() {
       final afterRss = memory.currentRssKb();
 
       if (timings.isEmpty) {
-        results[label] = {'note': 'no frames captured', 'rssDeltaKB': afterRss - beforeRss};
+        results[label] = {
+          'note': 'no frames captured',
+          'rssDeltaKB': afterRss - beforeRss,
+        };
         debugPrint('PERF | $label | ${results[label]}');
         return;
       }
       final builds = timings.map((t) => t.buildDuration.inMicroseconds / 1000);
-      final rasters = timings.map((t) => t.rasterDuration.inMicroseconds / 1000);
+      final rasters = timings.map(
+        (t) => t.rasterDuration.inMicroseconds / 1000,
+      );
       final sortedBuilds = builds.toList()..sort();
       final sortedRasters = rasters.toList()..sort();
       double percentile(List<double> sorted, int p) =>
@@ -151,10 +154,12 @@ void main() {
       results[label] = {
         'frames': timings.length,
         'rssDeltaKB': afterRss - beforeRss,
-        'avgBuildMs': (builds.reduce((a, b) => a + b) / builds.length).toStringAsFixed(2),
+        'avgBuildMs': (builds.reduce((a, b) => a + b) / builds.length)
+            .toStringAsFixed(2),
         'p90BuildMs': percentile(sortedBuilds, 90).toStringAsFixed(2),
         'worstBuildMs': sortedBuilds.last.toStringAsFixed(2),
-        'avgRasterMs': (rasters.reduce((a, b) => a + b) / rasters.length).toStringAsFixed(2),
+        'avgRasterMs': (rasters.reduce((a, b) => a + b) / rasters.length)
+            .toStringAsFixed(2),
         'worstRasterMs': sortedRasters.last.toStringAsFixed(2),
         'overBudgetFrames': missed,
       };

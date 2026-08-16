@@ -137,7 +137,9 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
       }
       await player.play();
       if (!mounted) return;
-      ref.read(nowPlayingProvider.notifier).setEpisode(
+      ref
+          .read(nowPlayingProvider.notifier)
+          .setEpisode(
             episodeId: episode.id,
             title: episode.title,
             subtitle: episode.notebookTitle ?? 'Study podcast',

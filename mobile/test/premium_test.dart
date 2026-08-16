@@ -18,8 +18,9 @@ Future<FakePlayBillingRepository> pumpPremium(
 }
 
 void main() {
-  testWidgets('renders the founding offer with backend count and Play price',
-      (tester) async {
+  testWidgets('renders the founding offer with backend count and Play price', (
+    tester,
+  ) async {
     await pumpPremium(tester);
 
     expect(find.text('StudyFlow Premium'), findsOneWidget);
@@ -31,8 +32,9 @@ void main() {
     expect(find.text('Restore Purchases'), findsOneWidget);
   });
 
-  testWidgets('shows the regular premium card when the offer is full',
-      (tester) async {
+  testWidgets('shows the regular premium card when the offer is full', (
+    tester,
+  ) async {
     await pumpPremium(
       tester,
       premium: FakePlayBillingRepository(
@@ -50,8 +52,9 @@ void main() {
     expect(find.text('23 of 35 left'), findsNothing);
   });
 
-  testWidgets('a failed backend verification never unlocks premium',
-      (tester) async {
+  testWidgets('a failed backend verification never unlocks premium', (
+    tester,
+  ) async {
     final fake = FakePlayBillingRepository(
       purchaseResult: const PurchaseResult(
         ok: false,
@@ -81,8 +84,9 @@ void main() {
     expect(find.text('Active'), findsNothing);
   });
 
-  testWidgets('entitlement appears only after the backend grants it',
-      (tester) async {
+  testWidgets('entitlement appears only after the backend grants it', (
+    tester,
+  ) async {
     final fake = FakePlayBillingRepository(
       purchaseResult: const PurchaseResult(
         ok: true,
@@ -118,8 +122,9 @@ void main() {
     expect(find.text('Restored: Founding Member.'), findsOneWidget);
   });
 
-  testWidgets('profile plan card reflects the backend plan and opens premium',
-      (tester) async {
+  testWidgets('profile plan card reflects the backend plan and opens premium', (
+    tester,
+  ) async {
     final fake = FakePlayBillingRepository(plan: 'premium');
     await pumpApp(tester, premium: fake);
 

@@ -84,22 +84,23 @@ void main() {
   });
 
   testWidgets(
-      'deep-linked Back falls back to the home shell instead of throwing',
-      (tester) async {
-    // Deep link: boot the router directly onto /about/creator with no
-    // navigation history behind it. The Back button must not throw
-    // ("nothing to pop") — it should land on the home dashboard.
-    await pumpApp(
-      tester,
-      router: buildAppRouter(initialLocation: AppRoutes.aboutCreator),
-    );
+    'deep-linked Back falls back to the home shell instead of throwing',
+    (tester) async {
+      // Deep link: boot the router directly onto /about/creator with no
+      // navigation history behind it. The Back button must not throw
+      // ("nothing to pop") — it should land on the home dashboard.
+      await pumpApp(
+        tester,
+        router: buildAppRouter(initialLocation: AppRoutes.aboutCreator),
+      );
 
-    expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
+      expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
 
-    // Landed on the home shell (dashboard greeting), not a crash.
-    expect(find.textContaining('Ready to study'), findsOneWidget);
-  });
+      // Landed on the home shell (dashboard greeting), not a crash.
+      expect(find.textContaining('Ready to study'), findsOneWidget);
+    },
+  );
 }

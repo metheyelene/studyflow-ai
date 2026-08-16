@@ -87,8 +87,9 @@ class _StudyFlowAiOrbState extends State<StudyFlowAiOrb>
     _controller.forward(from: 0);
   }
 
-  static Duration _durationFor(bool active) =>
-      active ? const Duration(milliseconds: 1150) : const Duration(milliseconds: 2600);
+  static Duration _durationFor(bool active) => active
+      ? const Duration(milliseconds: 1150)
+      : const Duration(milliseconds: 2600);
 
   @override
   void dispose() {
@@ -109,16 +110,17 @@ class _StudyFlowAiOrbState extends State<StudyFlowAiOrb>
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final t = Curves.easeInOut
-                .transform(_motionDisabled ? 0.0 : _controller.value);
+            final t = Curves.easeInOut.transform(
+              _motionDisabled ? 0.0 : _controller.value,
+            );
             // One pulse per cycle: 0 → 1 → 0.
             final pulse = math.sin(t * math.pi);
             final coreScale = 1.0 + (active ? 0.10 : 0.03) * pulse;
-            final haloOpacity =
-                active ? 0.45 * (1 - pulse) + 0.10 : 0.0;
+            final haloOpacity = active ? 0.45 * (1 - pulse) + 0.10 : 0.0;
             final haloScale = 1.0 + 0.35 * pulse;
-            final glowOpacity =
-                active ? 0.70 + 0.30 * pulse : 0.45 + 0.15 * pulse;
+            final glowOpacity = active
+                ? 0.70 + 0.30 * pulse
+                : 0.45 + 0.15 * pulse;
 
             return SizedBox(
               key: kStudyFlowAiOrb,

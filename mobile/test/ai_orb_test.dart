@@ -75,9 +75,6 @@ void main() {
     await tester.pumpWidget(_wrap(active: true));
     await tester.pump();
 
-    expect(
-      find.bySemanticsLabel('StudyFlow AI is thinking'),
-      findsOneWidget,
-    );
+    expect(find.bySemanticsLabel('StudyFlow AI is thinking'), findsOneWidget);
   });
 }

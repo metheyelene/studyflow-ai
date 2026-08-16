@@ -42,8 +42,9 @@ void main() {
     UrlLauncherPlatform.instance = original;
   });
 
-  testWidgets('shows the Founder Dashboard card only to the founder email',
-      (tester) async {
+  testWidgets('shows the Founder Dashboard card only to the founder email', (
+    tester,
+  ) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),
@@ -54,8 +55,9 @@ void main() {
     expect(find.text('Users, subscriptions, revenue'), findsOneWidget);
   });
 
-  testWidgets('hides the Founder Dashboard card from other signed-in users',
-      (tester) async {
+  testWidgets('hides the Founder Dashboard card from other signed-in users', (
+    tester,
+  ) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),
@@ -64,8 +66,9 @@ void main() {
     expect(find.text('Founder Dashboard'), findsNothing);
   });
 
-  testWidgets('tapping the card opens the web /admin dashboard',
-      (tester) async {
+  testWidgets('tapping the card opens the web /admin dashboard', (
+    tester,
+  ) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),
@@ -75,7 +78,9 @@ void main() {
     await tester.tap(find.text('Founder Dashboard'));
     await tester.pump();
 
-    expect(launcher.launched, [Uri.parse('${AppConfig.webAppUrl}/admin').toString()]);
+    expect(launcher.launched, [
+      Uri.parse('${AppConfig.webAppUrl}/admin').toString(),
+    ]);
     // The founder identity constant matches the backend ADMIN_EMAILS gate.
     expect(AppInfo.founderEmail, 'mithilviswask@gmail.com');
   });

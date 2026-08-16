@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb, TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -73,11 +74,11 @@ class PremiumScreen extends ConsumerWidget {
                         GlassSkeleton(height: 240),
                       ],
                     ),
-                    error: (err, _) => _ErrorCard(onRetry: () {
-                      ref
-                          .read(premiumControllerProvider.notifier)
-                          .refresh();
-                    }),
+                    error: (err, _) => _ErrorCard(
+                      onRetry: () {
+                        ref.read(premiumControllerProvider.notifier).refresh();
+                      },
+                    ),
                     data: (snapshot) => Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -191,9 +192,9 @@ class _FoundingOfferCard extends StatelessWidget {
             children: [
               Text(
                 price,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: 6),
               Padding(
@@ -247,10 +248,7 @@ class _PremiumCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            heading,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(heading, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
           Text(
             snapshot.founding.available
@@ -305,7 +303,8 @@ class _PurchaseCard extends ConsumerWidget {
               content: Text(
                 result.ok
                     ? 'Welcome to StudyFlow Premium.'
-                    : (result.message ?? "StudyFlow couldn't complete that purchase."),
+                    : (result.message ??
+                          "StudyFlow couldn't complete that purchase."),
               ),
             ),
           );
@@ -325,13 +324,15 @@ class _PurchaseCard extends ConsumerWidget {
         }
       } on BillingException catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       } catch (_) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("StudyFlow couldn't complete that request.")),
+          const SnackBar(
+            content: Text("StudyFlow couldn't complete that request."),
+          ),
         );
       } finally {
         ref.read(_purchaseBusyProvider.notifier).set(false);
@@ -428,8 +429,9 @@ class _PurchaseCard extends ConsumerWidget {
 }
 
 /// Tracks an in-flight purchase so double-taps cannot double-submit.
-final _purchaseBusyProvider =
-    NotifierProvider<_PurchaseBusy, bool>(_PurchaseBusy.new);
+final _purchaseBusyProvider = NotifierProvider<_PurchaseBusy, bool>(
+  _PurchaseBusy.new,
+);
 
 class _PurchaseBusy extends Notifier<bool> {
   @override

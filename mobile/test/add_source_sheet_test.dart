@@ -17,7 +17,9 @@ Widget _wrap(Widget child) {
 }
 
 void main() {
-  testWidgets('Add Source sheet offers upload and paste options', (tester) async {
+  testWidgets('Add Source sheet offers upload and paste options', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         AddSourceSheet(
@@ -96,10 +98,7 @@ void main() {
     await tester.tap(find.text('Upload files'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('not supported'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('not supported'), findsOneWidget);
     // The CTA is disabled when nothing valid is selected.
     expect(find.text('Add sources'), findsOneWidget);
     await tester.tap(find.text('Add sources'));
@@ -125,33 +124,31 @@ void main() {
     var closedWith = false;
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildAppTheme(
-          Brightness.light,
-          tier: PerformanceTier.standard,
-        ),
+        theme: buildAppTheme(Brightness.light, tier: PerformanceTier.standard),
         home: Builder(
           builder: (context) => Center(
             child: TextButton(
               onPressed: () async {
-                closedWith = await showGlassSheet<bool>(
-                  context: context,
-                  builder: (_) => AddSourceSheet(
-                    onUpload: (files, onProgress) async {
-                      for (var i = 1; i <= files.length; i++) {
-                        onProgress(i, files.length);
-                      }
-                      progress.addAll([]);
-                      return results;
-                    },
-                    onPaste: () {},
-                    onPickFiles: () async => [
-                      UploadFile(
-                        name: 'Physics.pdf',
-                        bytes: Uint8List.fromList(List.filled(1024, 1)),
+                closedWith =
+                    await showGlassSheet<bool>(
+                      context: context,
+                      builder: (_) => AddSourceSheet(
+                        onUpload: (files, onProgress) async {
+                          for (var i = 1; i <= files.length; i++) {
+                            onProgress(i, files.length);
+                          }
+                          progress.addAll([]);
+                          return results;
+                        },
+                        onPaste: () {},
+                        onPickFiles: () async => [
+                          UploadFile(
+                            name: 'Physics.pdf',
+                            bytes: Uint8List.fromList(List.filled(1024, 1)),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ) ??
+                    ) ??
                     false;
               },
               child: const Text('open'),

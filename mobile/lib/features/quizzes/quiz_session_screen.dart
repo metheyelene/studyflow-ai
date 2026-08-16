@@ -329,7 +329,9 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
                       const SizedBox(height: 14),
                       GlassButton(
                         label: isLast ? 'See results' : 'Next question',
-                        icon: isLast ? Icons.flag_outlined : Icons.arrow_forward,
+                        icon: isLast
+                            ? Icons.flag_outlined
+                            : Icons.arrow_forward,
                         expand: true,
                         onPressed: isLast ? _submit : _next,
                       ),
@@ -459,9 +461,7 @@ class _OptionTile extends StatelessWidget {
                 if (answered)
                   AnimatedScale(
                     scale: reduceMotion ? 1 : 0.4,
-                    duration: reduceMotion
-                        ? Duration.zero
-                        : AppMotion.medium,
+                    duration: reduceMotion ? Duration.zero : AppMotion.medium,
                     curve: AppMotion.entrance,
                     child: Icon(
                       state == _OptionState.correct

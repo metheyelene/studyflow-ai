@@ -159,7 +159,9 @@ void main() {
       expect(gradientBoxes, hasLength(2));
     });
 
-    testWidgets('GlassButton drops its drop shadow on low tier', (tester) async {
+    testWidgets('GlassButton drops its drop shadow on low tier', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           GlassButton(

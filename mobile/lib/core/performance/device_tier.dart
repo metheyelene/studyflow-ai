@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'detect_stub.dart'
     if (dart.library.io) 'detect_io.dart'
-    if (dart.library.js_interop) 'detect_web.dart' as detect;
+    if (dart.library.js_interop) 'detect_web.dart'
+    as detect;
 
 /// Rendering-performance tier. The low tier targets budget devices:
 /// BackdropFilter blur radius is reduced (blur is fill-rate/GPU-bound —
@@ -69,8 +70,9 @@ class ReduceEffectsController extends Notifier<bool> {
   }
 }
 
-final reduceEffectsProvider =
-    NotifierProvider<ReduceEffectsController, bool>(ReduceEffectsController.new);
+final reduceEffectsProvider = NotifierProvider<ReduceEffectsController, bool>(
+  ReduceEffectsController.new,
+);
 
 /// The effective rendering tier: the manual switch wins; otherwise the
 /// device is auto-detected. Watch this wherever rendering cost matters.

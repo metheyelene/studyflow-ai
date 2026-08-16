@@ -85,11 +85,7 @@ class _GlassButtonState extends State<GlassButton> {
         const Color(0xCC111718),
         g.border,
       ),
-      GlassButtonVariant.elevated => (
-        g.textPrimary,
-        g.floating,
-        g.border,
-      ),
+      GlassButtonVariant.elevated => (g.textPrimary, g.floating, g.border),
       GlassButtonVariant.text => (
         g.primary,
         Colors.transparent,
@@ -122,9 +118,7 @@ class _GlassButtonState extends State<GlassButton> {
           duration: _pressed && !disabled
               ? AppMotion.pressInDuration
               : AppMotion.pressOutDuration,
-          curve: _pressed && !disabled
-              ? AppMotion.pressIn
-              : AppMotion.pressOut,
+          curve: _pressed && !disabled ? AppMotion.pressIn : AppMotion.pressOut,
           child: Material(
             color: Colors.transparent,
             child: Listener(
@@ -149,17 +143,17 @@ class _GlassButtonState extends State<GlassButton> {
                     boxShadow: shadowed && !disabled && !g.reducedEffects
                         ? [
                             BoxShadow(
-                              color: (widget.variant ==
-                                          GlassButtonVariant.elevated
-                                      ? Colors.black
-                                      : g.primary)
-                                  .withValues(
-                                    alpha:
-                                        widget.variant ==
+                              color:
+                                  (widget.variant == GlassButtonVariant.elevated
+                                          ? Colors.black
+                                          : g.primary)
+                                      .withValues(
+                                        alpha:
+                                            widget.variant ==
                                                 GlassButtonVariant.elevated
                                             ? 0.18
                                             : 0.25,
-                                  ),
+                                      ),
                               blurRadius: 16,
                               offset: const Offset(0, 7),
                             ),
@@ -180,20 +174,18 @@ class _GlassButtonState extends State<GlassButton> {
                                   alpha: glossy
                                       ? 0.28
                                       : widget.variant ==
-                                                GlassButtonVariant.primary
-                                            ? 0.18
-                                            : widget.variant ==
-                                                      GlassButtonVariant.dark
-                                                  ? 0.10
-                                                  : 0.08,
+                                            GlassButtonVariant.primary
+                                      ? 0.18
+                                      : widget.variant ==
+                                            GlassButtonVariant.dark
+                                      ? 0.10
+                                      : 0.08,
                                 ),
                                 Colors.transparent,
                                 Colors.white.withValues(alpha: 0.03),
                               ]
                             : const [Colors.transparent, Colors.transparent],
-                        stops: filled
-                            ? const [0, 0.45, 1]
-                            : const [0, 1],
+                        stops: filled ? const [0, 0.45, 1] : const [0, 1],
                       ),
                     ),
                     child: Container(

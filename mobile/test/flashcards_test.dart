@@ -266,10 +266,7 @@ void main() {
     await tester.tap(find.text('What is threshold voltage?'));
     await tester.pumpAndSettle();
     // Slow, short drag — below the 90px / 600 velocity thresholds.
-    await tester.drag(
-      find.byType(AnimatedBuilder).last,
-      const Offset(-40, 0),
-    );
+    await tester.drag(find.byType(AnimatedBuilder).last, const Offset(-40, 0));
     await tester.pumpAndSettle();
 
     // Still on card 1, no rating recorded.

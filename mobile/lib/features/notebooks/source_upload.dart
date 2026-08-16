@@ -6,11 +6,7 @@ import 'package:flutter/material.dart';
 /// set exactly — TXT/MD/PDF/DOCX — so the app never claims a format the
 /// API cannot process.
 class UploadFile {
-  const UploadFile({
-    required this.name,
-    required this.bytes,
-    this.mimeType,
-  });
+  const UploadFile({required this.name, required this.bytes, this.mimeType});
 
   final String name;
   final Uint8List bytes;
@@ -66,7 +62,9 @@ String formatBytes(int bytes) {
 /// A polished vector icon per file kind — never emoji. Unknown kinds fall
 /// back to a neutral document glyph.
 IconData fileIconFor(String name) {
-  final ext = name.contains('.') ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : '';
+  final ext = name.contains('.')
+      ? name.substring(name.lastIndexOf('.') + 1).toLowerCase()
+      : '';
   return switch (ext) {
     'pdf' => Icons.picture_as_pdf,
     'doc' || 'docx' => Icons.description,
@@ -80,7 +78,9 @@ IconData fileIconFor(String name) {
 
 /// The accent color used to tint the file glyph per kind.
 Color fileIconColorFor(String name, Color fallback) {
-  final ext = name.contains('.') ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : '';
+  final ext = name.contains('.')
+      ? name.substring(name.lastIndexOf('.') + 1).toLowerCase()
+      : '';
   return switch (ext) {
     'pdf' => const Color(0xFFE2504F),
     'doc' || 'docx' => const Color(0xFF2B7CD3),
