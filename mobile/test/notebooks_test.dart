@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
+import 'package:studyflow_mobile/features/notebooks/note_assist.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_controller.dart';
@@ -197,5 +198,14 @@ class _FailingNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> deleteSource(String notebookId, String sourceId) {
     throw const NotebooksException('Could not remove the source.');
+  }
+
+  @override
+  Future<String> assistText(
+    String notebookId, {
+    required NoteAssistMode mode,
+    required String text,
+  }) {
+    throw const NotebooksException('Could not run that AI action.');
   }
 }

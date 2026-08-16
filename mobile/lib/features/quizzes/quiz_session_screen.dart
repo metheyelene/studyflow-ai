@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/routing/app_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/responsive.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
+import '../../shared/widgets/glass/glass_progress.dart';
 import 'quiz_models.dart';
 import 'quizzes_repository.dart';
 
-/// A take-quiz session: answer each question with immediate feedback, then
-/// submit the completed attempt for server-side scoring and see a breakdown.
+/// A take-quiz session: a large question on the open canvas, glass answer
+/// surfaces with immediate feedback, animated progress, then a scored
+/// attempt and a per-question breakdown.
 class QuizSessionScreen extends ConsumerWidget {
   const QuizSessionScreen({super.key, required this.quizId});
 
@@ -81,6 +85,7 @@ class _SessionScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final g = context.glass;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -95,12 +100,23 @@ class _SessionScaffold extends StatelessWidget {
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Back',
                   ),
+                  const SizedBox(width: 4),
                   Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'QUIZ SESSION',
+                          style: AppText.eyebrow.copyWith(color: g.textMuted),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -139,12 +155,11 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
 
   void _select(int optionIndex) {
     if (_answered || _submitting) return;
+    HapticFeedback.selectionClick();
     setState(() => _answers[_index] = optionIndex);
   }
 
-  void _next() {
-    setState(() => _index++);
-  }
+  void _next() => setState(() => _index++);
 
   Future<void> _submit() async {
     setState(() {
@@ -193,44 +208,82 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
     final selected = _answers[_index];
     final answered = selected != null;
     final isLast = _index == _total - 1;
+    final correctSoFar = [
+      for (var i = 0; i < _index; i++)
+        if (_answers[i] == detail.questions[i].correctIndex) 1,
+    ].length;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
         Row(
           children: [
-            Text(
-              'Question ${_index + 1} of $_total',
-              style: TextStyle(
-                color: context.glass.textMuted,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+            Expanded(
+              child: Text(
+                'Question ${_index + 1} of $_total',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: context.glass.textPrimary,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '$correctSoFar correct so far',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: context.glass.primary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: (_index + (answered ? 1 : 0)) / _total,
-            minHeight: 5,
-            backgroundColor: context.glass.border,
-            valueColor: AlwaysStoppedAnimation(context.glass.primary),
+        const SizedBox(height: 10),
+        // Progress animates from the previous value on every advance.
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: (_index + (answered ? 1 : 0)) / _total),
+          duration: reduceMotion ? Duration.zero : AppMotion.medium,
+          curve: AppMotion.standard,
+          builder: (context, value, _) =>
+              GlassProgress(value: value, height: 6),
+        ),
+        SizedBox(height: context.isPhone ? 22 : 28),
+        // The question is the big visual moment, on the open canvas.
+        AnimatedSwitcher(
+          duration: reduceMotion ? Duration.zero : AppMotion.medium,
+          switchInCurve: AppMotion.entrance,
+          switchOutCurve: AppMotion.standard,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.06),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          ),
+          child: Text(
+            question.question,
+            key: ValueKey(_index),
+            style: TextStyle(
+              color: context.glass.textPrimary,
+              fontSize: context.isPhone ? 21 : 24,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
           ),
         ),
-        const SizedBox(height: 18),
-        Text(
-          question.question,
-          style: TextStyle(
-            color: context.glass.textPrimary,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         for (var i = 0; i < question.options.length; i++) ...[
           _OptionTile(
             index: i,
@@ -240,131 +293,188 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
                       ? _OptionState.correct
                       : i == selected
                       ? _OptionState.wrong
-                      : _OptionState.neutral)
+                      : _OptionState.dimmed)
                 : _OptionState.neutral,
+            reduceMotion: reduceMotion,
             onTap: () => _select(i),
           ),
-          if (i < question.options.length - 1) const SizedBox(height: 8),
+          if (i < question.options.length - 1) const SizedBox(height: 10),
         ],
-        if (answered) ...[
-          const SizedBox(height: 16),
-          _FeedbackCard(
-            correct: selected == question.correctIndex,
-            explanation: question.explanation,
-          ),
-          const SizedBox(height: 14),
-          GlassButton(
-            label: isLast ? 'See results' : 'Next question',
-            icon: isLast ? Icons.flag_outlined : Icons.arrow_forward,
-            expand: true,
-            onPressed: isLast ? _submit : _next,
-          ),
-          if (_submitting) ...[
-            const SizedBox(height: 10),
-            const Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+        // Immediate feedback: explanation + the way forward.
+        AnimatedSwitcher(
+          duration: reduceMotion ? Duration.zero : AppMotion.medium,
+          switchInCurve: AppMotion.entrance,
+          switchOutCurve: AppMotion.standard,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.05),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
-          ],
-          if (_submitError != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              _submitError!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.glass.danger, fontSize: 13),
-            ),
-          ],
-        ],
+          ),
+          child: answered
+              ? Padding(
+                  key: const ValueKey('feedback'),
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _FeedbackCard(
+                        correct: selected == question.correctIndex,
+                        explanation: question.explanation,
+                      ),
+                      const SizedBox(height: 14),
+                      GlassButton(
+                        label: isLast ? 'See results' : 'Next question',
+                        icon: isLast ? Icons.flag_outlined : Icons.arrow_forward,
+                        expand: true,
+                        onPressed: isLast ? _submit : _next,
+                      ),
+                      if (_submitting) ...[
+                        const SizedBox(height: 10),
+                        const Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ],
+                      if (_submitError != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          _submitError!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: context.glass.danger,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('no-feedback')),
+        ),
       ],
     );
   }
 }
 
-enum _OptionState { neutral, correct, wrong }
+enum _OptionState { neutral, correct, wrong, dimmed }
 
 class _OptionTile extends StatelessWidget {
   const _OptionTile({
     required this.index,
     required this.text,
     required this.state,
+    required this.reduceMotion,
     required this.onTap,
   });
 
   final int index;
   final String text;
   final _OptionState state;
+  final bool reduceMotion;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
     final letter = String.fromCharCode(65 + index); // A, B, C, D
+    final answered = state != _OptionState.neutral;
+
     final Color? borderColor = switch (state) {
       _OptionState.correct => g.success,
       _OptionState.wrong => g.danger,
-      _OptionState.neutral => null,
+      _ => null,
     };
     final Color? bg = switch (state) {
       _OptionState.correct => g.success.withValues(alpha: 0.12),
       _OptionState.wrong => g.danger.withValues(alpha: 0.10),
-      _OptionState.neutral => null,
+      _ => null,
     };
-    final Color labelColor = switch (state) {
+    final Color accent = switch (state) {
       _OptionState.correct => g.success,
       _OptionState.wrong => g.danger,
-      _OptionState.neutral => g.primary,
+      _ => g.primary,
     };
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: state == _OptionState.neutral ? onTap : null,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: bg ?? g.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor ?? g.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: labelColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Text(
-                  letter,
-                  style: TextStyle(
-                    color: labelColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+    return AnimatedOpacity(
+      duration: reduceMotion ? Duration.zero : AppMotion.fast,
+      opacity: state == _OptionState.dimmed ? 0.55 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: state == _OptionState.neutral ? onTap : null,
+          borderRadius: BorderRadius.circular(AppShapes.card),
+          child: AnimatedContainer(
+            duration: reduceMotion ? Duration.zero : AppMotion.medium,
+            curve: AppMotion.standard,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: bg ?? g.surface,
+              borderRadius: BorderRadius.circular(AppShapes.card),
+              border: Border.all(
+                color: borderColor ?? g.border,
+                width: state == _OptionState.correct ? 1.6 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: reduceMotion ? Duration.zero : AppMotion.medium,
+                  curve: AppMotion.standard,
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: g.textPrimary,
-                    fontSize: 14.5,
-                    height: 1.35,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: g.textPrimary,
+                      fontSize: 15,
+                      height: 1.35,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              if (state == _OptionState.correct)
-                Icon(Icons.check_circle, size: 20, color: g.success)
-              else if (state == _OptionState.wrong)
-                Icon(Icons.cancel, size: 20, color: g.danger),
-            ],
+                if (answered)
+                  AnimatedScale(
+                    scale: reduceMotion ? 1 : 0.4,
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : AppMotion.medium,
+                    curve: AppMotion.entrance,
+                    child: Icon(
+                      state == _OptionState.correct
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      size: 22,
+                      color: state == _OptionState.correct
+                          ? g.success
+                          : g.danger,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -479,7 +589,7 @@ class _Results extends StatelessWidget {
         GlassCard(
           radius: 28,
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(15),
             child: Column(
               children: [
                 Container(

@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:studyflow_mobile/core/networking/connectivity_controller.dart';
 import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
+import 'package:studyflow_mobile/core/tts/tts_service.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
 import 'package:studyflow_mobile/core/theme/theme_controller.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
@@ -18,6 +21,7 @@ import 'package:studyflow_mobile/features/authentication/auth_repository.dart';
 import 'package:studyflow_mobile/features/dashboard/dashboard_repository.dart';
 import 'package:studyflow_mobile/features/flashcards/flashcard_models.dart';
 import 'package:studyflow_mobile/features/flashcards/flashcards_repository.dart';
+import 'package:studyflow_mobile/features/notebooks/note_assist.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
 import 'package:studyflow_mobile/features/quizzes/quiz_models.dart';
@@ -26,7 +30,9 @@ import 'package:studyflow_mobile/features/notebooks/notebook_sources.dart';
 import 'package:studyflow_mobile/features/notebooks/notebooks_repository.dart';
 import 'package:studyflow_mobile/features/notebooks/source_upload.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_controller.dart';
+import 'package:studyflow_mobile/features/settings/ai_preferences.dart';
 import 'package:studyflow_mobile/features/study/study_planner.dart';
+import 'package:studyflow_mobile/shared/widgets/glass/global_offline_banner.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_models.dart';
 import 'package:studyflow_mobile/features/onboarding/onboarding_repository.dart';
 import 'package:studyflow_mobile/features/premium/play_billing_repository.dart';
@@ -215,6 +221,26 @@ class FakeNotebooksRepository implements NotebooksRepository {
   @override
   Future<void> deleteSource(String notebookId, String sourceId) async {
     sources.removeWhere((s) => s.id == sourceId);
+  }
+
+  int assistCalls = 0;
+  NoteAssistMode? lastAssistMode;
+  String? lastAssistText;
+
+  /// Tests can install a canned result or a failure.
+  Future<String> Function(NoteAssistMode mode, String text)? assistOverride;
+
+  @override
+  Future<String> assistText(
+    String notebookId, {
+    required NoteAssistMode mode,
+    required String text,
+  }) async {
+    assistCalls++;
+    lastAssistMode = mode;
+    lastAssistText = text;
+    if (assistOverride != null) return assistOverride!(mode, text);
+    return '${mode.name.toUpperCase()}: assisted “$text”';
   }
 }
 
@@ -660,14 +686,45 @@ class FakeDashboardRepository implements DashboardRepository {
 /// the test sets it to — exactly how the real repository behaves after
 /// the backend verification response — so tests can prove that a failed
 /// verification never changes the plan (no client-side unlock).
+/// In-memory AI preferences repository: returns [current] and records
+/// saves, so the Settings panel can be exercised without a backend.
+class FakeAiPreferencesRepository implements AiPreferencesRepository {
+  FakeAiPreferencesRepository({AiPreferences? current})
+    : current = current ?? const AiPreferences();
+
+  AiPreferences current;
+  final List<AiPreferences> saved = [];
+  bool failSave = false;
+  int loadCalls = 0;
+
+  @override
+  Future<AiPreferences> load() async {
+    loadCalls++;
+    return current;
+  }
+
+  @override
+  Future<void> save(AiPreferences preferences) async {
+    if (failSave) {
+      throw const AiPreferencesException('save failed');
+    }
+    saved.add(preferences);
+    current = preferences;
+  }
+}
+
 class FakePlayBillingRepository implements PlayBillingRepository {
   FakePlayBillingRepository({
     this.plan = 'free',
     FoundingStatus? founding,
     this.priceLabel = '\$2',
-    this.purchaseResult = const PurchaseResult(ok: true, plan: 'founding_member'),
+    this.purchaseResult = const PurchaseResult(
+      ok: true,
+      plan: 'founding_member',
+    ),
     this.restoredPlans = const [],
-  }) : founding = founding ??
+  }) : founding =
+           founding ??
            const FoundingStatus(
              offerActive: true,
              claimed: 12,
@@ -720,7 +777,8 @@ class FakePlayBillingRepository implements PlayBillingRepository {
   }
 
   @override
-  Future<String> webCheckoutUrl() async => 'https://checkout.example.com/session';
+  Future<String> webCheckoutUrl() async =>
+      'https://checkout.example.com/session';
 }
 
 /// Pump the app router with fake repositories. When [signedIn] is true
@@ -739,6 +797,13 @@ Future<FakeAuthRepository> pumpApp(
   FakePodcastPlayer? podcastPlayer,
   FakeStudyPlannerRepository? planner,
   FakePlayBillingRepository? premium,
+  AiPreferencesRepository? aiPreferences,
+
+  /// Connectivity events for the offline banner. Pass a controller and
+  /// drive it with [StreamController.add] to toggle offline/online;
+  /// default is a silent stream (always online).
+  StreamController<List<ConnectivityResult>>? connectivity,
+  TtsService? tts,
   OnboardingStatus? onboardingStatus,
   bool signedIn = true,
   Size size = const Size(390, 844),
@@ -796,6 +861,13 @@ Future<FakeAuthRepository> pumpApp(
         playBillingRepositoryProvider.overrideWithValue(
           premium ?? FakePlayBillingRepository(),
         ),
+        aiPreferencesRepositoryProvider.overrideWithValue(
+          aiPreferences ?? FakeAiPreferencesRepository(),
+        ),
+        connectivityEventsProvider.overrideWith(
+          (ref) => connectivity?.stream ?? Stream.empty(),
+        ),
+        if (tts != null) ttsServiceProvider.overrideWithValue(tts),
         if (tier != null) performanceTierProvider.overrideWithValue(tier),
       ],
       child: _TestApp(router: router ?? buildAppRouter()),
@@ -825,6 +897,9 @@ class _TestApp extends ConsumerWidget {
         tier: ref.watch(performanceTierProvider),
       ),
       themeMode: ref.watch(themeModeProvider),
+      // Mirrors production: the offline strip sits above the Navigator.
+      builder: (context, child) =>
+          AppChrome(child: child ?? const SizedBox.shrink()),
     );
   }
 }

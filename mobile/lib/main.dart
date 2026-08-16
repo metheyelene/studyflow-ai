@@ -11,6 +11,7 @@ import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'features/authentication/auth_controller.dart';
+import 'shared/widgets/glass/global_offline_banner.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +76,11 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
           ),
           themeMode: themeMode,
           routerConfig: appRouter,
+          // The app frame around the Navigator: shows the quiet offline
+          // strip on every screen (shell tabs AND pushed routes) whenever
+          // the network drops.
+          builder: (context, child) =>
+              AppChrome(child: child ?? const SizedBox.shrink()),
         );
       },
     );

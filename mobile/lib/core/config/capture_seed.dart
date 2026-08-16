@@ -13,10 +13,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'capture_storage.dart';
 import '../../features/authentication/auth_models.dart';
 import '../../features/authentication/auth_repository.dart';
+import '../../features/notebooks/note_assist.dart';
 import '../../features/notebooks/notebook.dart';
 import '../../features/notebooks/notebook_chat.dart';
 import '../../features/notebooks/notebook_sources.dart';
 import '../../features/notebooks/notebooks_repository.dart';
+import '../../features/notebooks/source_upload.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_repository.dart';
 
@@ -152,6 +154,43 @@ class CaptureNotebooksRepository implements NotebooksRepository {
       wordCount: text.split(' ').length,
       createdAt: DateTime.now(),
     );
+  }
+
+  @override
+  Future<List<NotebookSource>> uploadFiles(
+    String notebookId, {
+    required List<UploadFile> files,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    onProgress?.call(files.length, files.length);
+    return [
+      for (var i = 0; i < files.length; i++)
+        NotebookSource(
+          id: 'src-up-$i',
+          title: files[i].name,
+          kind: 'uploaded',
+          status: SourceStatus.processing,
+          sizeBytes: files[i].bytes.length,
+          createdAt: DateTime.now(),
+        ),
+    ];
+  }
+
+  @override
+  Future<void> deleteSource(String notebookId, String sourceId) async {
+    // The capture seed is a canned preview — sources are not stored
+    // locally, so there is nothing to remove.
+  }
+
+  @override
+  Future<String> assistText(
+    String notebookId, {
+    required NoteAssistMode mode,
+    required String text,
+  }) async {
+    // Capture builds have no backend, so the toolbar returns a labeled
+    // sample so the flow stays demoable.
+    return '${mode.label}: sample response for “$text” (capture build).';
   }
 
   @override

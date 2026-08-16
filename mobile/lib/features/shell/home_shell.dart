@@ -102,21 +102,25 @@ class HomeShell extends ConsumerWidget {
                 child: child,
               ),
             ),
-            if (nowPlaying != null)
-              if (context.isPhone)
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 84,
-                  child: _miniPlayer(ref, nowPlaying, context),
-                )
-              else
-                Positioned(
-                  left: 96,
-                  right: 16,
-                  bottom: 16,
-                  child: _miniPlayer(ref, nowPlaying, context),
-                ),
+            // Mini-player slot: always present so the switcher can animate
+            // it out. Appears with a gentle rise+fade; dismissing (or the
+            // auto-dismissed completed pill) slides down and fades out.
+            // Phones keep the full-width strip above the nav bar; tablets
+            // and desktop get a bottom-right floating card with an
+            // artwork-driven ambient glow behind it.
+            if (context.isPhone)
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 84,
+                child: _miniSwitcher(ref, nowPlaying, context),
+              )
+            else
+              Positioned(
+                right: 24,
+                bottom: 24,
+                child: _desktopMiniPlayer(ref, nowPlaying, context),
+              ),
             if (context.isPhone)
               Positioned(
                 left: 0,
@@ -162,7 +166,92 @@ class HomeShell extends ConsumerWidget {
     }
   }
 
-  Widget _miniPlayer(WidgetRef ref, NowPlaying nowPlaying, BuildContext context) {
+  /// The mini-player slot (or its empty state). Accepts null so the
+  /// switcher can animate the pill out when playback ends.
+  Widget _miniSwitcher(
+    WidgetRef ref,
+    NowPlaying? nowPlaying,
+    BuildContext context,
+  ) {
+    return AnimatedSwitcher(
+      duration: AppMotion.medium,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: nowPlaying == null
+          ? const SizedBox.shrink(key: ValueKey('mini-none'))
+          : KeyedSubtree(
+              key: ValueKey(
+                'mini-${nowPlaying.episodeId}-'
+                '${nowPlaying.completed}',
+              ),
+              child: _miniPlayer(ref, nowPlaying, context),
+            ),
+    );
+  }
+
+  /// Tablet/desktop: a compact bottom-right card with a soft ambient glow
+  /// tinted by the artwork's coral accent behind it (decorative — dropped
+  /// when reduced effects are on).
+  Widget _desktopMiniPlayer(
+    WidgetRef ref,
+    NowPlaying? nowPlaying,
+    BuildContext context,
+  ) {
+    final g = context.glass;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (nowPlaying != null && !g.reducedEffects)
+          // The bloom is centered on the card (card ≈ 360×82; bloom 460)
+          // and extends up-left into the content area, softly — the corner
+          // itself stays clean.
+          Positioned(
+            right: -50,
+            top: -190,
+            child: IgnorePointer(
+              child: Container(
+                key: const Key('mini-player-glow'),
+                width: 460,
+                height: 460,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      g.audio.withValues(
+                        alpha: Theme.of(context).brightness == Brightness.dark
+                            ? 0.16
+                            : 0.10,
+                      ),
+                      g.audio.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: _miniSwitcher(ref, nowPlaying, context),
+        ),
+      ],
+    );
+  }
+
+  Widget _miniPlayer(
+    WidgetRef ref,
+    NowPlaying nowPlaying,
+    BuildContext context,
+  ) {
     return GlassMiniPlayer(
       title: nowPlaying.title,
       subtitle: nowPlaying.subtitle,
@@ -172,9 +261,9 @@ class HomeShell extends ConsumerWidget {
       heroTag: 'podcast-artwork-${nowPlaying.episodeId}',
       onPlayPause: () => _togglePlay(ref, nowPlaying),
       onReplay: () => ref.read(nowPlayingProvider.notifier).replay(),
-      onOpen: () => context.push(
-        '${AppRoutes.audio}/${nowPlaying.episodeId}',
-      ),
+      onScrub: (fraction) =>
+          ref.read(nowPlayingProvider.notifier).seekToFraction(fraction),
+      onOpen: () => context.push('${AppRoutes.audio}/${nowPlaying.episodeId}'),
     );
   }
 }

@@ -7,6 +7,7 @@ class GlassInput extends StatelessWidget {
   const GlassInput({
     super.key,
     this.controller,
+    this.focusNode,
     this.hintText,
     this.label,
     this.obscureText = false,
@@ -22,6 +23,7 @@ class GlassInput extends StatelessWidget {
   });
 
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final String? hintText;
   final String? label;
   final bool obscureText;
@@ -52,6 +54,7 @@ class GlassInput extends StatelessWidget {
         ],
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
           keyboardType: keyboardType,
           textInputAction: textInputAction,

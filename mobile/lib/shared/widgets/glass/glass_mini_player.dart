@@ -11,7 +11,7 @@ import 'glass_card.dart';
 ///  * playing/paused — artwork, title, subtitle, play/pause and a thin
 ///    glass progress bar fed by real playback position;
 ///  * completed — auto-collapsed to a compact pill with a replay action.
-class GlassMiniPlayer extends StatelessWidget {
+class GlassMiniPlayer extends StatefulWidget {
   const GlassMiniPlayer({
     super.key,
     required this.title,
@@ -22,6 +22,7 @@ class GlassMiniPlayer extends StatelessWidget {
     required this.onPlayPause,
     required this.onReplay,
     required this.onOpen,
+    required this.onScrub,
     required this.heroTag,
   });
 
@@ -41,9 +42,31 @@ class GlassMiniPlayer extends StatelessWidget {
   final VoidCallback onReplay;
   final VoidCallback onOpen;
 
+  /// Live playhead scrub: called with the finger's fraction while
+  /// dragging (and on tap) so the caller can seek the player.
+  final ValueChanged<double> onScrub;
+
+  @override
+  State<GlassMiniPlayer> createState() => _GlassMiniPlayerState();
+}
+
+class _GlassMiniPlayerState extends State<GlassMiniPlayer> {
+  /// Finger-driven preview fraction while scrubbing; null when idle so the
+  /// real playback progress drives the bar.
+  double? _dragFraction;
+
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    final completed = widget.completed;
+    final title = widget.title;
+    final subtitle = widget.subtitle;
+    final playing = widget.playing;
+    final progress = (_dragFraction ?? widget.progress).clamp(0.0, 1.0);
+    final heroTag = widget.heroTag;
+    final onPlayPause = widget.onPlayPause;
+    final onReplay = widget.onReplay;
+    final onOpen = widget.onOpen;
     if (completed) {
       return _CollapsedPill(
         heroTag: heroTag,
@@ -112,31 +135,82 @@ class GlassMiniPlayer extends StatelessWidget {
                 ),
               ],
             ),
-            // Thin glass progress bar: real position, not a clock.
-            Padding(
-              padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: SizedBox(
-                  height: 3,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ColoredBox(color: g.border),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: progress.clamp(0.0, 1.0),
-                          child: ColoredBox(color: g.primary),
+            // Draggable playhead on the real-position bar: scrubbing
+            // previews under the finger and seeks the player live.
+            _ScrubBar(
+              progress: progress,
+              onScrub: (fraction) {
+                setState(() => _dragFraction = fraction);
+                widget.onScrub(fraction);
+              },
+              onScrubEnd: () => setState(() => _dragFraction = null),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Draggable glass playhead. The visible track is thin but the hit area is
+/// comfortably tall; a tap seeks, a horizontal drag scrubs live.
+class _ScrubBar extends StatelessWidget {
+  const _ScrubBar({
+    required this.progress,
+    required this.onScrub,
+    required this.onScrubEnd,
+  });
+
+  final double progress;
+  final ValueChanged<double> onScrub;
+  final VoidCallback onScrubEnd;
+
+  double _fraction(double dx, double width) =>
+      (dx / width).clamp(0.0, 1.0);
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          return GestureDetector(
+            key: const Key('mini-player-scrub'),
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (d) => onScrub(_fraction(d.localPosition.dx, width)),
+            onHorizontalDragStart: (d) =>
+                onScrub(_fraction(d.localPosition.dx, width)),
+            onHorizontalDragUpdate: (d) =>
+                onScrub(_fraction(d.localPosition.dx, width)),
+            onHorizontalDragEnd: (_) => onScrubEnd(),
+            child: SizedBox(
+              height: 20,
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: SizedBox(
+                    height: 3,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ColoredBox(color: g.border),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            widthFactor: progress,
+                            child: ColoredBox(color: g.primary),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

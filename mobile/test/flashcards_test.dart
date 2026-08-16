@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -192,6 +193,124 @@ void main() {
     expect(flashcards.reviews, hasLength(2));
     expect(flashcards.reviews[0].$3, 4); // Good
     expect(flashcards.reviews[1].$3, 5); // Easy
+  });
+
+  testWidgets('swipe left commits Again and advances to the next card', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository(
+      decks: [deck(1, cards: 2)],
+      cards: sampleCards(),
+    );
+    await pumpApp(tester, flashcards: flashcards);
+    await openFlashcards(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 flashcards'));
+    await tester.pumpAndSettle();
+
+    // Flip the card, then swipe it left — a fast drag with velocity.
+    await tester.tap(find.text('What is threshold voltage?'));
+    await tester.pumpAndSettle();
+    await tester.fling(
+      find.byType(AnimatedBuilder).last,
+      const Offset(-260, 0),
+      1200,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Card 2 of 2'), findsOneWidget);
+    expect(flashcards.reviews, hasLength(1));
+    expect(flashcards.reviews[0].$3, 1); // Again
+  });
+
+  testWidgets('swipe right commits Good and springs back otherwise', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository(
+      decks: [deck(1, cards: 2)],
+      cards: sampleCards(),
+    );
+    await pumpApp(tester, flashcards: flashcards);
+    await openFlashcards(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 flashcards'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('What is threshold voltage?'));
+    await tester.pumpAndSettle();
+    await tester.fling(
+      find.byType(AnimatedBuilder).last,
+      const Offset(260, 0),
+      1200,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Card 2 of 2'), findsOneWidget);
+    expect(flashcards.reviews, hasLength(1));
+    expect(flashcards.reviews[0].$3, 4); // Good
+  });
+
+  testWidgets('a short swipe that misses the threshold springs back', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository(
+      decks: [deck(1, cards: 2)],
+      cards: sampleCards(),
+    );
+    await pumpApp(tester, flashcards: flashcards);
+    await openFlashcards(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 flashcards'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('What is threshold voltage?'));
+    await tester.pumpAndSettle();
+    // Slow, short drag — below the 90px / 600 velocity thresholds.
+    await tester.drag(
+      find.byType(AnimatedBuilder).last,
+      const Offset(-40, 0),
+    );
+    await tester.pumpAndSettle();
+
+    // Still on card 1, no rating recorded.
+    expect(find.text('Card 1 of 2'), findsOneWidget);
+    expect(flashcards.reviews, isEmpty);
+  });
+
+  testWidgets('reduced motion flips instantly without rating a swipe', (
+    tester,
+  ) async {
+    final flashcards = FakeFlashcardsRepository(
+      decks: [deck(1, cards: 2)],
+      cards: sampleCards(),
+    );
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pumpApp(tester, flashcards: flashcards);
+    await openFlashcards(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 flashcards'));
+    await tester.pumpAndSettle();
+
+    // Tap flips without an animation; the answer is immediately visible.
+    await tester.tap(find.text('What is threshold voltage?'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('The gate voltage where the channel conducts.'),
+      findsOneWidget,
+    );
+    expect(find.text('How well did you know it?'), findsOneWidget);
+
+    // A swipe under reduced motion does not commit a rating.
+    await tester.fling(
+      find.byType(AnimatedBuilder).last,
+      const Offset(-260, 0),
+      1200,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Card 1 of 2'), findsOneWidget);
+    expect(flashcards.reviews, isEmpty);
   });
 
   testWidgets('session shows an honest error when the deck is missing', (

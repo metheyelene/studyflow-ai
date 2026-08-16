@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/networking/api_client.dart';
+import 'note_assist.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
@@ -48,6 +49,15 @@ abstract class NotebooksRepository {
   /// Deletes a source and its indexed content from the notebook. The
   /// user's original device file (if any) is never touched.
   Future<void> deleteSource(String notebookId, String sourceId);
+
+  /// Asks the AI to transform the selected [text] (explain, summarize,
+  /// simplify, or quiz) and returns the transformed text. One AI action
+  /// is consumed server-side.
+  Future<String> assistText(
+    String notebookId, {
+    required NoteAssistMode mode,
+    required String text,
+  });
 }
 
 /// Backend-backed implementation. The source of truth is the StudyFlow
@@ -147,7 +157,9 @@ class ApiNotebooksRepository implements NotebooksRepository {
             'The file uploaded, but the server did not confirm it. Try again.',
           );
         }
-        uploaded.add(NotebookSource.fromJson(Map<String, dynamic>.from(source)));
+        uploaded.add(
+          NotebookSource.fromJson(Map<String, dynamic>.from(source)),
+        );
       } on DioException catch (e) {
         final status = e.response?.statusCode;
         final message = e.response?.data is Map
@@ -184,8 +196,49 @@ class ApiNotebooksRepository implements NotebooksRepository {
       throw NotebooksException(switch (e.response?.statusCode) {
         404 => 'This source is no longer available.',
         401 => 'Your session expired. Please log in again.',
-        null => 'Could not reach the server. Check your connection and try again.',
+        null =>
+          'Could not reach the server. Check your connection and try again.',
         _ => 'Could not remove that source. Please try again.',
+      });
+    }
+  }
+
+  @override
+  Future<String> assistText(
+    String notebookId, {
+    required NoteAssistMode mode,
+    required String text,
+  }) async {
+    try {
+      final res = await _client.post<Map<String, dynamic>>(
+        '/api/notebooks/$notebookId/assist',
+        data: {'mode': mode.name, 'text': text},
+      );
+      final data = res.data;
+      if (data == null || data['text'] is! String) {
+        throw const NotebooksException(
+          'The AI returned an empty result. Please try again.',
+        );
+      }
+      return (data['text'] as String).trim();
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map
+          ? (e.response!.data as Map)['error']
+          : null;
+      throw NotebooksException(switch (status) {
+        400 || 422 =>
+          (message is String && message.isNotEmpty)
+              ? message
+              : 'Select some text and try again.',
+        401 => 'Your session expired. Please log in again.',
+        429 =>
+          (message is String && message.isNotEmpty)
+              ? message
+              : "You've used this month's free AI allowance.",
+        null =>
+          'Could not reach the server. Check your connection and try again.',
+        _ => 'Something went wrong. Please try again.',
       });
     }
   }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/networking/connectivity_controller.dart';
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
+import '../../core/tts/tts_service.dart';
 import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_input.dart';
@@ -21,6 +23,7 @@ import '../flashcards/flashcards_repository.dart';
 import '../quizzes/quizzes_controller.dart';
 import '../quizzes/quizzes_repository.dart';
 import 'add_source_sheet.dart';
+import 'note_assist.dart';
 import 'notebook.dart';
 import 'notebook_chat.dart';
 import 'notebook_sources.dart';
@@ -79,6 +82,13 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
         onSubmit: (title, text) => ref
             .read(notebooksRepositoryProvider)
             .addPastedSource(widget.notebook.id, title: title, text: text),
+        // The note editor's contextual AI toolbar: transform the selected
+        // text (explain/summarize/simplify/quiz) or read it aloud. TTS
+        // comes from the provider so tests can inject a recorder.
+        tts: ref.read(ttsServiceProvider),
+        onAssist: (mode, text) => ref
+            .read(notebooksRepositoryProvider)
+            .assistText(widget.notebook.id, mode: mode, text: text),
       ),
     );
     if (added == true && mounted) {
@@ -252,6 +262,10 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
   Widget build(BuildContext context) {
     final g = context.glass;
     final notebook = widget.notebook;
+    // Global network state: when offline, every AI surface in this
+    // workspace is disabled with honest copy. Local features (sources
+    // list, review) keep working — they surface their own errors.
+    final offline = ref.watch(isOfflineProvider).value ?? false;
 
     return SafeArea(
       child: Column(
@@ -300,6 +314,7 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
               sourcesFuture: _sourcesFuture,
               onReload: _reloadSources,
               onAskAi: _openAskAi,
+              aiEnabled: !offline,
             ),
           ),
           SizedBox(height: context.isPhone ? 10 : 16),
@@ -310,11 +325,13 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _FloatingAiActions(
               flashcardBusy: _flashcardBusy,
-              onFlashcards: _flashcardBusy ? null : _generateFlashcards,
+              onFlashcards: offline || _flashcardBusy
+                  ? null
+                  : _generateFlashcards,
               quizBusy: _quizBusy,
-              onQuiz: _quizBusy ? null : _generateQuiz,
+              onQuiz: offline || _quizBusy ? null : _generateQuiz,
               podcastBusy: _podcastBusy,
-              onPodcast: _podcastBusy ? null : _createPodcast,
+              onPodcast: offline || _podcastBusy ? null : _createPodcast,
             ),
           ),
           SizedBox(height: context.isPhone ? 10 : 16),
@@ -336,15 +353,26 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
                 onAddSource: _openAddSourceSheet,
                 onDeleteSource: _deleteSource,
               ),
-              1 => _AskAiTab(notebookId: notebook.id),
-              _ => _StudyToolsTab(
-                onAskAi: _openAskAi,
+              1 => _AskAiTab(
+                notebookId: notebook.id,
+                online: !offline,
                 flashcardBusy: _flashcardBusy,
-                onFlashcards: _flashcardBusy ? null : _generateFlashcards,
+                onFlashcards: offline || _flashcardBusy
+                    ? null
+                    : _generateFlashcards,
                 quizBusy: _quizBusy,
-                onQuiz: _quizBusy ? null : _generateQuiz,
+                onQuiz: offline || _quizBusy ? null : _generateQuiz,
+              ),
+              _ => _StudyToolsTab(
+                onAskAi: offline ? null : _openAskAi,
+                flashcardBusy: _flashcardBusy,
+                onFlashcards: offline || _flashcardBusy
+                    ? null
+                    : _generateFlashcards,
+                quizBusy: _quizBusy,
+                onQuiz: offline || _quizBusy ? null : _generateQuiz,
                 podcastBusy: _podcastBusy,
-                onPodcast: _podcastBusy ? null : _createPodcast,
+                onPodcast: offline || _podcastBusy ? null : _createPodcast,
               ),
             },
           ),
@@ -365,11 +393,13 @@ class _WorkspaceHero extends StatelessWidget {
     required this.sourcesFuture,
     required this.onReload,
     required this.onAskAi,
+    this.aiEnabled = true,
   });
 
   final Future<List<NotebookSource>> sourcesFuture;
   final VoidCallback onReload;
   final VoidCallback onAskAi;
+  final bool aiEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +429,11 @@ class _WorkspaceHero extends StatelessWidget {
             },
           ),
           SizedBox(height: isPhone ? 10 : 18),
-          _AskStudyFlowCta(onTap: onAskAi, compact: isPhone),
+          _AskStudyFlowCta(
+            onTap: onAskAi,
+            compact: isPhone,
+            enabled: aiEnabled,
+          ),
         ],
       ),
     );
@@ -528,10 +562,15 @@ class _SourceProgressError extends StatelessWidget {
 /// Glossy primary CTA — a teal→cyan gradient button that springs under
 /// press. "Ask StudyFlow" opens the grounded AI chat for this workspace.
 class _AskStudyFlowCta extends StatefulWidget {
-  const _AskStudyFlowCta({required this.onTap, this.compact = false});
+  const _AskStudyFlowCta({
+    required this.onTap,
+    this.compact = false,
+    this.enabled = true,
+  });
 
   final VoidCallback onTap;
   final bool compact;
+  final bool enabled;
 
   @override
   State<_AskStudyFlowCta> createState() => _AskStudyFlowCtaState();
@@ -543,11 +582,16 @@ class _AskStudyFlowCtaState extends State<_AskStudyFlowCta> {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    final enabled = widget.enabled;
+    final iconColor = enabled
+        ? g.textOnPrimary
+        : g.textMuted.withValues(alpha: 0.55);
     return Semantics(
       button: true,
-      label: 'Ask StudyFlow',
+      enabled: enabled,
+      label: enabled ? 'Ask StudyFlow' : "You're offline — AI is paused",
       child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
+        scale: _pressed && enabled ? 0.97 : 1.0,
         duration: _pressed
             ? AppMotion.pressInDuration
             : AppMotion.pressOutDuration,
@@ -555,39 +599,61 @@ class _AskStudyFlowCtaState extends State<_AskStudyFlowCta> {
         child: Material(
           color: Colors.transparent,
           child: Listener(
-            onPointerDown: (_) => setState(() => _pressed = true),
-            onPointerUp: (_) => setState(() => _pressed = false),
-            onPointerCancel: (_) => setState(() => _pressed = false),
+            onPointerDown: !enabled
+                ? null
+                : (_) => setState(() => _pressed = true),
+            onPointerUp: !enabled
+                ? null
+                : (_) => setState(() => _pressed = false),
+            onPointerCancel: !enabled
+                ? null
+                : (_) => setState(() => _pressed = false),
             child: InkWell(
-              onTap: widget.onTap,
+              onTap: enabled ? widget.onTap : null,
               borderRadius: BorderRadius.circular(18),
               child: Ink(
                 padding: EdgeInsets.symmetric(
                   vertical: widget.compact ? 12 : 15,
                 ),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [g.primary, Color.lerp(g.primary, g.ai, 0.35)!],
-                  ),
+                  gradient: enabled
+                      ? LinearGradient(
+                          colors: [
+                            g.primary,
+                            Color.lerp(g.primary, g.ai, 0.35)!,
+                          ],
+                        )
+                      : null,
+                  color: enabled ? null : g.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: g.highlight.withValues(alpha: 0.6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: g.primary.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: enabled
+                        ? g.highlight.withValues(alpha: 0.6)
+                        : g.border,
+                  ),
+                  boxShadow: enabled
+                      ? [
+                          BoxShadow(
+                            color: g.primary.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.auto_awesome, size: 18, color: g.textOnPrimary),
+                    Icon(
+                      enabled ? Icons.auto_awesome : Icons.cloud_off_outlined,
+                      size: 18,
+                      color: iconColor,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      'Ask StudyFlow',
+                      enabled ? 'Ask StudyFlow' : 'AI paused — offline',
                       style: TextStyle(
-                        color: g.textOnPrimary,
+                        color: iconColor,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -681,11 +747,15 @@ class _AiActionChipState extends State<_AiActionChip> {
   @override
   Widget build(BuildContext context) {
     final g = context.glass;
+    // Disabled = no handler AND not busy (busy keeps its own spinner).
+    final disabled = widget.onTap == null && !widget.busy;
+    final accent = disabled ? g.textMuted.withValues(alpha: 0.55) : g.primary;
     return Semantics(
       button: true,
+      enabled: !disabled,
       label: widget.label,
       child: AnimatedScale(
-        scale: _pressed && widget.onTap != null ? 0.95 : 1.0,
+        scale: _pressed && !disabled ? 0.95 : 1.0,
         duration: _pressed
             ? AppMotion.pressInDuration
             : AppMotion.pressOutDuration,
@@ -693,13 +763,13 @@ class _AiActionChipState extends State<_AiActionChip> {
         child: Material(
           color: Colors.transparent,
           child: Listener(
-            onPointerDown: widget.onTap == null
+            onPointerDown: disabled
                 ? null
                 : (_) => setState(() => _pressed = true),
-            onPointerUp: widget.onTap == null
+            onPointerUp: disabled
                 ? null
                 : (_) => setState(() => _pressed = false),
-            onPointerCancel: widget.onTap == null
+            onPointerCancel: disabled
                 ? null
                 : (_) => setState(() => _pressed = false),
             child: InkWell(
@@ -713,7 +783,11 @@ class _AiActionChipState extends State<_AiActionChip> {
                 decoration: BoxDecoration(
                   color: g.floating,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: g.border),
+                  border: Border.all(
+                    color: disabled
+                        ? g.border.withValues(alpha: 0.5)
+                        : g.border,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -730,7 +804,9 @@ class _AiActionChipState extends State<_AiActionChip> {
                       height: 30,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: g.primarySoft,
+                        color: disabled
+                            ? g.textPrimary.withValues(alpha: 0.06)
+                            : g.primarySoft,
                         shape: BoxShape.circle,
                       ),
                       child: widget.busy
@@ -742,13 +818,19 @@ class _AiActionChipState extends State<_AiActionChip> {
                                 valueColor: AlwaysStoppedAnimation(g.primary),
                               ),
                             )
-                          : Icon(widget.icon, size: 16, color: g.primary),
+                          : Icon(
+                              disabled ? Icons.cloud_off_outlined : widget.icon,
+                              size: 16,
+                              color: accent,
+                            ),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       widget.label,
                       style: TextStyle(
-                        color: g.textPrimary,
+                        color: disabled
+                            ? g.textMuted.withValues(alpha: 0.7)
+                            : g.textPrimary,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1169,9 +1251,21 @@ class _SourceCard extends StatelessWidget {
 /// Bottom sheet: title + pasted text → POST source. Returns true when the
 /// source was added so the tab can refresh.
 class _PasteSourceSheet extends StatefulWidget {
-  const _PasteSourceSheet({required this.onSubmit});
+  const _PasteSourceSheet({
+    required this.onSubmit,
+    required this.onAssist,
+    this.tts,
+  });
 
   final Future<NotebookSource> Function(String title, String text) onSubmit;
+
+  /// Transforms the selected note text (explain / summarize / simplify /
+  /// quiz) through the backend and returns the transformed text.
+  final Future<String> Function(NoteAssistMode mode, String text) onAssist;
+
+  /// Reads the selection aloud. Defaults to the app's [ttsServiceProvider]
+  /// in production; tests inject a recorder.
+  final TtsService? tts;
 
   @override
   State<_PasteSourceSheet> createState() => _PasteSourceSheetState();
@@ -1180,14 +1274,100 @@ class _PasteSourceSheet extends StatefulWidget {
 class _PasteSourceSheetState extends State<_PasteSourceSheet> {
   final _title = TextEditingController();
   final _text = TextEditingController();
+  final _textFocus = FocusNode();
+  late final TtsService _tts = widget.tts ?? SystemTtsService();
   bool _busy = false;
   String? _error;
+  bool _hasSelection = false;
+  NoteAssistMode? _busyMode;
+  bool _listening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Selection changes come through the controller; the toolbar only
+    // shows while the field actually has focus.
+    _text.addListener(_syncSelection);
+    _textFocus.addListener(_syncSelection);
+    _tts.speaking.addListener(_syncSpeaking);
+  }
 
   @override
   void dispose() {
+    _text.removeListener(_syncSelection);
+    _textFocus.removeListener(_syncSelection);
+    _tts.speaking.removeListener(_syncSpeaking);
     _title.dispose();
     _text.dispose();
+    _textFocus.dispose();
     super.dispose();
+  }
+
+  void _syncSelection() {
+    final sel = _text.selection;
+    final has = _textFocus.hasFocus && sel.isValid && !sel.isCollapsed;
+    if (has != _hasSelection) setState(() => _hasSelection = has);
+  }
+
+  void _syncSpeaking() {
+    if (!mounted) return;
+    setState(() => _listening = _tts.speaking.value);
+  }
+
+  /// The currently selected substring, or null when the caret is
+  /// collapsed, the selection is invalid, or the field is unfocused.
+  String? get _selectedText {
+    final sel = _text.selection;
+    if (!sel.isValid || sel.isCollapsed) return null;
+    final t = sel.textInside(_text.text).trim();
+    return t.isEmpty ? null : t;
+  }
+
+  Future<void> _runTransform(NoteAssistMode mode) async {
+    final selected = _selectedText;
+    if (selected == null || _busyMode != null) return;
+    setState(() => _busyMode = mode);
+    try {
+      final result = await widget.onAssist(mode, selected);
+      if (!mounted) return;
+      final label = switch (mode) {
+        NoteAssistMode.explain => 'EXPLAINED',
+        NoteAssistMode.summarize => 'SUMMARY',
+        NoteAssistMode.simplify => 'SIMPLIFIED',
+        NoteAssistMode.quiz => 'QUIZ',
+      };
+      // Insert the result below the selection (never overwrite the
+      // user's words) and collapse the caret past it, which hides the
+      // toolbar.
+      final sel = _text.selection;
+      final insertion = '\n\n▸ $label\n${result.trim()}\n';
+      setState(() {
+        _text.text = _text.text.replaceRange(sel.end, sel.end, insertion);
+        _text.selection = TextSelection.collapsed(
+          offset: sel.end + insertion.length,
+        );
+        _busyMode = null;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busyMode = null;
+        _error = e is NotebooksException
+            ? e.message
+            : 'Could not run that action. Please try again.';
+      });
+    }
+  }
+
+  Future<void> _toggleListen() async {
+    final selected = _selectedText;
+    if (selected == null) return;
+    if (_listening) {
+      await _tts.stop();
+    } else {
+      await _tts.speak(selected);
+    }
   }
 
   Future<void> _add() async {
@@ -1245,11 +1425,45 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          GlassInput(
-            controller: _text,
-            label: 'Text',
-            hintText: 'Paste your notes here…',
-            maxLines: 8,
+          // The editor: a floating glass AI toolbar appears over the
+          // bottom of the field when text is selected — Explain,
+          // Summarize, Simplify, Quiz, and Listen.
+          Stack(
+            children: [
+              GlassInput(
+                controller: _text,
+                focusNode: _textFocus,
+                label: 'Text',
+                hintText: 'Paste your notes here…',
+                maxLines: 8,
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 10,
+                child: AnimatedSwitcher(
+                  duration: AppMotion.fast,
+                  reverseDuration: AppMotion.fast,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: animation,
+                      alignment: Alignment.bottomCenter,
+                      child: child,
+                    ),
+                  ),
+                  child: _hasSelection
+                      ? _SelectionAiToolbar(
+                          key: const ValueKey('selection-ai-toolbar'),
+                          busyMode: _busyMode,
+                          listening: _listening,
+                          onTransform: _runTransform,
+                          onListen: _toggleListen,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
           ),
           if (_error != null) ...[
             const SizedBox(height: 10),
@@ -1268,12 +1482,170 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
   }
 }
 
+/// The contextual AI toolbar that floats over the note editor while a
+/// non-collapsed selection is active. Five actions: the four transforms
+/// (Explain, Summarize, Simplify, Quiz) plus Listen (read the selection
+/// aloud, toggling to Stop while speaking).
+class _SelectionAiToolbar extends StatelessWidget {
+  const _SelectionAiToolbar({
+    super.key,
+    required this.busyMode,
+    required this.listening,
+    required this.onTransform,
+    required this.onListen,
+  });
+
+  final NoteAssistMode? busyMode;
+  final bool listening;
+  final ValueChanged<NoteAssistMode> onTransform;
+  final VoidCallback onListen;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      container: true,
+      label: 'AI actions for the selected text',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        decoration: BoxDecoration(
+          color: g.floating,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: g.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ToolbarAction(
+                icon: Icons.lightbulb_outline,
+                label: 'Explain',
+                busy: busyMode == NoteAssistMode.explain,
+                enabled: busyMode == null,
+                onTap: () => onTransform(NoteAssistMode.explain),
+              ),
+              _ToolbarAction(
+                icon: Icons.summarize_outlined,
+                label: 'Summarize',
+                busy: busyMode == NoteAssistMode.summarize,
+                enabled: busyMode == null,
+                onTap: () => onTransform(NoteAssistMode.summarize),
+              ),
+              _ToolbarAction(
+                icon: Icons.short_text_outlined,
+                label: 'Simplify',
+                busy: busyMode == NoteAssistMode.simplify,
+                enabled: busyMode == null,
+                onTap: () => onTransform(NoteAssistMode.simplify),
+              ),
+              _ToolbarAction(
+                icon: Icons.quiz_outlined,
+                label: 'Quiz',
+                busy: busyMode == NoteAssistMode.quiz,
+                enabled: busyMode == null,
+                onTap: () => onTransform(NoteAssistMode.quiz),
+              ),
+              _ToolbarAction(
+                icon: listening
+                    ? Icons.stop_circle_outlined
+                    : Icons.volume_up_outlined,
+                label: listening ? 'Stop' : 'Listen',
+                busy: false,
+                enabled: true,
+                onTap: onListen,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ToolbarAction extends StatelessWidget {
+  const _ToolbarAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.busy = false,
+    this.enabled = true,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool busy;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(13),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (busy)
+                SizedBox(
+                  width: 13,
+                  height: 13,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(g.primary),
+                  ),
+                )
+              else
+                Icon(icon, size: 15, color: g.primary),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: enabled ? g.textPrimary : g.textMuted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────── Ask AI ───────────────────────────
 
 class _AskAiTab extends ConsumerStatefulWidget {
-  const _AskAiTab({required this.notebookId});
+  const _AskAiTab({
+    required this.notebookId,
+    this.online = true,
+    this.flashcardBusy = false,
+    this.onFlashcards,
+    this.quizBusy = false,
+    this.onQuiz,
+  });
 
   final String notebookId;
+  final bool online;
+  final bool flashcardBusy;
+  final VoidCallback? onFlashcards;
+  final bool quizBusy;
+  final VoidCallback? onQuiz;
 
   @override
   ConsumerState<_AskAiTab> createState() => _AskAiTabState();
@@ -1289,6 +1661,7 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
   }
 
   void _send() {
+    if (!widget.online) return;
     final text = _controller.text;
     if (text.trim().isEmpty) return;
     _controller.clear();
@@ -1297,226 +1670,10 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
         .send(text);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    final chat = ref.watch(notebookChatControllerProvider(widget.notebookId));
-    final messages = chat.messages.reversed.toList();
-
-    return Column(
-      children: [
-        Expanded(
-          child: chat.messages.isEmpty
-              ? const _ChatEmptyState()
-              : ListView.builder(
-                  reverse: true,
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    8,
-                    16,
-                    context.isPhone ? 96 : 12,
-                  ),
-                  itemCount: messages.length + (chat.busy ? 1 : 0),
-                  itemBuilder: (context, i) {
-                    if (i == messages.length && chat.busy) {
-                      return const _ThinkingBubble();
-                    }
-                    return _MessageBubble(message: messages[i]);
-                  },
-                ),
-        ),
-        if (chat.error != null) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: g.danger.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: g.danger.withValues(alpha: 0.35)),
-              ),
-              child: Text(
-                chat.error!,
-                style: TextStyle(color: g.danger, fontSize: 13),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        Padding(
-          // Phones: the floating bottom nav overlays the branch content
-          // (the shell's Stack sits above the pushed route), so the input
-          // needs clearance to stay tappable above it.
-          padding: EdgeInsets.fromLTRB(16, 0, 16, context.isPhone ? 96 : 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: GlassInput(
-                  controller: _controller,
-                  hintText: 'Ask your notebook…',
-                  prefixIcon: Icons.question_answer_outlined,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _send(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GlassButton(
-                label: 'Ask',
-                icon: Icons.send,
-                semanticLabel: 'Ask',
-                onPressed: chat.busy ? null : _send,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ChatEmptyState extends StatelessWidget {
-  const _ChatEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 96 : 12),
-      child: GlassCard(
-        child: Column(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: g.primarySoft,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(Icons.auto_awesome, size: 21, color: g.primary),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Ask your notebook',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Answers are grounded in your sources and come with citations '
-              'you can tap to see the original material.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ThinkingBubble extends StatelessWidget {
-  const _ThinkingBubble();
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: g.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: g.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const StudyFlowAiOrb(active: true, size: 18),
-            const SizedBox(width: 10),
-            Text(
-              'Reading your sources…',
-              style: TextStyle(color: g.textMuted, fontSize: 13),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
-
-  final ChatMessage message;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    final isUser = message.isUser;
-
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 320),
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: isUser ? g.primary : g.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: isUser ? null : Border.all(color: g.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.content,
-              style: TextStyle(
-                color: isUser ? g.textOnPrimary : g.textPrimary,
-                fontSize: 14,
-                height: 1.45,
-              ),
-            ),
-            if (!isUser && message.citations.isNotEmpty) ...[
-              getCitations(context, message.citations),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget getCitations(BuildContext context, List<ChatCitation> citations) {
-    final g = context.glass;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        Text(
-          'Sources',
-          style: TextStyle(
-            color: g.textMuted,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final c in citations)
-              _CitationChip(
-                citation: c,
-                onTap: () => _showCitation(context, c),
-              ),
-          ],
-        ),
-      ],
-    );
+  void _ask(String prompt) {
+    ref
+        .read(notebookChatControllerProvider(widget.notebookId).notifier)
+        .send(prompt);
   }
 
   void _showCitation(BuildContext context, ChatCitation citation) {
@@ -1558,8 +1715,538 @@ class _MessageBubble extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final chat = ref.watch(notebookChatControllerProvider(widget.notebookId));
+    final messages = chat.messages.reversed.toList();
+
+    return Column(
+      children: [
+        Expanded(
+          child: chat.messages.isEmpty
+              ? _ChatEmptyState(onSuggestion: _ask)
+              : ListView.builder(
+                  reverse: true,
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    context.isPhone ? 96 : 16,
+                  ),
+                  itemCount: messages.length + (chat.busy ? 1 : 0),
+                  itemBuilder: (context, i) {
+                    if (i == messages.length && chat.busy) {
+                      return const _ThinkingRow();
+                    }
+                    final message = messages[i];
+                    return message.isUser
+                        ? _UserMessage(message: message)
+                        : _AiMessage(
+                            message: message,
+                            onShowCitation: (c) => _showCitation(context, c),
+                            flashcardBusy: widget.flashcardBusy,
+                            onFlashcards: widget.onFlashcards,
+                            quizBusy: widget.quizBusy,
+                            onQuiz: widget.onQuiz,
+                          );
+                  },
+                ),
+        ),
+        if (chat.error != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: g.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: g.danger.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                chat.error!,
+                style: TextStyle(color: g.danger, fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (!widget.online)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 15,
+                  color: g.textMuted.withValues(alpha: 0.8),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "You're offline — reconnect to ask StudyFlow.",
+                    style: TextStyle(color: g.textMuted, fontSize: 12.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          // Phones: the floating bottom nav overlays the branch content
+          // (the shell's Stack sits above the pushed route), so the input
+          // needs clearance to stay tappable above it.
+          padding: EdgeInsets.fromLTRB(16, 0, 16, context.isPhone ? 96 : 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: GlassInput(
+                  controller: _controller,
+                  hintText: 'Ask your notebook…',
+                  prefixIcon: Icons.question_answer_outlined,
+                  textInputAction: TextInputAction.send,
+                  enabled: widget.online,
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GlassButton(
+                label: 'Ask',
+                icon: Icons.send,
+                semanticLabel: 'Ask',
+                onPressed: !widget.online || chat.busy ? null : _send,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
+class _ChatEmptyState extends StatelessWidget {
+  const _ChatEmptyState({required this.onSuggestion});
+
+  final ValueChanged<String> onSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    const suggestions = [
+      'Summarize this notebook',
+      'What are the key concepts?',
+      'Quiz me on the material',
+    ];
+    return SingleChildScrollView(
+      key: const Key('chat-empty-state'),
+      padding: EdgeInsets.fromLTRB(24, 16, 24, context.isPhone ? 96 : 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                width: 140,
+                height: 140,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      g.primary.withValues(alpha: 0.16),
+                      g.primary.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+                child: const StudyFlowAiOrb(size: 56),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Ask StudyFlow',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Answers are grounded in your sources and come with '
+                'citations you can tap to see the original material.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: g.textMuted, fontSize: 14, height: 1.5),
+              ),
+              const SizedBox(height: 28),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final s in suggestions)
+                    _SuggestionChip(label: s, onTap: () => onSuggestion(s)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small glass suggestion pill. Tapping sends the prompt to the chat.
+class _SuggestionChip extends StatefulWidget {
+  const _SuggestionChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_SuggestionChip> createState() => _SuggestionChipState();
+}
+
+class _SuggestionChipState extends State<_SuggestionChip> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: _pressed
+            ? AppMotion.pressInDuration
+            : AppMotion.pressOutDuration,
+        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
+        child: Material(
+          color: Colors.transparent,
+          child: Listener(
+            onPointerDown: (_) => setState(() => _pressed = true),
+            onPointerUp: (_) => setState(() => _pressed = false),
+            onPointerCancel: (_) => setState(() => _pressed = false),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: g.floating,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: g.primary.withValues(alpha: 0.28)),
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome_outlined,
+                        size: 13,
+                        color: g.primary,
+                      ),
+                      const SizedBox(width: 7),
+                      Flexible(
+                        child: Text(
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: g.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quiet thinking state — a small pulsing orb and a muted line on the
+/// open canvas. The orb carries the motion; the text carries the meaning.
+class _ThinkingRow extends StatelessWidget {
+  const _ThinkingRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Row(
+        children: [
+          const StudyFlowAiOrb(active: true, size: 15),
+          const SizedBox(width: 10),
+          Text(
+            'Reading your sources…',
+            style: TextStyle(color: g.textMuted, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Minimal user message — a quiet right-aligned column on the open
+/// canvas, no bubble. The question stays the smallest visual element of a
+/// turn so the answer remains the focus of the reading experience.
+class _UserMessage extends StatelessWidget {
+  const _UserMessage({required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, left: 56),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            'YOU',
+            style: TextStyle(
+              color: g.primary,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.6,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            message.content,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: g.textPrimary.withValues(alpha: 0.92),
+              fontSize: 15,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reading-first AI response — open canvas, editorial typography, a
+/// SOURCES divider with dark glass citation chips, and contextual
+/// actions. No chat bubble.
+class _AiMessage extends ConsumerStatefulWidget {
+  const _AiMessage({
+    required this.message,
+    required this.onShowCitation,
+    this.flashcardBusy = false,
+    this.onFlashcards,
+    this.quizBusy = false,
+    this.onQuiz,
+  });
+
+  final ChatMessage message;
+  final ValueChanged<ChatCitation> onShowCitation;
+  final bool flashcardBusy;
+  final VoidCallback? onFlashcards;
+  final bool quizBusy;
+  final VoidCallback? onQuiz;
+
+  @override
+  ConsumerState<_AiMessage> createState() => _AiMessageState();
+}
+
+class _AiMessageState extends ConsumerState<_AiMessage> {
+  late final TtsService _tts = ref.read(ttsServiceProvider);
+
+  Future<void> _toggleListen() async {
+    if (_tts.speaking.value) {
+      await _tts.stop();
+    } else {
+      await _tts.speak(widget.message.content);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final message = widget.message;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const StudyFlowAiOrb(size: 15),
+              const SizedBox(width: 8),
+              Text(
+                'STUDYFLOW',
+                style: TextStyle(
+                  color: g.primary,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.6,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            message.content,
+            style: TextStyle(color: g.textPrimary, fontSize: 16, height: 1.65),
+          ),
+          if (message.citations.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(color: g.textPrimary.withValues(alpha: 0.08)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'SOURCES',
+                    style: TextStyle(
+                      color: g.textMuted,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Divider(color: g.textPrimary.withValues(alpha: 0.08)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in message.citations)
+                  _CitationChip(
+                    citation: c,
+                    onTap: () => widget.onShowCitation(c),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 18),
+          ValueListenableBuilder<bool>(
+            valueListenable: _tts.speaking,
+            builder: (context, speaking, _) => Wrap(
+              key: const Key('chat-answer-actions'),
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _ActionPill(
+                  icon: speaking
+                      ? Icons.stop_rounded
+                      : Icons.volume_up_outlined,
+                  label: speaking ? 'Stop' : 'Listen',
+                  onTap: _toggleListen,
+                ),
+                _ActionPill(
+                  icon: Icons.style_outlined,
+                  label: 'Flashcards',
+                  onTap: widget.onFlashcards,
+                  disabled: widget.flashcardBusy || widget.onFlashcards == null,
+                ),
+                _ActionPill(
+                  icon: Icons.quiz_outlined,
+                  label: 'Quiz',
+                  onTap: widget.onQuiz,
+                  disabled: widget.quizBusy || widget.onQuiz == null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Small contextual action pill under an AI answer — Listen speaks the
+/// answer aloud (toggling to Stop), Flashcards and Quiz run the same
+/// notebook-grounded generations as the workspace header.
+class _ActionPill extends StatelessWidget {
+  const _ActionPill({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.disabled = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final effectiveOnTap = disabled ? null : onTap;
+    return Semantics(
+      button: true,
+      enabled: effectiveOnTap != null,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: effectiveOnTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: g.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: disabled
+                    ? g.border.withValues(alpha: 0.5)
+                    : g.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: disabled
+                      ? g.textMuted.withValues(alpha: 0.5)
+                      : g.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: disabled
+                        ? g.textMuted.withValues(alpha: 0.6)
+                        : g.textPrimary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A source citation — a dark glass chip with a thin accent edge. Tapping
+/// opens the excerpt the answer is grounded in.
 class _CitationChip extends StatelessWidget {
   const _CitationChip({required this.citation, required this.onTap});
 
@@ -1573,34 +2260,38 @@ class _CitationChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.fromLTRB(11, 7, 11, 7),
           decoration: BoxDecoration(
-            color: g.primarySoft,
-            borderRadius: BorderRadius.circular(10),
+            color: g.surface,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: g.primary.withValues(alpha: 0.35)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '[${citation.marker}] ',
-                style: TextStyle(
-                  color: g.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  citation.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: g.textPrimary, fontSize: 12),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.description_outlined, size: 13, color: g.primary),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    citation.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: g.textPrimary, fontSize: 12.5),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1624,7 +2315,7 @@ class _StudyToolsTab extends StatelessWidget {
     required this.onPodcast,
   });
 
-  final VoidCallback onAskAi;
+  final VoidCallback? onAskAi;
   final bool flashcardBusy;
   final VoidCallback? onFlashcards;
   final bool quizBusy;

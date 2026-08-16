@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'audio_playback_service.dart';
 
+/// How long the collapsed (completed) mini-player pill lingers before it
+/// auto-dismisses. Long enough to replay or reopen, short enough that a
+/// finished episode never parks on screen forever.
+const Duration kCollapsedDismissAfter = Duration(seconds: 10);
+
 /// What is currently playing, surfaced globally so the shell can float a
 /// mini-player above navigation after the user leaves the full-screen
 /// player. The full-screen player publishes here on load and on every
@@ -50,6 +55,7 @@ class NowPlayingController extends Notifier<NowPlaying?> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
   StreamSubscription<void>? _completedSub;
+  Timer? _dismissTimer;
   Duration _duration = Duration.zero;
 
   @override
@@ -58,8 +64,14 @@ class NowPlayingController extends Notifier<NowPlaying?> {
       _positionSub?.cancel();
       _durationSub?.cancel();
       _completedSub?.cancel();
+      _dismissTimer?.cancel();
     });
     return null;
+  }
+
+  void _cancelDismiss() {
+    _dismissTimer?.cancel();
+    _dismissTimer = null;
   }
 
   /// Called by the full-screen player once playback actually starts. Tracks
@@ -70,6 +82,7 @@ class NowPlayingController extends Notifier<NowPlaying?> {
     required String title,
     required String subtitle,
   }) {
+    _cancelDismiss();
     _duration = Duration.zero;
     _subscribe();
     state = NowPlaying(
@@ -83,6 +96,7 @@ class NowPlayingController extends Notifier<NowPlaying?> {
   void setPlaying(bool playing) {
     final cur = state;
     if (cur == null) return;
+    _cancelDismiss();
     if (playing) {
       _subscribe();
     } else {
@@ -91,9 +105,24 @@ class NowPlayingController extends Notifier<NowPlaying?> {
     state = cur.copyWith(playing: playing, completed: false);
   }
 
+  /// Scrub to a fraction of the current episode (driven live by the
+  /// mini-player's draggable playhead). Seeks the real player and snaps
+  /// the tracked progress so the bar matches the finger immediately.
+  Future<void> seekToFraction(double fraction) async {
+    final cur = state;
+    if (cur == null || _duration.inMilliseconds <= 0) return;
+    final f = fraction.clamp(0.0, 1.0);
+    final target = Duration(
+      milliseconds: (f * _duration.inMilliseconds).round(),
+    );
+    await ref.read(podcastPlayerProvider).seek(target);
+    state = cur.copyWith(progress: f);
+  }
+
   /// Restart the finished episode from zero (the collapsed mini-player's
   /// action) and resume live progress.
   Future<void> replay() async {
+    _cancelDismiss();
     final player = ref.read(podcastPlayerProvider);
     await player.seek(Duration.zero);
     await player.play();
@@ -128,6 +157,13 @@ class NowPlayingController extends Notifier<NowPlaying?> {
       _positionSub?.cancel();
       _positionSub = null;
       state = cur.copyWith(playing: false, completed: true, progress: 1);
+      // Auto-dismiss the collapsed pill after a quiet spell, unless the
+      // user replays or opens the player first.
+      _cancelDismiss();
+      _dismissTimer = Timer(kCollapsedDismissAfter, () {
+        if (state?.completed ?? false) state = null;
+        _dismissTimer = null;
+      });
     });
   }
 

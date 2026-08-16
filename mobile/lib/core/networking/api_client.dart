@@ -66,13 +66,12 @@ class ApiClient {
     String path, {
     required FormData data,
     void Function(int, int?)? onSendProgress,
-  }) =>
-      _dio.post<T>(
-        path,
-        data: data,
-        options: Options(contentType: 'multipart/form-data'),
-        onSendProgress: onSendProgress,
-      );
+  }) => _dio.post<T>(
+    path,
+    data: data,
+    options: Options(contentType: 'multipart/form-data'),
+    onSendProgress: onSendProgress,
+  );
 
   /// POST that treats the response body as raw text — used by the notebook
   /// chat endpoint, whose body is a streamed answer followed by a citation

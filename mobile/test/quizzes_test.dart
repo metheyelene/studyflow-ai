@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -188,6 +189,99 @@ void main() {
     expect(find.text('You answered 2 of 2 correctly.'), findsOneWidget);
     expect(quizzes.submitCalls, 1);
     expect(quizzes.lastAnswers, [0, 0]); // wrong + correct
+  });
+
+  testWidgets('a wrong answer reveals the correct option immediately', (
+    tester,
+  ) async {
+    final quizzes = FakeQuizzesRepository(
+      quizzes: [quiz(1)],
+      questions: sampleQuestions(),
+    );
+    await pumpApp(tester, quizzes: quizzes);
+    await openQuizzes(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 quiz'));
+    await tester.pumpAndSettle();
+
+    // Q1: pick the wrong option (Oxide thickness, correct is index 1).
+    await tester.tap(find.text('Oxide thickness'));
+    await tester.pumpAndSettle();
+
+    // Immediate feedback: the correct option is revealed with a check icon
+    // and the chosen wrong option carries its own icon — never color alone.
+    // (cancel/cancel_outlined share a codepoint here, so assert structurally.)
+    expect(find.text('Not quite'), findsOneWidget);
+    final sessionList = find.byType(ListView).last;
+    expect(
+      find.descendant(
+        of: sessionList,
+        matching: find.byIcon(Icons.check_circle),
+      ),
+      findsOneWidget,
+    );
+    final wrongOption = find
+        .ancestor(
+          of: find.text('Oxide thickness'),
+          matching: find.byType(Material),
+        )
+        .first;
+    expect(
+      find.descendant(of: wrongOption, matching: find.byType(Icon)),
+      findsOneWidget,
+    );
+    expect(quizzes.lastAnswers, isNull); // nothing submitted yet
+  });
+
+  testWidgets('the correct-so-far counter updates as you advance', (
+    tester,
+  ) async {
+    final quizzes = FakeQuizzesRepository(
+      quizzes: [quiz(1)],
+      questions: sampleQuestions(),
+    );
+    await pumpApp(tester, quizzes: quizzes);
+    await openQuizzes(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 quiz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('0 correct so far'), findsOneWidget);
+    await tester.tap(find.text('Gate voltage where the channel conducts'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next question'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 correct so far'), findsOneWidget);
+    expect(find.text('Question 2 of 2'), findsOneWidget);
+  });
+
+  testWidgets('reduced motion still runs the full quiz flow', (tester) async {
+    final quizzes = FakeQuizzesRepository(
+      quizzes: [quiz(1)],
+      questions: sampleQuestions(),
+    );
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pumpApp(tester, quizzes: quizzes);
+    await openQuizzes(tester);
+
+    await tester.tap(find.text('VLSI Unit 3 quiz'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oxide thickness'));
+    await tester.pumpAndSettle();
+    expect(find.text('Not quite'), findsOneWidget);
+    await tester.tap(find.text('Next question'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Threshold voltage'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('See results'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Good work'), findsOneWidget);
+    expect(find.text('You answered 2 of 2 correctly.'), findsOneWidget);
+    expect(quizzes.submitCalls, 1);
   });
 
   testWidgets('submit failure surfaces a friendly error', (tester) async {

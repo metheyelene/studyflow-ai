@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
+import 'package:studyflow_mobile/features/settings/ai_preferences.dart';
 
 import 'helpers.dart';
 
@@ -48,6 +49,91 @@ void main() {
 
     final context = tester.element(find.byType(Scaffold).first);
     expect(Theme.of(context).brightness, Brightness.dark);
+  });
+
+  group('AI preferences', () {
+    testWidgets(
+      'expanding loads defaults and a style change saves server-side',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final ai = FakeAiPreferencesRepository();
+        final router = buildAppRouter();
+        await pumpApp(tester, router: router, aiPreferences: ai);
+        router.go('/settings');
+        await tester.pumpAndSettle();
+
+        // Collapsed by default — the backend is only contacted on expand.
+        expect(find.text('AI preferences'), findsOneWidget);
+        expect(find.text('Concise'), findsNothing);
+
+        await tester.tap(find.text('AI preferences'));
+        await tester.pumpAndSettle();
+
+        expect(ai.loadCalls, 1);
+        expect(find.text('Concise'), findsOneWidget);
+        expect(find.text('Balanced'), findsOneWidget);
+        expect(find.text('University'), findsOneWidget);
+        expect(find.text('English'), findsOneWidget);
+
+        await tester.tap(find.text('Concise'));
+        await tester.pumpAndSettle();
+
+        expect(ai.saved, hasLength(1));
+        expect(ai.saved.single.responseStyle, AiResponseStyle.concise);
+        expect(ai.current.responseStyle, AiResponseStyle.concise);
+      },
+    );
+
+    testWidgets('study level and language changes persist', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final ai = FakeAiPreferencesRepository();
+      final router = buildAppRouter();
+      await pumpApp(tester, router: router, aiPreferences: ai);
+      router.go('/settings');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('AI preferences'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Professional'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Spanish'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Spanish'));
+      await tester.pumpAndSettle();
+
+      expect(ai.saved, hasLength(2));
+      expect(ai.saved[0].studyLevel, AiStudyLevel.professional);
+      expect(ai.saved[1].language, 'Spanish');
+    });
+
+    testWidgets('a failed save reverts and shows a friendly toast', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final ai = FakeAiPreferencesRepository()..failSave = true;
+      final router = buildAppRouter();
+      await pumpApp(tester, router: router, aiPreferences: ai);
+      router.go('/settings');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('AI preferences'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Concise'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("We couldn't save your preferences. Please try again."),
+        findsOneWidget,
+      );
+      // Reverted to the last saved (default) value.
+      expect(ai.current.responseStyle, AiResponseStyle.balanced);
+
+      // Let the toast's auto-dismiss timer fire so the test ends clean.
+      await tester.pump(const Duration(milliseconds: 2400));
+      await tester.pumpAndSettle();
+    });
   });
 
   testWidgets('Reduce visual effects forces the low tier and persists', (

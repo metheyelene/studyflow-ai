@@ -326,6 +326,9 @@ void main() {
             .tag,
         'podcast-artwork-ep-1',
       );
+      // Let the auto-dismiss timer elapse so none pends at teardown.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('tapping the mini-player morphs into the full player', (
@@ -362,6 +365,197 @@ void main() {
           .map((h) => h.tag)
           .toList();
       expect(heroes, contains('podcast-artwork-ep-1'));
+    });
+
+    testWidgets('tapping the playhead seeks to that spot', (tester) async {
+      final player = FakePodcastPlayer();
+      await tester.pumpWidget(
+        shell(
+          index: 0,
+          onDestinationSelected: (_) {},
+          child: const Text('home'),
+          extra: [podcastPlayerProvider.overrideWithValue(player)],
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.text('home')),
+      );
+      container.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            subtitle: 'VLSI Unit 3',
+          );
+      player.emitDuration(const Duration(seconds: 300));
+      await tester.pump();
+
+      final bar = tester.getRect(find.byKey(const Key('mini-player-scrub')));
+      await tester.tapAt(
+        Offset(bar.left + bar.width * 0.25, bar.center.dy),
+      );
+      await tester.pump();
+
+      expect(player.lastSeek, const Duration(seconds: 75));
+      expect(
+        tester
+            .widget<GlassMiniPlayer>(find.byType(GlassMiniPlayer))
+            .progress,
+        closeTo(0.25, 0.01),
+      );
+    });
+
+    testWidgets('dragging the playhead scrubs the episode live', (
+      tester,
+    ) async {
+      final player = FakePodcastPlayer();
+      await tester.pumpWidget(
+        shell(
+          index: 0,
+          onDestinationSelected: (_) {},
+          child: const Text('home'),
+          extra: [podcastPlayerProvider.overrideWithValue(player)],
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.text('home')),
+      );
+      container.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            subtitle: 'VLSI Unit 3',
+          );
+      player.emitDuration(const Duration(seconds: 300));
+      await tester.pump();
+
+      final bar = tester.getRect(find.byKey(const Key('mini-player-scrub')));
+      // Drag from 10% to ~50% of the bar: the playhead preview follows the
+      // finger and the player is seeked live to ~150s.
+      await tester.dragFrom(
+        Offset(bar.left + bar.width * 0.10, bar.center.dy),
+        Offset(bar.width * 0.40, 0),
+      );
+      await tester.pump();
+
+      expect(player.lastSeek, const Duration(seconds: 150));
+      expect(
+        tester
+            .widget<GlassMiniPlayer>(find.byType(GlassMiniPlayer))
+            .progress,
+        closeTo(0.5, 0.05),
+      );
+    });
+
+    testWidgets('completed pill auto-dismisses after 10s idle', (
+      tester,
+    ) async {
+      final player = FakePodcastPlayer();
+      await tester.pumpWidget(
+        shell(
+          index: 0,
+          onDestinationSelected: (_) {},
+          child: const Text('home'),
+          extra: [podcastPlayerProvider.overrideWithValue(player)],
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.text('home')),
+      );
+      container.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            subtitle: 'VLSI Unit 3',
+          );
+      await tester.pump();
+      player.emitCompleted();
+      await tester.pump();
+      expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
+
+      // Still up at the halfway mark…
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
+
+      // …gone after the full quiet spell (slide-down fade settles).
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.replay_rounded), findsNothing);
+      expect(container.read(nowPlayingProvider), isNull);
+    });
+
+    testWidgets('replaying before dismissal cancels auto-dismiss', (
+      tester,
+    ) async {
+      final player = FakePodcastPlayer();
+      await tester.pumpWidget(
+        shell(
+          index: 0,
+          onDestinationSelected: (_) {},
+          child: const Text('home'),
+          extra: [podcastPlayerProvider.overrideWithValue(player)],
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.text('home')),
+      );
+      container.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            subtitle: 'VLSI Unit 3',
+          );
+      await tester.pump();
+      player.emitCompleted();
+      await tester.pump();
+
+      // Replay before the 10s window closes.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.tap(find.byIcon(Icons.replay_rounded));
+      await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+
+      // Past the dismissal mark the pill must still be around.
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pump();
+      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.replay_rounded), findsNothing);
+      expect(container.read(nowPlayingProvider)?.playing, isTrue);
+    });
+
+    testWidgets('tablet layout: bottom-right card with artwork glow', (
+      tester,
+    ) async {
+      // 800×600 default surface → tablet branch.
+      final player = FakePodcastPlayer();
+      await tester.pumpWidget(
+        shell(
+          index: 0,
+          onDestinationSelected: (_) {},
+          child: const Text('home'),
+          extra: [podcastPlayerProvider.overrideWithValue(player)],
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.text('home')),
+      );
+      container.read(nowPlayingProvider.notifier).setEpisode(
+            episodeId: 'ep-1',
+            title: 'VLSI Unit 3 — Study Podcast',
+            subtitle: 'VLSI Unit 3',
+          );
+      await tester.pumpAndSettle();
+
+      // Artwork-driven ambient glow behind the card.
+      expect(find.byKey(const Key('mini-player-glow')), findsOneWidget);
+
+      // A compact card anchored to the bottom-right corner (24px inset).
+      final card = tester.getRect(find.byType(GlassMiniPlayer));
+      expect(card.width, lessThanOrEqualTo(360));
+      expect(800 - card.right, closeTo(24, 2));
+      expect(600 - card.bottom, closeTo(24, 2));
+
+      // Once the episode completes and auto-dismisses, the glow goes too.
+      player.emitCompleted();
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mini-player-glow')), findsNothing);
+      expect(container.read(nowPlayingProvider), isNull);
     });
 
     testWidgets('hidden when nothing is playing', (tester) async {

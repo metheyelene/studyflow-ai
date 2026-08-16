@@ -314,6 +314,9 @@ void main() {
         audio: audio,
         router: router,
         podcastPlayer: player,
+        // Pin standard explicitly: this test asserts the effectful render
+        // path, independent of any ambient PERFORMANCE_TIER define.
+        tier: PerformanceTier.standard,
       );
       router.go('/audio/ep-1');
       await tester.pumpAndSettle();
