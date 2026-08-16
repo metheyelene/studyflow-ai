@@ -65,6 +65,7 @@ vi.mock("@/lib/usage", () => ({
 import { runAction } from "@/lib/ai/actions";
 import { getNotebookForUser, NotFoundError } from "@/lib/ai/sources";
 import { consumeAiAction } from "@/lib/usage";
+import { resetRateLimits } from "@/lib/rateLimit";
 import { GET, POST } from "@/app/api/flashcards/route";
 import {
   DELETE as deckDELETE,
@@ -85,6 +86,7 @@ const deckRow = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetRateLimits();
   (dbMock.query.flashcardDecks.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([deckRow]);
   (chain.where as ReturnType<typeof vi.fn>).mockReturnValue(chain);
   (chain.groupBy as ReturnType<typeof vi.fn>).mockResolvedValue([

@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { ACTION_NAMES, runAction, type ActionName, type ActionParams } from "@/lib/ai/actions";
-import { AiNotConfiguredError, AiProviderError } from "@/lib/ai/orchestrator";
+import {
+  AI_NOT_CONFIGURED_MESSAGE,
+  AiNotConfiguredError,
+  AiProviderError,
+} from "@/lib/ai/orchestrator";
 import { getPlanForSession } from "@/lib/premium";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { consumeAiAction } from "@/lib/usage";
 
 export const runtime = "nodejs";
@@ -28,6 +33,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   }
 
+  // Abuse protection: a short per-minute ceiling on top of the monthly
+  // allowance (docs: rate limiting / request quotas).
+  const rate = checkRateLimit(session.user.id, "ai:actions");
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          "You're sending requests too quickly. Please slow down and try again in a moment.",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rate.retryAfterMs / 1000)) },
+      },
+    );
+  }
+
   const planCtx = await getPlanForSession();
   const plan = planCtx?.plan ?? "free";
   const consumed = await consumeAiAction(session.user.id, plan);
@@ -46,7 +67,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ result });
   } catch (err) {
     if (err instanceof AiNotConfiguredError) {
-      return NextResponse.json({ error: err.message }, { status: 503 });
+      return NextResponse.json({ error: AI_NOT_CONFIGURED_MESSAGE }, { status: 503 });
     }
     if (err instanceof AiProviderError) {
       return NextResponse.json(

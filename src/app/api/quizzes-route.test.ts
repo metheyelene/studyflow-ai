@@ -58,6 +58,7 @@ vi.mock("@/lib/usage", () => ({
 import { runAction } from "@/lib/ai/actions";
 import { getNotebookForUser, NotFoundError } from "@/lib/ai/sources";
 import { consumeAiAction } from "@/lib/usage";
+import { resetRateLimits } from "@/lib/rateLimit";
 import { GET, POST } from "@/app/api/quizzes/route";
 import { DELETE as quizDELETE, GET as quizGET } from "@/app/api/quizzes/[quizId]/route";
 import { POST as answersPOST } from "@/app/api/quizzes/[quizId]/answers/route";
@@ -96,6 +97,7 @@ const questions = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetRateLimits();
   (dbMock.query.quizzes.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([quizRow]);
   (dbMock.query.quizAttempts.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
     { quizId: "quiz_1", score: 1, totalQuestions: 2 },

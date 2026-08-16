@@ -3,8 +3,14 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { findCitations, prepareGrounded, stripFabricatedMarkers, type Citation } from "@/lib/ai/grounded";
-import { stream } from "@/lib/ai/orchestrator";
+import {
+  AI_NOT_CONFIGURED_MESSAGE,
+  AiNotConfiguredError,
+  AiProviderError,
+  stream,
+} from "@/lib/ai/orchestrator";
 import { getPlanForSession } from "@/lib/premium";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { consumeAiAction, type AiUsage } from "@/lib/usage";
 
 export const runtime = "nodejs";
@@ -32,6 +38,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!question) return NextResponse.json({ error: "A question is required." }, { status: 400 });
   if (question.length > 2000) {
     return NextResponse.json({ error: "Question is too long (max 2000 chars)." }, { status: 400 });
+  }
+
+  // Abuse protection: a short per-minute ceiling on top of the monthly
+  // allowance, so one account can't hammer the expensive AI endpoints.
+  const rate = checkRateLimit(session.user.id, "ai:chat");
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          "You're sending requests too quickly. Please slow down and try again in a moment.",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rate.retryAfterMs / 1000)) },
+      },
+    );
   }
 
   let prepared;
@@ -69,26 +91,49 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     resolveTrailer = resolve;
   });
 
-  const { result, meta } = await stream({
-    feature: "qa",
-    tier: "standard",
-    system: prepared.system,
-    prompt: prepared.prompt,
-    temperature: 0.3,
-    maxOutputTokens: 1200,
-    onFinish: ({ text, usage }) => {
-      const stripped = stripFabricatedMarkers(text ?? "", prepared.validMarkers).stripped;
-      const citations = findCitations(text ?? "", prepared.markerToChunk);
-      resolveTrailer({
-        citations,
-        stripped,
-        provider: meta.provider,
-        model: meta.model,
-        inputTokens: usage?.inputTokens ?? 0,
-        outputTokens: usage?.outputTokens ?? 0,
-      });
-    },
-  });
+  let streamed: Awaited<ReturnType<typeof stream>>;
+  try {
+    streamed = await stream({
+      feature: "qa",
+      tier: "standard",
+      system: prepared.system,
+      prompt: prepared.prompt,
+      temperature: 0.3,
+      maxOutputTokens: 1200,
+      onFinish: ({ text, usage }) => {
+        const stripped = stripFabricatedMarkers(text ?? "", prepared.validMarkers).stripped;
+        const citations = findCitations(text ?? "", prepared.markerToChunk);
+        resolveTrailer({
+          citations,
+          stripped,
+          provider: meta.provider,
+          model: meta.model,
+          inputTokens: usage?.inputTokens ?? 0,
+          outputTokens: usage?.outputTokens ?? 0,
+        });
+      },
+    });
+  } catch (err) {
+    // Failures before the stream starts (no provider configured, every
+    // provider down) are friendly JSON — never a raw 500.
+    if (err instanceof AiNotConfiguredError) {
+      return NextResponse.json({ error: AI_NOT_CONFIGURED_MESSAGE }, { status: 503 });
+    }
+    if (err instanceof AiProviderError) {
+      return NextResponse.json(
+        {
+          error: "The AI service is temporarily unavailable. Please try again in a moment.",
+        },
+        { status: 502 },
+      );
+    }
+    console.error("[chat:stream]", err);
+    return NextResponse.json(
+      { error: "Failed to prepare an answer." },
+      { status: 500 },
+    );
+  }
+  const { result, meta } = streamed;
 
   const encoder = new TextEncoder();
   const streamBody = new ReadableStream<Uint8Array>({

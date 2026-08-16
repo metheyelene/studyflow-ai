@@ -4,10 +4,15 @@ import { count, eq, inArray } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { auth } from "@/lib/auth";
-import { AiNotConfiguredError, AiProviderError } from "@/lib/ai/orchestrator";
+import {
+  AI_NOT_CONFIGURED_MESSAGE,
+  AiNotConfiguredError,
+  AiProviderError,
+} from "@/lib/ai/orchestrator";
 import { runAction, type ActionName } from "@/lib/ai/actions";
 import { NotFoundError, getNotebookForUser } from "@/lib/ai/sources";
 import { getPlanForSession } from "@/lib/premium";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { consumeAiAction } from "@/lib/usage";
 
 export const runtime = "nodejs";
@@ -75,6 +80,22 @@ export async function POST(request: Request) {
   const notebookId = body?.notebookId;
   if (!notebookId || typeof notebookId !== "string") {
     return NextResponse.json({ error: "Pick a notebook to generate from." }, { status: 400 });
+  }
+
+  // Abuse protection: a short per-minute ceiling on top of the monthly
+  // allowance (docs: rate limiting / request quotas).
+  const rate = checkRateLimit(session.user.id, "ai:flashcards");
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          "You're sending requests too quickly. Please slow down and try again in a moment.",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rate.retryAfterMs / 1000)) },
+      },
+    );
   }
 
   let notebook;
@@ -145,7 +166,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     if (err instanceof AiNotConfiguredError) {
-      return NextResponse.json({ error: err.message }, { status: 503 });
+      return NextResponse.json({ error: AI_NOT_CONFIGURED_MESSAGE }, { status: 503 });
     }
     if (err instanceof AiProviderError) {
       return NextResponse.json(
