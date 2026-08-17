@@ -87,13 +87,20 @@ jobs:
       # regenerated-goldens artifact so a maintainer can commit the Linux
       # output without rerunning locally. When a change is intentional,
       # commit the regenerated PNGs with the change.
+      #
+      # Drift is detected with `git status --porcelain`, NOT
+      # `git diff --exit-code`: a brand-new baseline (a screen added to
+      # the golden table) is an UNTRACKED file that git diff cannot see,
+      # so a diff-only gate would pass silently and the regenerated file
+      # would never be uploaded or committed. The porcelain check catches
+      # both modified (` M`) and new (`??`) files.
       - name: Golden baselines (regenerate + diff)
         id: golden-gate
         working-directory: mobile
         run: |
           flutter test --tags golden --update-goldens
-          git diff --stat -- test/goldens test/theme_golden_test.dart
-          git diff --exit-code -- test/goldens test/theme_golden_test.dart
+          git status --porcelain -- test/goldens test/theme_golden_test.dart
+          test -z "$(git status --porcelain -- test/goldens test/theme_golden_test.dart)"
 
       # On drift, the step above left the fresh baselines in the workspace
       # — publish them so a maintainer can download the artifact and commit
