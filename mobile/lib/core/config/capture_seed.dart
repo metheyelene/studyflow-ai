@@ -21,6 +21,7 @@ import '../../features/notebooks/notebooks_repository.dart';
 import '../../features/notebooks/source_upload.dart';
 import '../../features/onboarding/onboarding_models.dart';
 import '../../features/onboarding/onboarding_repository.dart';
+import '../../features/dashboard/dashboard_repository.dart';
 
 final captureUser = AuthUser(
   id: 'capture-user',
@@ -51,6 +52,37 @@ class _CaptureAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+}
+
+/// Dashboard data for capture builds: a realistic free-plan usage state
+/// (17 of 20 AI actions left) and one sample upcoming exam so the Home
+/// hero and countdown card render instead of erroring on the dead API.
+class _CaptureDashboardRepository implements DashboardRepository {
+  @override
+  Future<AiUsage> usage() async => const AiUsage(
+    used: 3,
+    limit: 20,
+    remaining: 17,
+    percent: 15,
+    resetsAt: '',
+    plan: 'free',
+  );
+
+  @override
+  Future<List<UpcomingExam>> exams() async {
+    final d = DateTime.now().add(const Duration(days: 21));
+    final iso =
+        '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+    return [
+      UpcomingExam(
+        id: 'capture-exam-1',
+        title: 'Sample: Electromagnetics Midterm',
+        date: iso,
+      ),
+    ];
+  }
 }
 
 /// Capture builds are signed in but must not gate on onboarding — the
@@ -224,4 +256,5 @@ final captureOverrides = <Override>[
     _CaptureOnboardingRepository(),
   ),
   notebooksRepositoryProvider.overrideWithValue(CaptureNotebooksRepository()),
+  dashboardRepositoryProvider.overrideWithValue(_CaptureDashboardRepository()),
 ];

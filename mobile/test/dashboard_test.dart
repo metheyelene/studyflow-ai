@@ -23,9 +23,10 @@ void main() {
     );
     await pumpApp(tester, dashboard: dashboard);
 
-    expect(find.text('3/20'), findsOneWidget);
-    expect(find.text('Free'), findsOneWidget);
-    expect(find.text('17 left · resets on the 1st'), findsOneWidget);
+    // The editorial hero leads with the remaining-actions numeral.
+    expect(find.text('17'), findsOneWidget);
+    expect(find.text('AI actions left'), findsOneWidget);
+    expect(find.text('Free plan · resets on the 1st'), findsOneWidget);
     expect(find.text('Ready to study?'), findsOneWidget);
   });
 
@@ -86,7 +87,7 @@ void main() {
     await tester.tap(find.text('Retry').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('3/20'), findsOneWidget);
+    expect(find.text('17'), findsOneWidget);
     expect(find.text('Could not load your usage.'), findsNothing);
   });
 

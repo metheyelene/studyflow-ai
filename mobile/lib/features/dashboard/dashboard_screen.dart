@@ -10,22 +10,24 @@ import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
 import '../notebooks/notebook.dart';
 import '../notebooks/notebooks_controller.dart';
+import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
-import '../../shared/widgets/glass/glass_pill.dart';
-import '../../shared/widgets/glass/glass_progress.dart';
 import 'dashboard_controller.dart';
 import 'dashboard_repository.dart';
 
-/// Home tab. Greeting, Today's Focus hero, quick actions, progress, and
-/// upcoming exams. The live widgets (AI usage, exams) come from the API
-/// with skeleton/error states; nothing here is hardcoded data.
+/// Home tab — an editorial composition, not a dashboard.
+///
+/// One hero focus (Today's Focus), large typography, generous negative
+/// space. The greeting is the entry; the hero is the single dominant
+/// moment (a big numeral on the open canvas — no card box); sections
+/// below it are quiet supporting rows. Live widgets (AI usage, exams)
+/// come from the API with skeleton/error states; nothing is invented.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
     final dashboard = ref.watch(dashboardControllerProvider);
     // Personal, but deterministic: a time-of-day greeting would make the
     // Home golden (and any regenerated baseline) hour-dependent.
@@ -48,33 +50,20 @@ class DashboardScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  firstName == null
-                      ? 'Welcome back'
-                      : 'Welcome back, $firstName',
-                  style: AppText.small.copyWith(
-                    color: g.textMuted,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Ready to study?',
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: AppSpacing.xl),
+                _Greeting(firstName: firstName),
+                const SizedBox(height: AppSpacing.huge),
                 _FocusHero(dashboard: dashboard),
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.huge),
                 const _SectionTitle(title: 'RECENT SPACES'),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 const _RecentSpaces(),
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.xxxl),
                 const _SectionTitle(title: 'QUICK ACTIONS'),
-                const SizedBox(height: 10),
-                const _QuickActionsChips(),
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: 14),
+                const _QuickActions(),
+                const SizedBox(height: AppSpacing.xxxl),
                 const _SectionTitle(title: 'UPCOMING'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 _UpcomingExams(dashboard: dashboard),
               ],
             ),
@@ -85,10 +74,44 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Today's Focus hero — the flagship moment on Home. It leads with the
-/// real AI-usage meter (large translucent hero, specular sheen, animated
-/// ring) and closes with a glossy teal→cyan CTA into the Study tab, so
-/// "what should I do next?" always has an answer.
+/// Editorial greeting: small tracked eyebrow, the first name in display
+/// type, and one quiet supporting line. The name — not a card — is the
+/// entry to the screen.
+class _Greeting extends StatelessWidget {
+  const _Greeting({this.firstName});
+
+  final String? firstName;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'WELCOME BACK',
+          style: AppText.eyebrow.copyWith(color: g.textMuted),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          firstName ?? 'Friend',
+          style: Theme.of(
+            context,
+          ).textTheme.displayMedium?.copyWith(color: g.textPrimary),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Ready to study?',
+          style: TextStyle(color: g.textMuted, fontSize: 15, height: 1.4),
+        ),
+      ],
+    );
+  }
+}
+
+/// Today's Focus — the one hero moment. Flat on the canvas (no card box):
+/// a white eyebrow, a large numeral, one label, one quiet sub-line, and
+/// the single primary CTA. The glossy control carries all the material.
 class _FocusHero extends ConsumerWidget {
   const _FocusHero({required this.dashboard});
 
@@ -96,121 +119,41 @@ class _FocusHero extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GlassCard(
-      tone: GlassTone.floating,
-      glossy: true,
-      radius: AppShapes.hero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  "TODAY'S FOCUS",
-                  style: AppText.eyebrow.copyWith(color: context.glass.primary),
-                ),
-              ),
-              GlassBadge(label: 'AI workspace', icon: Icons.auto_awesome),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Your study engine is ready.',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 20),
-          dashboard.when(
-            loading: () => const _UsageSkeleton(),
-            error: (_, _) => _UsageError(
-              onRetry: () =>
-                  ref.read(dashboardControllerProvider.notifier).refresh(),
-            ),
-            data: (snapshot) => _UsageMeter(usage: snapshot.usage),
-          ),
-          const SizedBox(height: 20),
-          _HeroCta(),
-        ],
-      ),
-    );
-  }
-}
-
-/// Glossy primary CTA — a teal→cyan gradient button that springs under
-/// press. "Start studying" leads into the adaptive Study tab.
-class _HeroCta extends StatefulWidget {
-  const _HeroCta();
-
-  @override
-  State<_HeroCta> createState() => _HeroCtaState();
-}
-
-class _HeroCtaState extends State<_HeroCta> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
     final g = context.glass;
-    return Semantics(
-      button: true,
-      label: 'Start studying',
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
-        duration: _pressed
-            ? AppMotion.pressInDuration
-            : AppMotion.pressOutDuration,
-        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
-        child: Material(
-          color: Colors.transparent,
-          child: Listener(
-            onPointerDown: (_) => setState(() => _pressed = true),
-            onPointerUp: (_) => setState(() => _pressed = false),
-            onPointerCancel: (_) => setState(() => _pressed = false),
-            child: InkWell(
-              onTap: () => context.go(AppRoutes.study),
-              borderRadius: BorderRadius.circular(18),
-              child: Ink(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [g.primary, Color.lerp(g.primary, g.ai, 0.35)!],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: g.highlight.withValues(alpha: 0.6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: g.primary.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.bolt_rounded, size: 18, color: g.textOnPrimary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Start studying',
-                      style: TextStyle(
-                        color: g.textOnPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "TODAY'S FOCUS",
+          style: AppText.eyebrow.copyWith(color: g.primary),
         ),
-      ),
+        const SizedBox(height: 10),
+        dashboard.when(
+          loading: () => const _FocusSkeleton(),
+          error: (_, _) => _FocusError(
+            onRetry: () =>
+                ref.read(dashboardControllerProvider.notifier).refresh(),
+          ),
+          data: (snapshot) => _FocusStats(usage: snapshot.usage),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        GlassButton(
+          label: 'Start studying',
+          icon: Icons.arrow_forward,
+          size: GlassButtonSize.large,
+          expand: true,
+          onPressed: () => context.go(AppRoutes.study),
+        ),
+      ],
     );
   }
 }
 
-class _UsageMeter extends StatelessWidget {
-  const _UsageMeter({required this.usage});
+/// The hero numeral: how much AI study work is available this cycle.
+/// The number is the largest type on the screen; the plan/cycle detail
+/// drops to a muted sub-line.
+class _FocusStats extends StatelessWidget {
+  const _FocusStats({required this.usage});
 
   final AiUsage usage;
 
@@ -220,83 +163,58 @@ class _UsageMeter extends StatelessWidget {
     final planLabel = switch (usage.plan) {
       'premium' => 'Premium',
       'founding_member' => 'Founding member',
-      _ => 'Free',
+      _ => 'Free plan',
     };
-    return Row(
+    final number = usage.limit > 0 ? '${usage.remaining}' : '—';
+    final sub = usage.remaining > 0
+        ? '$planLabel · resets on the 1st'
+        : 'Allowance used · resets on the 1st';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Animate 0 → current on first appearance; further changes tween
-        // from the previous value instead of snapping.
-        TweenAnimationBuilder<double>(
-          tween: Tween(
-            begin: 0,
-            end: usage.limit > 0 ? usage.percent / 100 : 0,
-          ),
-          duration: AppMotion.medium,
-          curve: AppMotion.emphasized,
-          builder: (context, value, _) =>
-              GlassRing(value: value, label: '${usage.used}/${usage.limit}'),
+        Text(
+          number,
+          style: Theme.of(
+            context,
+          ).textTheme.displayLarge?.copyWith(color: g.textPrimary, height: 1.0),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'AI actions',
-                      style: AppText.bodyMedium.copyWith(color: g.textPrimary),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GlassBadge(
-                    label: planLabel,
-                    icon: Icons.workspace_premium_outlined,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                usage.remaining > 0
-                    ? '${usage.remaining} left · resets on the 1st'
-                    : 'Allowance used · resets on the 1st',
-                style: AppText.small.copyWith(color: g.textMuted),
-              ),
-            ],
+        const SizedBox(height: 4),
+        Text(
+          'AI actions left',
+          style: TextStyle(
+            color: g.textPrimary,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
           ),
         ),
+        const SizedBox(height: 4),
+        Text(sub, style: AppText.small.copyWith(color: g.textMuted)),
       ],
     );
   }
 }
 
-class _UsageSkeleton extends StatelessWidget {
-  const _UsageSkeleton();
+class _FocusSkeleton extends StatelessWidget {
+  const _FocusSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const GlassSkeleton(width: 84, height: 84, radius: 42),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              GlassSkeleton(width: 120, height: 15),
-              SizedBox(height: 8),
-              GlassSkeleton(width: 160, height: 12),
-            ],
-          ),
-        ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        GlassSkeleton(width: 120, height: 56, radius: 14),
+        SizedBox(height: 10),
+        GlassSkeleton(width: 150, height: 16),
+        SizedBox(height: 8),
+        GlassSkeleton(width: 190, height: 12),
       ],
     );
   }
 }
 
-class _UsageError extends ConsumerWidget {
-  const _UsageError({required this.onRetry});
+class _FocusError extends ConsumerWidget {
+  const _FocusError({required this.onRetry});
 
   final VoidCallback onRetry;
 
@@ -306,8 +224,8 @@ class _UsageError extends ConsumerWidget {
     return Row(
       children: [
         Icon(
-          Icons.cloud_off_outlined,
-          size: 22,
+          Icons.cloud_off,
+          size: 20,
           color: g.textMuted.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 10),
@@ -350,7 +268,7 @@ class _UpcomingExams extends ConsumerWidget {
         child: Row(
           children: [
             Icon(
-              Icons.cloud_off_outlined,
+              Icons.cloud_off,
               size: 22,
               color: g.textMuted.withValues(alpha: 0.7),
             ),
@@ -377,7 +295,7 @@ class _UpcomingExams extends ConsumerWidget {
               children: [
                 const SizedBox(height: 8),
                 Icon(
-                  Icons.event_outlined,
+                  Icons.event,
                   size: 26,
                   color: g.textMuted.withValues(alpha: 0.6),
                 ),
@@ -429,9 +347,8 @@ class _SectionTitle extends StatelessWidget {
 }
 
 /// Recent Study Spaces — the real notebook list on the open canvas
-/// (hairline dividers, no card box). Replaces the old hardcoded stat rows
-/// ("0 days / 0 / 0") that presented placeholders as learning data; this
-/// section shows what the user actually has and opens it.
+/// (hairline dividers, no card box). Shows what the user actually has
+/// and opens it.
 class _RecentSpaces extends ConsumerWidget {
   const _RecentSpaces();
 
@@ -515,7 +432,7 @@ class _SpaceRow extends StatelessWidget {
                 color: g.primarySoft,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.menu_book_outlined, size: 17, color: g.primary),
+              child: Icon(Icons.menu_book, size: 17, color: g.primary),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -548,41 +465,54 @@ class _SpaceRow extends StatelessWidget {
   }
 }
 
-/// Floating glossy action chips. Same destinations as the old grid — tabs
-/// go() (shell tabs), detail routes push() so back returns to Home — but
-/// the chips read as elevated translucent objects instead of a flat grid.
-class _QuickActionsChips extends StatelessWidget {
-  const _QuickActionsChips();
+/// Quiet 3×2 action grid. Small translucent tiles, white icon, muted
+/// label — supporting controls that stay out of the hero's way.
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  static const _actions = [
+    (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
+    (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
+    (Icons.style, 'Flashcards', AppRoutes.flashcards, true),
+    (Icons.quiz, 'Quiz', AppRoutes.quizzes, true),
+    // Audio is a shell tab now, so go to it (like Upload notes/Study
+    // plan) rather than pushing a full-screen route over the shell.
+    (Icons.mic, 'Podcast', AppRoutes.audio, false),
+    (Icons.event_available, 'Study plan', AppRoutes.study, false),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    const actions = [
-      (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
-      (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
-      (Icons.style_outlined, 'Flashcards', AppRoutes.flashcards, true),
-      (Icons.quiz_outlined, 'Quiz', AppRoutes.quizzes, true),
-      // Audio is a shell tab now, so go to it (like Upload notes/Study
-      // plan) rather than pushing a full-screen route over the shell.
-      (Icons.mic_none, 'Podcast', AppRoutes.audio, false),
-      (Icons.event_available_outlined, 'Study plan', AppRoutes.study, false),
-    ];
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+    return Column(
       children: [
-        for (final a in actions)
-          _GlossyActionChip(
-            icon: a.$1,
-            label: a.$2,
-            onTap: () => a.$4 ? context.push(a.$3) : context.go(a.$3),
+        for (var row = 0; row < 2; row++)
+          Padding(
+            padding: EdgeInsets.only(bottom: row == 0 ? 10 : 0),
+            child: Row(
+              children: [
+                for (var col = 0; col < 3; col++) ...[
+                  Expanded(
+                    child: _QuietAction(
+                      icon: _actions[row * 3 + col].$1,
+                      label: _actions[row * 3 + col].$2,
+                      onTap: () {
+                        final a = _actions[row * 3 + col];
+                        a.$4 ? context.push(a.$3) : context.go(a.$3);
+                      },
+                    ),
+                  ),
+                  if (col != 2) const SizedBox(width: 10),
+                ],
+              ],
+            ),
           ),
       ],
     );
   }
 }
 
-class _GlossyActionChip extends StatefulWidget {
-  const _GlossyActionChip({
+class _QuietAction extends StatefulWidget {
+  const _QuietAction({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -593,10 +523,10 @@ class _GlossyActionChip extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_GlossyActionChip> createState() => _GlossyActionChipState();
+  State<_QuietAction> createState() => _QuietActionState();
 }
 
-class _GlossyActionChipState extends State<_GlossyActionChip> {
+class _QuietActionState extends State<_QuietAction> {
   bool _pressed = false;
 
   @override
@@ -619,43 +549,29 @@ class _GlossyActionChipState extends State<_GlossyActionChip> {
             onPointerCancel: (_) => setState(() => _pressed = false),
             child: InkWell(
               onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               child: Ink(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 11,
+                  horizontal: 8,
+                  vertical: 14,
                 ),
                 decoration: BoxDecoration(
-                  color: g.floating,
-                  borderRadius: BorderRadius.circular(18),
+                  color: g.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: g.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: Row(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: g.primarySoft,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(widget.icon, size: 16, color: g.primary),
-                    ),
-                    const SizedBox(width: 10),
+                    Icon(widget.icon, size: 18, color: g.primary),
+                    const SizedBox(height: 6),
                     Text(
                       widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: g.textPrimary,
-                        fontSize: 13.5,
+                        color: g.textMuted,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
