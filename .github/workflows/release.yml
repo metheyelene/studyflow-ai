@@ -67,11 +67,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            mobile/build/app/outputs/flutter-apk/app-release.apk \
-            mobile/build/app/outputs/bundle/release/app-release.aab \
-            --title "StudyFlow AI $GITHUB_REF_NAME" \
-            --notes "Signed Android build. APK installs directly on any Android phone. The .aab is for the Play Store. Set the API_BASE_URL repository variable to your deployed backend before distributing."
+          # The release API occasionally 503s under load; retry with backoff
+          # instead of failing the whole (already-signed) build.
+          for i in 1 2 3 4 5; do
+            if gh release create "$GITHUB_REF_NAME" \
+              mobile/build/app/outputs/flutter-apk/app-release.apk \
+              mobile/build/app/outputs/bundle/release/app-release.aab \
+              --title "StudyFlow AI $GITHUB_REF_NAME" \
+              --notes "Signed Android build. APK installs directly on any Android phone. The .aab is for the Play Store. Set the API_BASE_URL repository variable to your deployed backend before distributing."; then
+              exit 0
+            fi
+            echo "release create failed (attempt $i/5), backing off..."
+            sleep $((i * 15))
+          done
+          echo "release create failed after 5 attempts" >&2
+          exit 1
 
   ios:
     name: Verify iOS build compiles (unsigned)
