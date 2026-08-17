@@ -49,20 +49,21 @@ void main() {
     expect(find.text('Profile'), findsOneWidget); // bottom nav
   });
 
-  testWidgets('quick actions render and Upload notes navigates to notebooks', (
+  testWidgets('quick actions render and Ask AI navigates to notebooks', (
     tester,
   ) async {
     await pumpApp(tester);
 
-    expect(find.text('QUICK ACTIONS'), findsOneWidget);
-    expect(find.text('Upload notes'), findsOneWidget);
-    expect(find.text('Summarize'), findsOneWidget);
-    expect(find.text('Study plan'), findsOneWidget);
+    expect(find.text('QUICK'), findsOneWidget);
+    expect(find.text('Ask AI'), findsOneWidget);
+    expect(find.text('Flashcards'), findsOneWidget);
+    expect(find.text('Quiz'), findsOneWidget);
+    expect(find.text('Podcast'), findsOneWidget);
     expect(find.text('UPCOMING'), findsOneWidget);
     expect(find.text('No upcoming exams'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Upload notes'));
-    await tester.tap(find.text('Upload notes'));
+    await tester.ensureVisible(find.text('Ask AI'));
+    await tester.tap(find.text('Ask AI'));
     await tester.pumpAndSettle();
 
     // Real navigation: the notebooks tab opens with its honest empty state.
@@ -74,27 +75,20 @@ void main() {
     (tester) async {
       await pumpApp(tester);
 
-      // Mirrors the web dashboard QUICK_ACTIONS: Upload Notes and Create
-      // Summary link to /notebooks; Flashcards and Quiz have their own real
-      // screens; Study Plan links to /planner (mobile: /study).
-      const notebookActions = ['Upload notes', 'Summarize'];
-      for (final label in notebookActions) {
-        await tester.ensureVisible(find.text(label));
-        await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
-
-        // Real navigation: the notebooks tab opens with its empty state.
-        expect(
-          find.text('No notebooks yet'),
-          findsOneWidget,
-          reason: '$label should open the notebooks tab (web: /notebooks)',
-        );
-
-        // Return to Home so the next action starts from the dashboard.
-        await tester.tap(find.text('Home'));
-        await tester.pumpAndSettle();
-        expect(find.text('QUICK ACTIONS'), findsOneWidget);
-      }
+      // Mirrors the web dashboard QUICK_ACTIONS: Ask AI links to the
+      // notebooks tab; Flashcards, Quiz, and Podcast have their own real
+      // destinations.
+      await tester.ensureVisible(find.text('Ask AI'));
+      await tester.tap(find.text('Ask AI'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('No notebooks yet'),
+        findsOneWidget,
+        reason: 'Ask AI should open the notebooks tab',
+      );
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(find.text('QUICK'), findsOneWidget);
 
       // Flashcards now has its own real screen (deck list).
       await tester.ensureVisible(find.text('Flashcards'));
@@ -120,14 +114,14 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      // Study plan mirrors the web's /planner destination → the Study tab.
-      await tester.ensureVisible(find.text('Study plan'));
-      await tester.tap(find.text('Study plan'));
+      // Podcast mirrors the audio tab (web: /audio).
+      await tester.ensureVisible(find.text('Podcast'));
+      await tester.tap(find.text('Podcast'));
       await tester.pumpAndSettle();
       expect(
-        find.text('STUDY MATERIAL'),
+        find.text('No podcasts yet'),
         findsOneWidget,
-        reason: 'Study plan should open the Study tab (web: /planner)',
+        reason: 'Podcast should open the audio tab',
       );
     },
   );

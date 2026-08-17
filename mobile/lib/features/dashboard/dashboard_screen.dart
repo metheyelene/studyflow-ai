@@ -14,15 +14,14 @@ import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
 import 'dashboard_controller.dart';
-import 'dashboard_repository.dart';
 
-/// Home tab — an editorial composition, not a dashboard.
+/// Home tab — an editorial command center, not a dashboard.
 ///
-/// One hero focus (Today's Focus), large typography, generous negative
-/// space. The greeting is the entry; the hero is the single dominant
-/// moment (a big numeral on the open canvas — no card box); sections
-/// below it are quiet supporting rows. Live widgets (AI usage, exams)
-/// come from the API with skeleton/error states; nothing is invented.
+/// Composition: greeting → a single subject-led hero (the study space you
+/// should continue, in display type, with one CTA) → a quiet AI-allowance
+/// bar → numbered recent spaces on hairlines → compact action pills →
+/// the next exam. Large type and open canvas carry the hierarchy; the
+/// only "box" on the screen is the white glossy CTA.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -39,9 +38,9 @@ class DashboardScreen extends ConsumerWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
-          20,
+          24,
           AppSpacing.xl,
-          20,
+          24,
           context.isPhone ? 120 : 40,
         ),
         child: Center(
@@ -51,15 +50,17 @@ class DashboardScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _Greeting(firstName: firstName),
-                const SizedBox(height: AppSpacing.huge),
-                _FocusHero(dashboard: dashboard),
-                const SizedBox(height: AppSpacing.huge),
-                const _SectionTitle(title: 'RECENT SPACES'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xxl),
+                const _ContinueHero(),
+                const SizedBox(height: AppSpacing.xl),
+                _UsageBar(dashboard: dashboard),
+                const SizedBox(height: AppSpacing.xxxl),
+                const _SectionTitle(title: 'RECENT'),
+                const SizedBox(height: 6),
                 const _RecentSpaces(),
                 const SizedBox(height: AppSpacing.xxxl),
-                const _SectionTitle(title: 'QUICK ACTIONS'),
-                const SizedBox(height: 14),
+                const _SectionTitle(title: 'QUICK'),
+                const SizedBox(height: 12),
                 const _QuickActions(),
                 const SizedBox(height: AppSpacing.xxxl),
                 const _SectionTitle(title: 'UPCOMING'),
@@ -74,9 +75,9 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Editorial greeting: small tracked eyebrow, the first name in display
-/// type, and one quiet supporting line. The name — not a card — is the
-/// entry to the screen.
+/// Editorial greeting: a tracked eyebrow, the first name in confident
+/// display type, and one quiet line. The name — not a card — opens the
+/// screen.
 class _Greeting extends StatelessWidget {
   const _Greeting({this.firstName});
 
@@ -90,14 +91,21 @@ class _Greeting extends StatelessWidget {
       children: [
         Text(
           'WELCOME BACK',
-          style: AppText.eyebrow.copyWith(color: g.textMuted),
+          style: AppText.eyebrow.copyWith(
+            color: g.textMuted,
+            letterSpacing: 1.4,
+          ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           firstName ?? 'Friend',
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(color: g.textPrimary),
+          style: TextStyle(
+            color: g.textPrimary,
+            fontSize: 34,
+            height: 1.12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.6,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -109,138 +117,434 @@ class _Greeting extends StatelessWidget {
   }
 }
 
-/// Today's Focus — the one hero moment. Flat on the canvas (no card box):
-/// a white eyebrow, a large numeral, one label, one quiet sub-line, and
-/// the single primary CTA. The glossy control carries all the material.
-class _FocusHero extends ConsumerWidget {
-  const _FocusHero({required this.dashboard});
+/// The single dominant moment: the study space to continue, in large
+/// display type on the open canvas, with one primary CTA. The subject —
+/// not a stat — is the hero.
+class _ContinueHero extends ConsumerWidget {
+  const _ContinueHero();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final g = context.glass;
+    final state = ref.watch(notebooksControllerProvider);
+
+    return state.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          GlassSkeleton(width: 150, height: 14),
+          SizedBox(height: 12),
+          GlassSkeleton(width: 260, height: 44),
+          SizedBox(height: 12),
+          GlassSkeleton(width: 190, height: 13),
+        ],
+      ),
+      error: (_, _) => _HeroEmpty(
+        onTap: () => context.go(AppRoutes.notebooks),
+        title: 'Add your first study space',
+        sub: 'Upload a PDF or your notes and StudyFlow will organize them.',
+      ),
+      data: (notebooks) {
+        if (notebooks.isEmpty) {
+          return _HeroEmpty(
+            onTap: () => context.go(AppRoutes.notebooks),
+            title: 'Your study space is empty',
+            sub: 'Upload a PDF or your notes and StudyFlow will organize them.',
+          );
+        }
+        final focus = notebooks.first;
+        final count = focus.sourceCount;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'CONTINUE STUDYING',
+              style: AppText.eyebrow.copyWith(
+                color: g.primary,
+                letterSpacing: 1.4,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              focus.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: g.textPrimary,
+                fontSize: 40,
+                height: 1.04,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.8,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              count == 1 ? '1 source' : '$count sources',
+              style: AppText.eyebrow.copyWith(
+                color: g.textMuted,
+                fontSize: 12,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            GlassButton(
+              label: 'Continue studying',
+              icon: Icons.arrow_forward,
+              size: GlassButtonSize.large,
+              expand: true,
+              onPressed: () => context.push('/notebooks/${focus.id}'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// A calm empty-hero for a brand-new user: the same editorial moment, but
+/// inviting creation.
+class _HeroEmpty extends StatelessWidget {
+  const _HeroEmpty({
+    required this.title,
+    required this.sub,
+    required this.onTap,
+  });
+
+  final String title;
+  final String sub;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'START HERE',
+          style: AppText.eyebrow.copyWith(color: g.primary, letterSpacing: 1.4),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          title,
+          style: TextStyle(
+            color: g.textPrimary,
+            fontSize: 38,
+            height: 1.05,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.8,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          sub,
+          style: TextStyle(color: g.textMuted, fontSize: 15, height: 1.45),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        GlassButton(
+          label: 'Create a study space',
+          icon: Icons.add,
+          size: GlassButtonSize.large,
+          expand: true,
+          onPressed: onTap,
+        ),
+      ],
+    );
+  }
+}
+
+/// The AI allowance — a supporting detail, not the hero. A thin progress
+/// bar and a compact line carry the stat that used to dominate.
+class _UsageBar extends ConsumerWidget {
+  const _UsageBar({required this.dashboard});
 
   final AsyncValue<DashboardSnapshot> dashboard;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "TODAY'S FOCUS",
-          style: AppText.eyebrow.copyWith(color: g.primary),
-        ),
-        const SizedBox(height: 10),
-        dashboard.when(
-          loading: () => const _FocusSkeleton(),
-          error: (_, _) => _FocusError(
-            onRetry: () =>
+    return dashboard.when(
+      loading: () => const GlassSkeleton(width: 220, height: 20),
+      error: (_, _) => Row(
+        children: [
+          Icon(
+            Icons.cloud_off,
+            size: 18,
+            color: g.textMuted.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Could not load your usage.',
+              style: AppText.small.copyWith(color: g.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () =>
                 ref.read(dashboardControllerProvider.notifier).refresh(),
+            style: TextButton.styleFrom(
+              foregroundColor: g.primary,
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('Retry'),
           ),
-          data: (snapshot) => _FocusStats(usage: snapshot.usage),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        GlassButton(
-          label: 'Start studying',
-          icon: Icons.arrow_forward,
-          size: GlassButtonSize.large,
-          expand: true,
-          onPressed: () => context.go(AppRoutes.study),
-        ),
-      ],
+        ],
+      ),
+      data: (snapshot) {
+        final usage = snapshot.usage;
+        final planLabel = switch (usage.plan) {
+          'premium' => 'Premium',
+          'founding_member' => 'Founding member',
+          _ => 'Free plan',
+        };
+        final remaining = usage.remaining;
+        final frac = (usage.percent / 100).clamp(0.0, 1.0);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$remaining',
+                  style: TextStyle(
+                    color: g.textPrimary,
+                    fontSize: 22,
+                    height: 1.0,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Text(
+                      'AI actions left',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.small.copyWith(color: g.textMuted),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Text(
+                      planLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: AppText.caption.copyWith(color: g.textMuted),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Thin monochrome allowance bar.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: SizedBox(
+                height: 3,
+                child: Stack(
+                  children: [
+                    Container(color: g.textPrimary.withValues(alpha: 0.10)),
+                    FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: frac,
+                      child: Container(color: g.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Resets on the 1st',
+              style: AppText.caption.copyWith(
+                color: g.textMuted.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-/// The hero numeral: how much AI study work is available this cycle.
-/// The number is the largest type on the screen; the plan/cycle detail
-/// drops to a muted sub-line.
-class _FocusStats extends StatelessWidget {
-  const _FocusStats({required this.usage});
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
 
-  final AiUsage usage;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    final planLabel = switch (usage.plan) {
-      'premium' => 'Premium',
-      'founding_member' => 'Founding member',
-      _ => 'Free plan',
-    };
-    final number = usage.limit > 0 ? '${usage.remaining}' : '—';
-    final sub = usage.remaining > 0
-        ? '$planLabel · resets on the 1st'
-        : 'Allowance used · resets on the 1st';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
         Text(
-          number,
-          style: Theme.of(
-            context,
-          ).textTheme.displayLarge?.copyWith(color: g.textPrimary, height: 1.0),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'AI actions left',
-          style: TextStyle(
-            color: g.textPrimary,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            height: 1.3,
+          title,
+          style: AppText.eyebrow.copyWith(
+            color: context.glass.textMuted,
+            letterSpacing: 1.4,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(sub, style: AppText.small.copyWith(color: g.textMuted)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: context.glass.textPrimary.withValues(alpha: 0.07),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _FocusSkeleton extends StatelessWidget {
-  const _FocusSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        GlassSkeleton(width: 120, height: 56, radius: 14),
-        SizedBox(height: 10),
-        GlassSkeleton(width: 150, height: 16),
-        SizedBox(height: 8),
-        GlassSkeleton(width: 190, height: 12),
-      ],
-    );
-  }
-}
-
-class _FocusError extends ConsumerWidget {
-  const _FocusError({required this.onRetry});
-
-  final VoidCallback onRetry;
+/// Recent study spaces — a numbered editorial list on the open canvas
+/// (hairline dividers, no card box).
+class _RecentSpaces extends ConsumerWidget {
+  const _RecentSpaces();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final g = context.glass;
-    return Row(
-      children: [
-        Icon(
-          Icons.cloud_off,
-          size: 20,
-          color: g.textMuted.withValues(alpha: 0.7),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'Could not load your usage.',
+    final state = ref.watch(notebooksControllerProvider);
+    return state.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          GlassSkeleton(width: 210, height: 16),
+          SizedBox(height: 10),
+          GlassSkeleton(width: 150, height: 13),
+        ],
+      ),
+      error: (_, _) => Text(
+        'Could not load your study spaces.',
+        style: AppText.small.copyWith(color: g.textMuted),
+      ),
+      data: (notebooks) {
+        if (notebooks.isEmpty) {
+          return Text(
+            'Your study spaces will appear here.',
             style: AppText.small.copyWith(color: g.textMuted),
-          ),
+          );
+        }
+        return Column(
+          children: [
+            for (var i = 0; i < notebooks.length; i++) ...[
+              _SpaceRow(index: i + 1, notebook: notebooks[i]),
+              if (i != notebooks.length - 1)
+                Divider(
+                  color: g.textPrimary.withValues(alpha: 0.06),
+                  height: 1,
+                ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One notebook row: index numeral, title, source metadata, chevron.
+class _SpaceRow extends StatelessWidget {
+  const _SpaceRow({required this.index, required this.notebook});
+
+  final int index;
+  final Notebook notebook;
+
+  @override
+  Widget build(BuildContext context) {
+    final g = context.glass;
+    final count = notebook.sourceCount;
+    return InkWell(
+      onTap: () => context.push('/notebooks/${notebook.id}'),
+      borderRadius: BorderRadius.circular(AppShapes.card),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 30,
+              child: Text(
+                index.toString().padLeft(2, '0'),
+                style: TextStyle(
+                  color: g.textMuted.withValues(alpha: 0.55),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notebook.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    count == 1 ? '1 source' : '$count sources',
+                    style: AppText.small.copyWith(color: g.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: g.textMuted.withValues(alpha: 0.5),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: onRetry,
-          style: TextButton.styleFrom(foregroundColor: g.primary),
-          child: const Text('Retry'),
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+/// Compact glossy action pills in one horizontal row — floating controls,
+/// not a tile grid.
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  // (icon, label, route, isShellTab): shell tabs switch via context.go;
+  // dedicated screens push over the shell.
+  static const _actions = [
+    (Icons.auto_awesome, 'Ask AI', AppRoutes.notebooks, true),
+    (Icons.style, 'Flashcards', AppRoutes.flashcards, false),
+    (Icons.quiz, 'Quiz', AppRoutes.quizzes, false),
+    (Icons.mic, 'Podcast', AppRoutes.audio, true),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < _actions.length; i++) ...[
+            if (i != 0) const SizedBox(width: 10),
+            GlassButton(
+              label: _actions[i].$2,
+              icon: _actions[i].$1,
+              variant: GlassButtonVariant.glass,
+              size: GlassButtonSize.medium,
+              onPressed: () {
+                final action = _actions[i];
+                // Shell tabs switch via go; dedicated screens push over
+                // the shell (matching the pre-pill behavior).
+                action.$4 ? context.go(action.$3) : context.push(action.$3);
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -328,260 +632,6 @@ class _UpcomingExams extends ConsumerWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: AppText.eyebrow.copyWith(color: context.glass.textMuted),
-    );
-  }
-}
-
-/// Recent Study Spaces — the real notebook list on the open canvas
-/// (hairline dividers, no card box). Shows what the user actually has
-/// and opens it.
-class _RecentSpaces extends ConsumerWidget {
-  const _RecentSpaces();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
-    final state = ref.watch(notebooksControllerProvider);
-    return state.when(
-      loading: () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          GlassSkeleton(width: 210, height: 16),
-          SizedBox(height: 10),
-          GlassSkeleton(width: 150, height: 13),
-        ],
-      ),
-      error: (_, _) => Text(
-        'Could not load your study spaces.',
-        style: AppText.small.copyWith(color: g.textMuted),
-      ),
-      data: (notebooks) {
-        if (notebooks.isEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your study spaces will appear here. Add your first PDF or '
-                'notes and StudyFlow will organize them.',
-                style: AppText.small.copyWith(color: g.textMuted, height: 1.4),
-              ),
-              const SizedBox(height: 4),
-              TextButton.icon(
-                onPressed: () => context.go(AppRoutes.notebooks),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Create a study space'),
-                style: TextButton.styleFrom(foregroundColor: g.primary),
-              ),
-            ],
-          );
-        }
-        return Column(
-          children: [
-            for (var i = 0; i < notebooks.length; i++) ...[
-              _SpaceRow(notebook: notebooks[i]),
-              if (i != notebooks.length - 1)
-                Divider(
-                  color: g.textPrimary.withValues(alpha: 0.06),
-                  height: 1,
-                ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// One notebook row on the open canvas: accent icon tile, title, source
-/// metadata, and a chevron. Tapping enters the study space.
-class _SpaceRow extends StatelessWidget {
-  const _SpaceRow({required this.notebook});
-
-  final Notebook notebook;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    final count = notebook.sourceCount;
-    return InkWell(
-      onTap: () => context.push('/notebooks/${notebook.id}'),
-      borderRadius: BorderRadius.circular(AppShapes.card),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: g.primarySoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.menu_book, size: 17, color: g.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notebook.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.bodyMedium.copyWith(color: g.textPrimary),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    count == 1 ? '1 source' : '$count sources',
-                    style: AppText.small.copyWith(color: g.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: g.textMuted.withValues(alpha: 0.5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Quiet 3×2 action grid. Small translucent tiles, white icon, muted
-/// label — supporting controls that stay out of the hero's way.
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  static const _actions = [
-    (Icons.upload_file, 'Upload notes', AppRoutes.notebooks, false),
-    (Icons.auto_awesome, 'Summarize', AppRoutes.notebooks, false),
-    (Icons.style, 'Flashcards', AppRoutes.flashcards, true),
-    (Icons.quiz, 'Quiz', AppRoutes.quizzes, true),
-    // Audio is a shell tab now, so go to it (like Upload notes/Study
-    // plan) rather than pushing a full-screen route over the shell.
-    (Icons.mic, 'Podcast', AppRoutes.audio, false),
-    (Icons.event_available, 'Study plan', AppRoutes.study, false),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var row = 0; row < 2; row++)
-          Padding(
-            padding: EdgeInsets.only(bottom: row == 0 ? 10 : 0),
-            child: Row(
-              children: [
-                for (var col = 0; col < 3; col++) ...[
-                  Expanded(
-                    child: _QuietAction(
-                      icon: _actions[row * 3 + col].$1,
-                      label: _actions[row * 3 + col].$2,
-                      onTap: () {
-                        final a = _actions[row * 3 + col];
-                        a.$4 ? context.push(a.$3) : context.go(a.$3);
-                      },
-                    ),
-                  ),
-                  if (col != 2) const SizedBox(width: 10),
-                ],
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _QuietAction extends StatefulWidget {
-  const _QuietAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  State<_QuietAction> createState() => _QuietActionState();
-}
-
-class _QuietActionState extends State<_QuietAction> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return Semantics(
-      button: true,
-      label: widget.label,
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: _pressed
-            ? AppMotion.pressInDuration
-            : AppMotion.pressOutDuration,
-        curve: _pressed ? AppMotion.pressIn : AppMotion.pressOut,
-        child: Material(
-          color: Colors.transparent,
-          child: Listener(
-            onPointerDown: (_) => setState(() => _pressed = true),
-            onPointerUp: (_) => setState(() => _pressed = false),
-            onPointerCancel: (_) => setState(() => _pressed = false),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(16),
-              child: Ink(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: g.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: g.border),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(widget.icon, size: 18, color: g.primary),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: g.textMuted,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

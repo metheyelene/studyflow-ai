@@ -26,7 +26,10 @@ void main() {
     // The editorial hero leads with the remaining-actions numeral.
     expect(find.text('17'), findsOneWidget);
     expect(find.text('AI actions left'), findsOneWidget);
-    expect(find.text('Free plan · resets on the 1st'), findsOneWidget);
+    // The allowance is now a quiet bar: plan label and reset line render
+    // as separate supporting details.
+    expect(find.text('Free plan'), findsOneWidget);
+    expect(find.text('Resets on the 1st'), findsOneWidget);
     expect(find.text('Ready to study?'), findsOneWidget);
   });
 
