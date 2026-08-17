@@ -295,7 +295,7 @@ void main() {
       final playButton = tester.widget<Material>(
         find
             .ancestor(
-              of: find.byIcon(Icons.pause_rounded),
+              of: find.byIcon(Icons.pause),
               matching: find.byType(Material),
             )
             .first,
@@ -336,7 +336,7 @@ void main() {
       final playButton = tester.widget<Material>(
         find
             .ancestor(
-              of: find.byIcon(Icons.pause_rounded),
+              of: find.byIcon(Icons.pause),
               matching: find.byType(Material),
             )
             .first,

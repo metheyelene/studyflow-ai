@@ -53,7 +53,7 @@ class ProfileScreen extends ConsumerWidget {
                         title: 'Settings',
                         subtitle: 'Profile, preferences, account',
                         leading: Icon(
-                          Icons.settings_outlined,
+                          Icons.settings,
                           size: 22,
                           color: g.primary,
                         ),
@@ -72,11 +72,7 @@ class ProfileScreen extends ConsumerWidget {
                       GlassListTile(
                         title: 'About StudyFlow',
                         subtitle: 'About the app and its creator',
-                        leading: Icon(
-                          Icons.info_outline,
-                          size: 22,
-                          color: g.primary,
-                        ),
+                        leading: Icon(Icons.info, size: 22, color: g.primary),
                         trailing: Icon(
                           Icons.chevron_right,
                           size: 20,
@@ -170,9 +166,7 @@ class _PlanCard extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                premium
-                    ? Icons.workspace_premium
-                    : Icons.workspace_premium_outlined,
+                premium ? Icons.workspace_premium : Icons.workspace_premium,
                 size: 20,
                 color: premium ? g.primary : g.textMuted,
               ),

@@ -47,7 +47,7 @@ class QuizzesScreen extends ConsumerWidget {
                   label: quizzes.valueOrNull == null
                       ? '—'
                       : '${quizzes.valueOrNull!.quizzes.length}',
-                  icon: Icons.quiz_outlined,
+                  icon: Icons.quiz,
                 ),
                 const SizedBox(width: 10),
                 GlassButton(
@@ -147,7 +147,7 @@ class QuizzesScreen extends ConsumerWidget {
               const SizedBox(width: 8),
               GlassButton(
                 label: 'Delete',
-                icon: Icons.delete_outline,
+                icon: Icons.delete,
                 onPressed: () => Navigator.of(dialogContext).pop(true),
               ),
             ],
@@ -216,7 +216,7 @@ class _QuizzesError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.cloud_off, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 'Could not load your quizzes',
@@ -267,7 +267,7 @@ class _EmptyQuizzes extends StatelessWidget {
                 color: g.primarySoft,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.quiz_outlined, size: 24, color: g.primary),
+              child: Icon(Icons.quiz, size: 24, color: g.primary),
             ),
             const SizedBox(height: 14),
             Text(
@@ -337,7 +337,7 @@ class _QuizCard extends StatelessWidget {
                     color: g.primarySoft,
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: Icon(Icons.quiz_outlined, size: 21, color: g.primary),
+                  child: Icon(Icons.quiz, size: 21, color: g.primary),
                 ),
                 const SizedBox(width: 13),
                 Expanded(
@@ -364,11 +364,7 @@ class _QuizCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: g.textMuted,
-                  ),
+                  icon: Icon(Icons.delete, size: 20, color: g.textMuted),
                   tooltip: 'Delete quiz',
                 ),
               ],

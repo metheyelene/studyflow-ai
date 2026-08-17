@@ -46,7 +46,7 @@ class PodcastLibraryScreen extends ConsumerWidget {
                 ),
                 GlassButton(
                   label: 'New podcast',
-                  icon: Icons.mic_none,
+                  icon: Icons.mic,
                   size: GlassButtonSize.small,
                   onPressed: () => _openGenerateSheet(context, ref),
                 ),
@@ -148,7 +148,7 @@ class PodcastLibraryScreen extends ConsumerWidget {
               const SizedBox(width: 8),
               GlassButton(
                 label: 'Delete',
-                icon: Icons.delete_outline,
+                icon: Icons.delete,
                 variant: GlassButtonVariant.primary,
                 onPressed: () => Navigator.of(dialogContext).pop(true),
               ),
@@ -211,7 +211,7 @@ class _EpisodeCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Icon(
-                    episode.isReady ? Icons.play_arrow_rounded : Icons.mic_none,
+                    episode.isReady ? Icons.play_arrow : Icons.mic,
                     size: 22,
                     color: episode.isReady ? g.primary : g.textMuted,
                   ),
@@ -265,11 +265,7 @@ class _EpisodeCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: g.textMuted,
-                  ),
+                  icon: Icon(Icons.delete, size: 20, color: g.textMuted),
                   tooltip: 'Delete episode',
                 ),
               ],
@@ -344,7 +340,7 @@ class _EpisodesError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.cloud_off, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 'Could not load your audio',
@@ -395,11 +391,7 @@ class _EmptyLibrary extends StatelessWidget {
                 color: g.primarySoft,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                Icons.headphones_outlined,
-                size: 24,
-                color: g.primary,
-              ),
+              child: Icon(Icons.headphones, size: 24, color: g.primary),
             ),
             const SizedBox(height: 14),
             Text(
@@ -417,7 +409,7 @@ class _EmptyLibrary extends StatelessWidget {
             const SizedBox(height: 18),
             GlassButton(
               label: 'Start a podcast',
-              icon: Icons.mic_none,
+              icon: Icons.mic,
               onPressed: onGenerate,
             ),
           ],
@@ -594,7 +586,7 @@ class _GeneratePodcastSheetState extends ConsumerState<_GeneratePodcastSheet> {
             const SizedBox(height: 18),
             GlassButton(
               label: _busy ? 'Creating…' : 'Generate episode',
-              icon: Icons.mic_none,
+              icon: Icons.mic,
               expand: true,
               onPressed: _busy || _notebookId == null ? null : _generate,
             ),

@@ -46,11 +46,7 @@ class FlashcardSessionScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.cloud_off_outlined,
-                      size: 26,
-                      color: g.textMuted,
-                    ),
+                    Icon(Icons.cloud_off, size: 26, color: g.textMuted),
                     const SizedBox(height: 12),
                     Text(
                       'Could not load this deck',
@@ -547,7 +543,7 @@ class _EmptyDeck extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.style_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.style, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 'This deck is empty',
@@ -600,7 +596,7 @@ class _Summary extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.check_circle_outline, size: 40, color: g.success),
+                Icon(Icons.check_circle, size: 40, color: g.success),
                 const SizedBox(height: 12),
                 Text(
                   'Session complete',

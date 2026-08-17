@@ -43,11 +43,7 @@ class QuizSessionScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.cloud_off_outlined,
-                      size: 26,
-                      color: g.textMuted,
-                    ),
+                    Icon(Icons.cloud_off, size: 26, color: g.textMuted),
                     const SizedBox(height: 12),
                     Text(
                       'Could not load this quiz',
@@ -329,9 +325,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
                       const SizedBox(height: 14),
                       GlassButton(
                         label: isLast ? 'See results' : 'Next question',
-                        icon: isLast
-                            ? Icons.flag_outlined
-                            : Icons.arrow_forward,
+                        icon: isLast ? Icons.flag : Icons.arrow_forward,
                         expand: true,
                         onPressed: isLast ? _submit : _next,
                       ),
@@ -502,7 +496,7 @@ class _FeedbackCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  correct ? Icons.check_circle_outline : Icons.cancel_outlined,
+                  correct ? Icons.check_circle : Icons.cancel,
                   size: 20,
                   color: color,
                 ),
@@ -548,7 +542,7 @@ class _EmptyQuiz extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.quiz_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.quiz, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 'This quiz is empty',

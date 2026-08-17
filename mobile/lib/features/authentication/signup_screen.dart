@@ -104,7 +104,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       label: 'Name',
                       hintText: 'Your name',
                       textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.person_outline,
+                      prefixIcon: Icons.person,
                     ),
                     const SizedBox(height: 12),
                     GlassInput(
@@ -113,7 +113,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       hintText: 'you@example.com',
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.mail_outline,
+                      prefixIcon: Icons.mail,
                     ),
                     const SizedBox(height: 12),
                     GlassInput(
@@ -122,7 +122,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       hintText: 'At least 8 characters',
                       obscureText: true,
                       textInputAction: TextInputAction.done,
-                      prefixIcon: Icons.lock_outline,
+                      prefixIcon: Icons.lock,
                       onSubmitted: (_) => _submit(),
                     ),
                     if (_error != null) ...[

@@ -13,22 +13,18 @@ import 'onboarding_models.dart';
 /// The five onboarding goals. Values must match the backend's GOAL_OPTIONS
 /// (src/lib/onboarding.ts); labels are the user-facing copy.
 const _goalChoices = <({String value, String label, IconData icon})>[
-  (
-    value: 'summaries',
-    label: 'AI summaries',
-    icon: Icons.auto_awesome_outlined,
-  ),
-  (value: 'flashcards', label: 'Flashcards', icon: Icons.style_outlined),
-  (value: 'quizzes', label: 'Quizzes', icon: Icons.quiz_outlined),
+  (value: 'summaries', label: 'AI summaries', icon: Icons.auto_awesome),
+  (value: 'flashcards', label: 'Flashcards', icon: Icons.style),
+  (value: 'quizzes', label: 'Quizzes', icon: Icons.quiz),
   (
     value: 'study planning',
     label: 'Study planning',
-    icon: Icons.calendar_month_outlined,
+    icon: Icons.calendar_month,
   ),
   (
     value: 'staying motivated',
     label: 'Staying motivated',
-    icon: Icons.local_fire_department_outlined,
+    icon: Icons.local_fire_department,
   ),
 ];
 
@@ -283,7 +279,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         label: 'Course',
         hintText: _stepHint,
         textInputAction: TextInputAction.next,
-        prefixIcon: Icons.school_outlined,
+        prefixIcon: Icons.school,
         // Keep the Continue button's enabled state live as the user types.
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _canContinue ? _next() : null,
@@ -293,7 +289,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         label: 'Subjects',
         hintText: _stepHint,
         textInputAction: TextInputAction.next,
-        prefixIcon: Icons.menu_book_outlined,
+        prefixIcon: Icons.menu_book,
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _canContinue ? _next() : null,
       ),
@@ -330,7 +326,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const SizedBox(width: 10),
                 GlassButton(
                   label: _exams[i].date ?? 'Pick date',
-                  icon: Icons.event_outlined,
+                  icon: Icons.event,
                   variant: _exams[i].date == null
                       ? GlassButtonVariant.glass
                       : GlassButtonVariant.primary,

@@ -114,7 +114,7 @@ void main() {
       expect(find.text('tab 0'), findsOneWidget);
 
       // 800×600 default surface → tablet rail, which shows icons only.
-      await tester.tap(find.byIcon(Icons.library_books_outlined));
+      await tester.tap(find.byIcon(Icons.library_books));
       // Mid-transition: the new branch fades in with a gentle rise — it is
       // present but still rising (never two branches at once: GoRouter's
       // navigators carry GlobalKeys).
@@ -148,7 +148,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(kHomeNavItems.length, 6);
 
-      await tester.tap(find.byIcon(Icons.headphones_outlined));
+      await tester.tap(find.byIcon(Icons.headphones));
       await tester.pumpAndSettle();
       expect(find.text('tab 3'), findsOneWidget);
     });
@@ -180,16 +180,16 @@ void main() {
 
       expect(find.text('VLSI Unit 3 — Study Podcast'), findsOneWidget);
       expect(find.text('VLSI Unit 3'), findsOneWidget);
-      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsOneWidget);
 
       // Pause from the mini-player drives the singleton player and the
       // notifier together.
-      await tester.tap(find.byIcon(Icons.pause_rounded));
+      await tester.tap(find.byIcon(Icons.pause));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
-      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.tap(find.byIcon(Icons.play_arrow));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
     });
@@ -261,20 +261,20 @@ void main() {
       player.emitCompleted();
       await tester.pumpAndSettle();
       // Collapsed pill: replay affordance, no play/pause, no progress bar.
-      expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.pause_rounded), findsNothing);
-      expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+      expect(find.byIcon(Icons.replay), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsNothing);
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
       expect(
         tester.widget<GlassMiniPlayer>(find.byType(GlassMiniPlayer)).completed,
         isTrue,
       );
 
       // Replay restarts from zero and expands back to the full state.
-      await tester.tap(find.byIcon(Icons.replay_rounded));
+      await tester.tap(find.byIcon(Icons.replay));
       await tester.pumpAndSettle();
       expect(player.lastSeek, Duration.zero);
       expect(player.playing, isTrue);
-      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsOneWidget);
       expect(
         tester.widget<GlassMiniPlayer>(find.byType(GlassMiniPlayer)).completed,
         isFalse,
@@ -459,16 +459,16 @@ void main() {
       await tester.pump();
       player.emitCompleted();
       await tester.pump();
-      expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.replay), findsOneWidget);
 
       // Still up at the halfway mark…
       await tester.pump(const Duration(seconds: 5));
-      expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.replay), findsOneWidget);
 
       // …gone after the full quiet spell (slide-down fade settles).
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.replay_rounded), findsNothing);
+      expect(find.byIcon(Icons.replay), findsNothing);
       expect(container.read(nowPlayingProvider), isNull);
     });
 
@@ -500,15 +500,15 @@ void main() {
 
       // Replay before the 10s window closes.
       await tester.pump(const Duration(seconds: 5));
-      await tester.tap(find.byIcon(Icons.replay_rounded));
+      await tester.tap(find.byIcon(Icons.replay));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
 
       // Past the dismissal mark the pill must still be around.
       await tester.pump(const Duration(seconds: 6));
       await tester.pump();
-      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.replay_rounded), findsNothing);
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.replay), findsNothing);
       expect(container.read(nowPlayingProvider)?.playing, isTrue);
     });
 

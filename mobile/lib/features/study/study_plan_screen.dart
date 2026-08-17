@@ -335,7 +335,7 @@ class _ErrorState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.event_busy_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.event_busy, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 message,

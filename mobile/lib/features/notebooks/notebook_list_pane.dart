@@ -148,11 +148,7 @@ class _NotebookCard extends StatelessWidget {
                     color: g.primarySoft,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.library_books_outlined,
-                    size: 20,
-                    color: g.primary,
-                  ),
+                  child: Icon(Icons.library_books, size: 20, color: g.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -232,7 +228,7 @@ class _ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.cloud_off_outlined,
+              Icons.cloud_off,
               size: 30,
               color: g.textMuted.withValues(alpha: 0.7),
             ),
@@ -285,11 +281,7 @@ class _EmptyState extends StatelessWidget {
                   color: g.primarySoft,
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(
-                  Icons.library_books_outlined,
-                  size: 26,
-                  color: g.primary,
-                ),
+                child: Icon(Icons.library_books, size: 26, color: g.primary),
               ),
               const SizedBox(height: 16),
               Text(

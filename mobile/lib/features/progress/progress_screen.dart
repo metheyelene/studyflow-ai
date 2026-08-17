@@ -137,7 +137,7 @@ class _MasteryHero extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.error_outline, size: 20, color: g.danger),
+              Icon(Icons.error, size: 20, color: g.danger),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -160,7 +160,7 @@ class _MasteryHero extends StatelessWidget {
           final (ctaLabel, ctaIcon, ctaAction) = switch ((value, weakest)) {
             (null, _) => (
               'Review flashcards',
-              Icons.style_outlined,
+              Icons.style,
               () => context.go(AppRoutes.flashcards),
             ),
             (final int v, final DeckAccuracy w) when w.accuracy < 70 => (
@@ -170,7 +170,7 @@ class _MasteryHero extends StatelessWidget {
             ),
             _ => (
               'Start a quiz',
-              Icons.quiz_outlined,
+              Icons.quiz,
               () => context.go(AppRoutes.quizzes),
             ),
           };

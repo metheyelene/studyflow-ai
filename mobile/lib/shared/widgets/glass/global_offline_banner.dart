@@ -50,7 +50,7 @@ class _OfflineBanner extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 15, color: g.textMuted),
+              Icon(Icons.cloud_off, size: 15, color: g.textMuted),
               const SizedBox(width: 8),
               // Flexible so the strip reflows gracefully on narrow phones,
               // large text scales, and wide test fonts instead of

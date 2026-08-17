@@ -57,7 +57,7 @@ class ExamCountdownCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
-                    Icons.event_outlined,
+                    Icons.event,
                     size: 22,
                     color: soon ? g.amber : g.primary,
                   ),
@@ -204,7 +204,7 @@ class ExamCountdownCard extends ConsumerWidget {
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
-          icon: const Icon(Icons.event_note_outlined, size: 16),
+          icon: const Icon(Icons.event_note, size: 16),
           label: const Text('Build study plan'),
         ),
       );

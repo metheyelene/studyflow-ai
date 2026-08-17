@@ -538,7 +538,11 @@ ThemeData buildAppTheme(
       scrolledUnderElevation: 0,
       centerTitle: false,
       titleTextStyle: text.titleLarge,
-      iconTheme: IconThemeData(color: scheme.onSurface),
+      // Bold, minimal iconography: one filled family. The bundled
+      // MaterialIcons font is static so weight/fill are future-proofing
+      // for a variable font — boldness itself comes from the filled glyph
+      // set chosen across the app.
+      iconTheme: IconThemeData(color: scheme.onSurface, weight: 700, fill: 1),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,

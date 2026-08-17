@@ -67,7 +67,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           title: 'Profile',
                           subtitle: 'Name, study level, preferences',
                           leading: Icon(
-                            Icons.person_outline,
+                            Icons.person,
                             size: 22,
                             color: g.primary,
                           ),
@@ -90,7 +90,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           title: 'Appearance',
                           subtitle: 'Light / dark / system',
                           leading: Icon(
-                            Icons.palette_outlined,
+                            Icons.palette,
                             size: 22,
                             color: g.primary,
                           ),
@@ -126,17 +126,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               segments: const [
                                 ButtonSegment(
                                   value: ThemeMode.light,
-                                  icon: Icon(Icons.light_mode_outlined),
+                                  icon: Icon(Icons.light_mode),
                                   label: Text('Light'),
                                 ),
                                 ButtonSegment(
                                   value: ThemeMode.dark,
-                                  icon: Icon(Icons.dark_mode_outlined),
+                                  icon: Icon(Icons.dark_mode),
                                   label: Text('Dark'),
                                 ),
                                 ButtonSegment(
                                   value: ThemeMode.system,
-                                  icon: Icon(Icons.brightness_auto_outlined),
+                                  icon: Icon(Icons.brightness_auto),
                                   label: Text('System'),
                                 ),
                               ],
@@ -154,7 +154,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 'Smaller blur and a plainer background — '
                                 'smoother on low-end devices.',
                             leading: Icon(
-                              Icons.animation_outlined,
+                              Icons.animation,
                               size: 22,
                               color: g.primary,
                             ),
@@ -173,11 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         GlassListTile(
                           title: 'AI preferences',
                           subtitle: 'Response style, level, language',
-                          leading: Icon(
-                            Icons.tune_outlined,
-                            size: 22,
-                            color: g.primary,
-                          ),
+                          leading: Icon(Icons.tune, size: 22, color: g.primary),
                           trailing: Icon(
                             _showAiPreferences
                                 ? Icons.expand_less
@@ -206,11 +202,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         GlassListTile(
                           title: 'About StudyFlow',
                           subtitle: 'About the app and its creator',
-                          leading: Icon(
-                            Icons.info_outline,
-                            size: 22,
-                            color: g.primary,
-                          ),
+                          leading: Icon(Icons.info, size: 22, color: g.primary),
                           trailing: Icon(
                             Icons.chevron_right,
                             size: 20,
@@ -284,7 +276,7 @@ class _AiPreferencesPanel extends ConsumerWidget {
       error: (_, _) => Row(
         children: [
           Icon(
-            Icons.cloud_off_outlined,
+            Icons.cloud_off,
             size: 18,
             color: g.textMuted.withValues(alpha: 0.7),
           ),

@@ -128,7 +128,7 @@ class _GlassMiniPlayerState extends State<GlassMiniPlayer> {
                   onPressed: onPlayPause,
                   tooltip: playing ? 'Pause' : 'Play',
                   icon: Icon(
-                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    playing ? Icons.pause : Icons.play_arrow,
                     size: 26,
                     color: g.primary,
                   ),
@@ -268,7 +268,7 @@ class _CollapsedPill extends StatelessWidget {
             IconButton(
               onPressed: onReplay,
               tooltip: 'Replay',
-              icon: Icon(Icons.replay_rounded, size: 22, color: g.primary),
+              icon: Icon(Icons.replay, size: 22, color: g.primary),
             ),
           ],
         ),
@@ -302,7 +302,7 @@ class _Artwork extends StatelessWidget {
         ),
       ),
       child: Icon(
-        Icons.graphic_eq_rounded,
+        Icons.graphic_eq,
         size: size * 0.48,
         color: Colors.white.withValues(alpha: 0.92),
       ),

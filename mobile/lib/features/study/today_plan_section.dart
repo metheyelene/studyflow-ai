@@ -36,7 +36,7 @@ class TodayPlanSection extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                Icons.event_busy_outlined,
+                Icons.event_busy,
                 size: 22,
                 color: g.textMuted.withValues(alpha: 0.6),
               ),
@@ -63,7 +63,7 @@ class TodayPlanSection extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.error_outline, size: 20, color: g.danger),
+              Icon(Icons.error, size: 20, color: g.danger),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -109,7 +109,7 @@ class TodayPlanSection extends ConsumerWidget {
                   const SizedBox(height: 12),
                   GlassButton(
                     label: 'Plan this exam',
-                    icon: Icons.event_note_outlined,
+                    icon: Icons.event_note,
                     onPressed: () async {
                       await ref
                           .read(studyPlannerControllerProvider.notifier)
@@ -229,7 +229,7 @@ class TodayPlanSection extends ConsumerWidget {
                   children: [
                     GlassButton(
                       label: 'Full plan',
-                      icon: Icons.view_list_outlined,
+                      icon: Icons.view_list,
                       variant: GlassButtonVariant.glass,
                       size: GlassButtonSize.small,
                       onPressed: () => context.push(

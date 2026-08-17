@@ -12,34 +12,26 @@ import '../../shared/widgets/glass/glass_mini_player.dart';
 import '../../shared/widgets/glass/glass_nav.dart';
 
 const kHomeNavItems = [
-  GlassNavItem(
-    label: 'Home',
-    icon: Icons.home_outlined,
-    selectedIcon: Icons.home,
-  ),
+  GlassNavItem(label: 'Home', icon: Icons.home, selectedIcon: Icons.home),
   GlassNavItem(
     label: 'Notebooks',
-    icon: Icons.library_books_outlined,
+    icon: Icons.library_books,
     selectedIcon: Icons.library_books,
   ),
-  GlassNavItem(
-    label: 'Study',
-    icon: Icons.school_outlined,
-    selectedIcon: Icons.school,
-  ),
+  GlassNavItem(label: 'Study', icon: Icons.school, selectedIcon: Icons.school),
   GlassNavItem(
     label: 'Audio',
-    icon: Icons.headphones_outlined,
+    icon: Icons.headphones,
     selectedIcon: Icons.headphones,
   ),
   GlassNavItem(
     label: 'Progress',
-    icon: Icons.insights_outlined,
+    icon: Icons.insights,
     selectedIcon: Icons.insights,
   ),
   GlassNavItem(
     label: 'Profile',
-    icon: Icons.person_outline,
+    icon: Icons.person,
     selectedIcon: Icons.person,
   ),
 ];

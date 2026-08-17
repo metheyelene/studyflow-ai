@@ -116,11 +116,7 @@ class _CreatorScreenState extends State<CreatorScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    Icons.mail_outline,
-                                    size: 16,
-                                    color: g.primary,
-                                  ),
+                                  Icon(Icons.mail, size: 16, color: g.primary),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
@@ -227,7 +223,7 @@ class _CreatorScreenState extends State<CreatorScreen> {
                           const SizedBox(height: 14),
                           GlassButton(
                             label: 'Send Feedback',
-                            icon: Icons.send_outlined,
+                            icon: Icons.send,
                             variant: GlassButtonVariant.glass,
                             onPressed: () =>
                                 _openMail(subject: AppInfo.feedbackSubject),

@@ -122,7 +122,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                       const SizedBox(height: 14),
                       GlassButton(
                         label: 'Open notebooks',
-                        icon: Icons.library_books_outlined,
+                        icon: Icons.library_books,
                         onPressed: () => context.go(AppRoutes.notebooks),
                       ),
                     ],
@@ -160,7 +160,7 @@ class _ExamsSection extends ConsumerWidget {
         child: Row(
           children: [
             Icon(
-              Icons.cloud_off_outlined,
+              Icons.cloud_off,
               size: 22,
               color: g.textMuted.withValues(alpha: 0.7),
             ),
@@ -187,7 +187,7 @@ class _ExamsSection extends ConsumerWidget {
               children: [
                 const SizedBox(height: 8),
                 Icon(
-                  Icons.event_outlined,
+                  Icons.event,
                   size: 26,
                   color: g.textMuted.withValues(alpha: 0.6),
                 ),

@@ -48,7 +48,7 @@ class FlashcardsScreen extends ConsumerWidget {
                   label: decks.valueOrNull == null
                       ? '—'
                       : '${decks.valueOrNull!.decks.length} deck${decks.valueOrNull!.decks.length == 1 ? '' : 's'}',
-                  icon: Icons.style_outlined,
+                  icon: Icons.style,
                 ),
                 const SizedBox(width: 10),
                 GlassButton(
@@ -149,7 +149,7 @@ class FlashcardsScreen extends ConsumerWidget {
               const SizedBox(width: 8),
               GlassButton(
                 label: 'Delete',
-                icon: Icons.delete_outline,
+                icon: Icons.delete,
                 variant: GlassButtonVariant.primary,
                 onPressed: () => Navigator.of(dialogContext).pop(true),
               ),
@@ -217,7 +217,7 @@ class _DecksError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 26, color: g.textMuted),
+              Icon(Icons.cloud_off, size: 26, color: g.textMuted),
               const SizedBox(height: 12),
               Text(
                 'Could not load your decks',
@@ -268,7 +268,7 @@ class _EmptyDecks extends StatelessWidget {
                 color: g.primarySoft,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.style_outlined, size: 24, color: g.primary),
+              child: Icon(Icons.style, size: 24, color: g.primary),
             ),
             const SizedBox(height: 14),
             Text('No decks yet', style: Theme.of(context).textTheme.titleLarge),
@@ -323,7 +323,7 @@ class _DeckCard extends StatelessWidget {
                     color: g.primarySoft,
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: Icon(Icons.style_outlined, size: 21, color: g.primary),
+                  child: Icon(Icons.style, size: 21, color: g.primary),
                 ),
                 const SizedBox(width: 13),
                 Expanded(
@@ -351,11 +351,7 @@ class _DeckCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: g.textMuted,
-                  ),
+                  icon: Icon(Icons.delete, size: 20, color: g.textMuted),
                   tooltip: 'Delete deck',
                 ),
               ],

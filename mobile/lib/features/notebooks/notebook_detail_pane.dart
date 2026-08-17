@@ -538,7 +538,7 @@ class _SourceProgressError extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.cloud_off_outlined,
+          Icons.cloud_off,
           size: 22,
           color: g.textMuted.withValues(alpha: 0.7),
         ),
@@ -645,7 +645,7 @@ class _AskStudyFlowCtaState extends State<_AskStudyFlowCta> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      enabled ? Icons.auto_awesome : Icons.cloud_off_outlined,
+                      enabled ? Icons.auto_awesome : Icons.cloud_off,
                       size: 18,
                       color: iconColor,
                     ),
@@ -699,21 +699,21 @@ class _FloatingAiActions extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _AiActionChip(
-            icon: Icons.style_outlined,
+            icon: Icons.style,
             label: 'Flashcards',
             busy: flashcardBusy,
             onTap: onFlashcards,
           ),
           const SizedBox(width: 10),
           _AiActionChip(
-            icon: Icons.quiz_outlined,
+            icon: Icons.quiz,
             label: 'Quiz',
             busy: quizBusy,
             onTap: onQuiz,
           ),
           const SizedBox(width: 10),
           _AiActionChip(
-            icon: Icons.mic_none,
+            icon: Icons.mic,
             label: 'Podcast',
             busy: podcastBusy,
             onTap: onPodcast,
@@ -819,7 +819,7 @@ class _AiActionChipState extends State<_AiActionChip> {
                               ),
                             )
                           : Icon(
-                              disabled ? Icons.cloud_off_outlined : widget.icon,
+                              disabled ? Icons.cloud_off : widget.icon,
                               size: 16,
                               color: accent,
                             ),
@@ -953,7 +953,7 @@ class _SourcesTab extends StatelessWidget {
         }
         if (snapshot.hasError) {
           return _TabScaffold(
-            icon: Icons.cloud_off_outlined,
+            icon: Icons.cloud_off,
             title: 'Could not load sources',
             description: 'Check your connection and try again.',
             actions: [
@@ -969,7 +969,7 @@ class _SourcesTab extends StatelessWidget {
         final sources = snapshot.data ?? const <NotebookSource>[];
         if (sources.isEmpty) {
           return _TabScaffold(
-            icon: Icons.description_outlined,
+            icon: Icons.description,
             title: 'No sources yet',
             description:
                 'Paste your notes and StudyFlow AI indexes them — answers, '
@@ -1145,7 +1145,7 @@ class _SourceCard extends StatelessWidget {
                     ),
                   ),
                   child: Icon(
-                    isPasted ? Icons.notes : Icons.picture_as_pdf_outlined,
+                    isPasted ? Icons.notes : Icons.picture_as_pdf,
                     size: 20,
                     color: statusColor,
                   ),
@@ -1178,7 +1178,7 @@ class _SourceCard extends StatelessWidget {
                 if (onDelete != null)
                   IconButton(
                     onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 18),
+                    icon: const Icon(Icons.delete, size: 18),
                     color: g.textMuted.withValues(alpha: 0.7),
                     tooltip: 'Remove source',
                     visualDensity: VisualDensity.compact,
@@ -1526,37 +1526,35 @@ class _SelectionAiToolbar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _ToolbarAction(
-                icon: Icons.lightbulb_outline,
+                icon: Icons.lightbulb,
                 label: 'Explain',
                 busy: busyMode == NoteAssistMode.explain,
                 enabled: busyMode == null,
                 onTap: () => onTransform(NoteAssistMode.explain),
               ),
               _ToolbarAction(
-                icon: Icons.summarize_outlined,
+                icon: Icons.summarize,
                 label: 'Summarize',
                 busy: busyMode == NoteAssistMode.summarize,
                 enabled: busyMode == null,
                 onTap: () => onTransform(NoteAssistMode.summarize),
               ),
               _ToolbarAction(
-                icon: Icons.short_text_outlined,
+                icon: Icons.short_text,
                 label: 'Simplify',
                 busy: busyMode == NoteAssistMode.simplify,
                 enabled: busyMode == null,
                 onTap: () => onTransform(NoteAssistMode.simplify),
               ),
               _ToolbarAction(
-                icon: Icons.quiz_outlined,
+                icon: Icons.quiz,
                 label: 'Quiz',
                 busy: busyMode == NoteAssistMode.quiz,
                 enabled: busyMode == null,
                 onTap: () => onTransform(NoteAssistMode.quiz),
               ),
               _ToolbarAction(
-                icon: listening
-                    ? Icons.stop_circle_outlined
-                    : Icons.volume_up_outlined,
+                icon: listening ? Icons.stop_circle : Icons.volume_up,
                 label: listening ? 'Stop' : 'Listen',
                 busy: false,
                 enabled: true,
@@ -1687,11 +1685,7 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.description_outlined,
-                  size: 18,
-                  color: context.glass.primary,
-                ),
+                Icon(Icons.description, size: 18, color: context.glass.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1779,7 +1773,7 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
             child: Row(
               children: [
                 Icon(
-                  Icons.cloud_off_outlined,
+                  Icons.cloud_off,
                   size: 15,
                   color: g.textMuted.withValues(alpha: 0.8),
                 ),
@@ -1805,7 +1799,7 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
                 child: GlassInput(
                   controller: _controller,
                   hintText: 'Ask your notebook…',
-                  prefixIcon: Icons.question_answer_outlined,
+                  prefixIcon: Icons.question_answer,
                   textInputAction: TextInputAction.send,
                   enabled: widget.online,
                   onSubmitted: (_) => _send(),
@@ -1943,11 +1937,7 @@ class _SuggestionChipState extends State<_SuggestionChip> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.auto_awesome_outlined,
-                        size: 13,
-                        color: g.primary,
-                      ),
+                      Icon(Icons.auto_awesome, size: 13, color: g.primary),
                       const SizedBox(width: 7),
                       Flexible(
                         child: Text(
@@ -2148,20 +2138,18 @@ class _AiMessageState extends ConsumerState<_AiMessage> {
               runSpacing: 8,
               children: [
                 _ActionPill(
-                  icon: speaking
-                      ? Icons.stop_rounded
-                      : Icons.volume_up_outlined,
+                  icon: speaking ? Icons.stop : Icons.volume_up,
                   label: speaking ? 'Stop' : 'Listen',
                   onTap: _toggleListen,
                 ),
                 _ActionPill(
-                  icon: Icons.style_outlined,
+                  icon: Icons.style,
                   label: 'Flashcards',
                   onTap: widget.onFlashcards,
                   disabled: widget.flashcardBusy || widget.onFlashcards == null,
                 ),
                 _ActionPill(
-                  icon: Icons.quiz_outlined,
+                  icon: Icons.quiz,
                   label: 'Quiz',
                   onTap: widget.onQuiz,
                   disabled: widget.quizBusy || widget.onQuiz == null,
@@ -2280,7 +2268,7 @@ class _CitationChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.description_outlined, size: 13, color: g.primary),
+                Icon(Icons.description, size: 13, color: g.primary),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
@@ -2374,7 +2362,7 @@ class _StudyToolsTab extends StatelessWidget {
                           ),
                         ),
                       )
-                    : Icon(Icons.style_outlined, size: 22, color: g.primary),
+                    : Icon(Icons.style, size: 22, color: g.primary),
                 trailing: Icon(
                   Icons.chevron_right,
                   size: 20,
@@ -2404,7 +2392,7 @@ class _StudyToolsTab extends StatelessWidget {
                           ),
                         ),
                       )
-                    : Icon(Icons.quiz_outlined, size: 22, color: g.primary),
+                    : Icon(Icons.quiz, size: 22, color: g.primary),
                 trailing: Icon(
                   Icons.chevron_right,
                   size: 20,
@@ -2434,7 +2422,7 @@ class _StudyToolsTab extends StatelessWidget {
                           ),
                         ),
                       )
-                    : Icon(Icons.mic_none, size: 22, color: g.primary),
+                    : Icon(Icons.mic, size: 22, color: g.primary),
                 trailing: Icon(
                   Icons.chevron_right,
                   size: 20,
@@ -2451,11 +2439,7 @@ class _StudyToolsTab extends StatelessWidget {
                 title: 'Summaries',
                 subtitle:
                     'Short, detailed, or exam-focused summaries of your material',
-                leading: Icon(
-                  Icons.summarize_outlined,
-                  size: 22,
-                  color: g.primary,
-                ),
+                leading: Icon(Icons.summarize, size: 22, color: g.primary),
                 onTap: onAskAi,
               ),
               Divider(
@@ -2466,11 +2450,7 @@ class _StudyToolsTab extends StatelessWidget {
               GlassListTile(
                 title: 'Study guides',
                 subtitle: 'Key concepts, definitions, and formulas',
-                leading: Icon(
-                  Icons.menu_book_outlined,
-                  size: 22,
-                  color: g.primary,
-                ),
+                leading: Icon(Icons.menu_book, size: 22, color: g.primary),
                 onTap: onAskAi,
               ),
             ],

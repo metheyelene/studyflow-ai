@@ -123,7 +123,7 @@ class _PlanCard extends StatelessWidget {
           Icon(
             snapshot.isPremium
                 ? Icons.workspace_premium
-                : Icons.workspace_premium_outlined,
+                : Icons.workspace_premium,
             size: 28,
             color: snapshot.isPremium ? g.primary : g.textMuted,
           ),

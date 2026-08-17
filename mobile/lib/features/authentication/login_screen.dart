@@ -100,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       hintText: 'you@example.com',
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.mail_outline,
+                      prefixIcon: Icons.mail,
                     ),
                     const SizedBox(height: 12),
                     GlassInput(
@@ -108,7 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: 'Password',
                       obscureText: true,
                       textInputAction: TextInputAction.done,
-                      prefixIcon: Icons.lock_outline,
+                      prefixIcon: Icons.lock,
                       onSubmitted: (_) => _submit(),
                     ),
                     if (_error != null) ...[

@@ -75,7 +75,7 @@ class _SelectHint extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.library_books_outlined,
+            Icons.library_books,
             size: 44,
             color: g.textMuted.withValues(alpha: 0.5),
           ),

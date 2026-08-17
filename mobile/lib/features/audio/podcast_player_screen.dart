@@ -230,11 +230,7 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.cloud_off_outlined,
-                      size: 26,
-                      color: g.textMuted,
-                    ),
+                    Icon(Icons.cloud_off, size: 26, color: g.textMuted),
                     const SizedBox(height: 12),
                     Text(
                       'Could not play this episode',
@@ -595,7 +591,7 @@ class _PlayButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Icon(
-            playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+            playing ? Icons.pause : Icons.play_arrow,
             size: 34,
             color: Colors.white,
           ),
@@ -713,7 +709,7 @@ class _ChapterRow extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.play_circle_outline,
+                Icons.play_circle,
                 size: 18,
                 color: active ? g.primary : g.textMuted,
               ),
@@ -878,7 +874,7 @@ class _FailedView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 26, color: g.danger),
+              Icon(Icons.error, size: 26, color: g.danger),
               const SizedBox(height: 12),
               Text(
                 'This episode failed to generate',
