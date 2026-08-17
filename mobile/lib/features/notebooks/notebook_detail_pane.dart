@@ -15,6 +15,7 @@ import '../../shared/widgets/glass/glass_nav.dart';
 import '../../shared/widgets/glass/glass_pill.dart';
 import '../../shared/widgets/glass/glass_progress.dart';
 import '../../shared/widgets/glass/glass_sheet.dart';
+import '../../shared/widgets/graphics/sf_graphics.dart';
 import '../../shared/widgets/ai/studyflow_ai_orb.dart';
 import '../audio/audio_controller.dart';
 import '../audio/audio_repository.dart';
@@ -1963,8 +1964,10 @@ class _SuggestionChipState extends State<_SuggestionChip> {
   }
 }
 
-/// Quiet thinking state — a small pulsing orb and a muted line on the
-/// open canvas. The orb carries the motion; the text carries the meaning.
+/// Quiet thinking state — a small source-retrieval graphic and a muted
+/// line on the open canvas. The graphic carries the motion (a pulse
+/// travelling the node network — SOURCES → RETRIEVAL → ANSWER); the text
+/// carries the meaning.
 class _ThinkingRow extends StatelessWidget {
   const _ThinkingRow();
 
@@ -1975,8 +1978,8 @@ class _ThinkingRow extends StatelessWidget {
       padding: const EdgeInsets.only(top: 24, bottom: 8),
       child: Row(
         children: [
-          const StudyFlowAiOrb(active: true, size: 15),
-          const SizedBox(width: 10),
+          const SFSourceSearchGraphic(size: Size(40, 40)),
+          const SizedBox(width: 12),
           Text(
             'Reading your sources…',
             style: TextStyle(color: g.textMuted, fontSize: 13),

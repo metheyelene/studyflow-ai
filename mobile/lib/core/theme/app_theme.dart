@@ -51,6 +51,31 @@ abstract final class AppMotion {
   /// Subtle idle drift for ambient background light (very slow, GPU-cheap
   /// opacity/position tween — never a per-frame transform on content).
   static const Duration ambient = Duration(seconds: 12);
+
+  // ── Graphics motion ──────────────────────────────────────────────
+  // These govern the monochrome motion-graphics system. They live here
+  // so every graphic reads the same timing language.
+
+  /// Micro inline indicator (spinner pulse, dot bounce).
+  static const Duration micro = Duration(milliseconds: 600);
+
+  /// Processing loop — document scan, AI thinking, waveform idle.
+  static const Duration graphicsLoop = Duration(milliseconds: 2200);
+
+  /// Faster processing loop for busy states (AI generating, upload).
+  static const Duration graphicsBusy = Duration(milliseconds: 1400);
+
+  /// Content reveal — staggered lines appearing, flashcard stacking.
+  static const Duration graphicsReveal = Duration(milliseconds: 800);
+
+  /// Success / completion — checkmark draw, circle completion.
+  static const Duration graphicsSuccess = Duration(milliseconds: 700);
+
+  /// Calm continuous curve for processing loops.
+  static const Curve graphicsCalm = Curves.easeInOut;
+
+  /// Snap curve for content appearing.
+  static const Curve graphicsSnap = Curves.easeOutCubic;
 }
 
 /// Shape tokens — the single source for corner radii. Shape communicates

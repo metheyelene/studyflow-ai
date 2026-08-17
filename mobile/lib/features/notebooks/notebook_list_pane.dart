@@ -10,6 +10,7 @@ import '../../shared/widgets/glass/glass_button.dart';
 import '../../shared/widgets/glass/glass_card.dart';
 import '../../shared/widgets/glass/glass_input.dart';
 import '../../shared/widgets/glass/glass_misc.dart';
+import '../../shared/widgets/graphics/sf_graphics.dart';
 import 'notebook.dart';
 import 'notebook_create_sheet.dart';
 import 'notebooks_controller.dart';
@@ -283,6 +284,10 @@ class _EmptyState extends StatelessWidget {
                 ),
                 child: Icon(Icons.library_books, size: 26, color: g.primary),
               ),
+              const SizedBox(height: 20),
+              // A small knowledge structure assembling — the empty state
+              // stays calm but alive.
+              const SFKnowledgeGraphic(size: Size(96, 88)),
               const SizedBox(height: 16),
               Text(
                 hasQuery ? 'No matching notebooks' : 'No notebooks yet',

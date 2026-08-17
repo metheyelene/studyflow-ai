@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/graphics/sf_graphics.dart';
 
 /// Shown only while the session is restoring on boot — kept fast and
-/// minimal (no artificial delay).
+/// minimal (no artificial delay). The StudyFlow mark draws itself: a
+/// thin line grows into a knowledge structure, then collapses back into
+/// the logo.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
@@ -15,16 +18,9 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: g.primarySoft,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(Icons.auto_stories, size: 34, color: g.primary),
-            ),
-            const SizedBox(height: 14),
+            // The branded monochrome mark.
+            const SFSplashGraphic(size: Size(112, 112)),
+            const SizedBox(height: 10),
             Text(
               'StudyFlow',
               style: TextStyle(
