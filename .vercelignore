@@ -1,0 +1,14 @@
+# The Vercel deploy only needs the Next.js app (src/, public/, config).
+# The Flutter app and build artifacts are not part of the web backend.
+node_modules
+.next
+mobile
+ios
+android
+docs
+dist
+brand
+.freebuff
+.git
+.DS_Store
+*.log
