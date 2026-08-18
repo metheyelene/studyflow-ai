@@ -55,7 +55,7 @@ const SECTIONS = [
       "Premium is a recurring subscription billed in advance (monthly or yearly, depending on the option you choose). You will always see the amount and billing frequency before you confirm payment.",
       "You can cancel at any time from your account/subscription page. You keep Premium access until the end of the period you already paid for, then your account returns to the Free plan. There are no cancellation hoops or penalties.",
       "Payments are processed by our payment provider. We never see or store your card number. If a payment fails, we will attempt to notify you; continued non-payment may result in your account returning to the Free plan.",
-      "Refunds: [REFUND POLICY — decide and document here. Suggested default for an honest product: “If you are unhappy, contact us within the first N days and we will consider a refund — we would rather make it right than keep your money.”]",
+      "Refunds: if you are unhappy with Premium, contact us within 14 days of purchase and we will refund the amount you paid — we would rather make it right than keep your money. Refunds are issued to the original payment method and may take a few business days to appear.",
       "If the founding-member price changes in the future, we will clearly disclose the change before it affects you, and you can cancel at any time.",
     ],
   },
@@ -147,14 +147,13 @@ export default function TermsPage() {
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
               Effective date:{" "}
-              <span className="text-foreground font-medium">[EFFECTIVE DATE — set before publishing]</span>
-              {" "}· Last updated: [DATE]
+              <span className="text-foreground font-medium">August 18, 2026</span>
+              {" "}· Last updated: August 18, 2026
             </p>
-            <div className="bg-amber-500/10 border-amber-500/30 text-amber-300 mt-4 rounded-xl border px-4 py-3 text-sm">
-              <strong>Review needed before publishing.</strong> This is a draft. The
-              bracketed decisions — refund policy, governing law, dispute resolution —
-              are business/legal choices that must be made and reviewed before the app
-              goes public.
+            <div className="text-muted-foreground mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
+              <strong className="text-foreground">About these terms.</strong> These terms
+              describe the current StudyFlow service. We update them as the product
+              evolves; material changes are announced under “Changes to these terms”.
             </div>
           </div>
         </div>

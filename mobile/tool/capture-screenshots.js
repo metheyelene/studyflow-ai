@@ -31,48 +31,52 @@ const SHOTS = [
     waitFor: ['Email', 'Log in'],
   },
   {
-    name: '03-dashboard',
+    name: '03-home',
     url: '/home',
-    waitFor: ['Ready to study?', 'QUICK ACTIONS'],
+    waitFor: ['WELCOME BACK', 'CONTINUE STUDYING'],
   },
   {
     name: '04-notebooks',
     url: '/notebooks',
-    waitFor: ['Sample: Cell Biology — Unit 2', 'New'],
+    waitFor: ['Sample: Cell Biology — Unit 2', 'Sample: VLSI Unit 3'],
   },
   {
-    name: '05-notebook-detail',
+    name: '05-study-space',
     url: `/notebooks/${NOTEBOOK_ID}`,
-    waitFor: ['Sample: Cell Biology — Unit 2', 'Ask AI'],
+    waitFor: ['STUDY SPACE', 'Sample: Cell Biology — Unit 2'],
   },
   {
-    name: '06-notebook-ask-ai',
+    name: '06-ask-ai',
     url: `/notebooks/${NOTEBOOK_ID}`,
-    waitFor: ['Sample: Cell Biology — Unit 2', 'No sources yet'],
+    waitFor: ['STUDY SPACE', 'Sample: Cell Biology — Unit 2'],
     clickTab: 'Ask AI',
     afterTab: ['Ask your notebook'],
+    askQuestion: 'What is photosynthesis?',
   },
   {
-    name: '07-study-tools',
-    url: `/notebooks/${NOTEBOOK_ID}`,
-    waitFor: ['Sample: Cell Biology — Unit 2', 'No sources yet'],
-    clickTab: 'Study tools',
-    afterTab: ['Summarize', 'Flashcards'],
+    name: '07-flashcards',
+    url: '/flashcards/fc-photosynthesis',
+    waitFor: ['What does a CMOS inverter consist of?'],
   },
   {
-    name: '08-study-plan',
-    url: '/study',
-    waitFor: ['Flashcards, quizzes, and your study plan'],
+    name: '08-quiz',
+    url: '/quizzes/qz-photosynthesis',
+    waitFor: ['QUIZ SESSION', 'Where does the light-dependent reaction take place?'],
   },
   {
-    name: '09-progress',
+    name: '09-audio',
+    url: '/audio',
+    waitFor: ['Sample: Cell Biology Study Podcast', 'Sample: VLSI Unit 3 Deep Dive'],
+  },
+  {
+    name: '10-progress',
     url: '/progress',
-    waitFor: ['Progress', 'quiz scores'],
+    waitFor: ['Mastery'],
   },
   {
-    name: '10-profile',
-    url: '/profile',
-    waitFor: ['Profile', 'Aarav Sharma'],
+    name: '11-premium',
+    url: '/premium',
+    waitFor: ['Founding Member'],
   },
 ];
 
@@ -140,6 +144,27 @@ const SHOTS = [
             .filter(Boolean).slice(0, 40));
         console.log('  [debug] after click:', JSON.stringify(after));
       }
+    }
+
+    if (shot.askQuestion) {
+      // Ask the seeded chat a real question so the grounded answer and
+      // citation chip render (the differentiator shot).
+      const input = page.getByRole('textbox').last();
+      await input.click();
+      await input.fill(shot.askQuestion);
+      await input.press('Enter');
+      await page.waitForFunction(
+        (label) =>
+          [...document.querySelectorAll('flt-semantics, [aria-label]')].some(
+            (n) =>
+              (n.getAttribute('aria-label') || n.textContent || '').includes(
+                label,
+              ),
+          ),
+        'Sample answer',
+        { timeout: 30000 },
+      );
+      await page.waitForTimeout(1500);
     }
 
     // Let the last frame settle (glass animations are short, ~300ms).

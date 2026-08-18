@@ -137,14 +137,13 @@ export default function PrivacyPage() {
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
               Effective date:{" "}
-              <span className="text-foreground font-medium">[EFFECTIVE DATE — set before publishing]</span>
-              {" "}· Last updated: [DATE]
+              <span className="text-foreground font-medium">August 18, 2026</span>
+              {" "}· Last updated: August 18, 2026
             </p>
-            <div className="bg-amber-500/10 border-amber-500/30 text-amber-300 mt-4 rounded-xl border px-4 py-3 text-sm">
-              <strong>Review needed before publishing.</strong> This is a draft written
-              from what StudyFlow actually does today. A lawyer (or a legal template
-              service for your jurisdiction) should review it before the app goes public,
-              and the placeholder fields below must be filled in.
+            <div className="text-muted-foreground mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
+              <strong className="text-foreground">About this policy.</strong> This policy
+              describes what StudyFlow does today. It is reviewed as the product evolves;
+              material changes are announced under “Changes to this policy”.
             </div>
           </div>
         </div>
