@@ -1,10 +1,26 @@
 name: Release
 
-# Creates a downloadable GitHub Release from a signed Android build.
+# Creates a downloadable GitHub Release from a signed Android build, plus a
+# signed iOS IPA when the iOS signing secrets are configured.
 # Trigger: push a tag like v1.0.0  (git tag v1.0.0 && git push origin v1.0.0)
 #
-# The Android APK/AAB are signed with the StudyFlow release keystore, which
+# Android: the APK/AAB are signed with the StudyFlow release keystore, which
 # lives ONLY as GitHub secrets (STUDYFLOW_KEYSTORE_*). Never commit it.
+#
+# iOS: to publish a distributable IPA you need an Apple Developer account.
+# Generate once in Xcode (Settings → Accounts → Manage Certificates → Apple
+# Distribution) and in the Developer portal (a Distribution provisioning
+# profile for bundle id ai.studyflow.studyflowMobile), then add these secrets:
+#   IOS_CERT_B64       — base64 of the .p12 containing the distribution cert
+#   IOS_CERT_PASSWORD  — the .p12 export password
+#   IOS_PROFILE_B64    — base64 of the .mobileprovision distribution profile
+# And this repository variable:
+#   IOS_DEVELOPMENT_TEAM — your 10-char Apple Developer Team ID
+# (Optional) to auto-upload to TestFlight, add an App Store Connect API key
+# with App Manager role and these secrets:
+#   APPLE_API_KEY_B64, APPLE_API_KEY_ID, APPLE_API_KEY_ISSUER_ID
+# Until the secrets are set, the iOS job compiles unsigned (verify-only) and
+# the release ships Android binaries only.
 #
 # The API base URL the app talks to comes from the `API_BASE_URL` repository
 # variable (Settings → Secrets and variables → Actions → Variables). Set it
@@ -35,6 +51,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.44.9
           cache: true
 
       - name: Decode release keystore
@@ -74,7 +91,7 @@ jobs:
               mobile/build/app/outputs/flutter-apk/app-release.apk \
               mobile/build/app/outputs/bundle/release/app-release.aab \
               --title "StudyFlow AI $GITHUB_REF_NAME" \
-              --notes "Signed Android build. APK installs directly on any Android phone. The .aab is for the Play Store. Set the API_BASE_URL repository variable to your deployed backend before distributing."; then
+              --notes "Signed Android build. APK installs directly on any Android phone. The .aab is for the Play Store. A signed iOS IPA is attached automatically when the iOS signing secrets are configured. Set the API_BASE_URL repository variable to your deployed backend before distributing."; then
               exit 0
             fi
             echo "release create failed (attempt $i/5), backing off..."
@@ -84,8 +101,9 @@ jobs:
           exit 1
 
   ios:
-    name: Verify iOS build compiles (unsigned)
+    name: Build iOS (signed IPA when secrets configured)
     runs-on: macos-latest
+    needs: android
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,9 +112,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.44.9
           cache: true
 
-      - name: Build iOS (no codesign)
+      - name: Build iOS (no codesign — compile verification)
         working-directory: mobile
         run: flutter build ios --release --no-codesign --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}
 
@@ -105,3 +124,104 @@ jobs:
         with:
           name: ios-unsigned-${{ github.ref_name }}
           path: mobile/build/ios/iphoneos/*.app
+
+      # ---- Signed IPA (runs only when the signing secrets are configured) ----
+      - name: Check iOS signing configuration
+        id: signing
+        env:
+          IOS_CERT_B64: ${{ secrets.IOS_CERT_B64 }}
+        run: |
+          if [ -z "$IOS_CERT_B64" ]; then
+            echo "No iOS signing secrets configured — skipping signed IPA build."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Inject development team into Xcode project
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          IOS_TEAM_ID: ${{ vars.IOS_DEVELOPMENT_TEAM }}
+        working-directory: mobile/ios
+        run: |
+          if [ -z "$IOS_TEAM_ID" ]; then
+            echo "IOS_DEVELOPMENT_TEAM variable is not set" >&2
+            exit 1
+          fi
+          python3 - "$IOS_TEAM_ID" <<'PY'
+          import sys
+          team = sys.argv[1]
+          path = "Runner.xcodeproj/project.pbxproj"
+          src = open(path).read()
+          # The Runner target's three build configs (Debug/Release/Profile)
+          # each carry the app bundle id; RunnerTests carries a suffixed id and
+          # must not be patched. The trailing ';' anchors the match.
+          needle = "PRODUCT_BUNDLE_IDENTIFIER = ai.studyflow.studyflowMobile;"
+          count = src.count(needle)
+          assert count == 3, f"expected 3 Runner build configs, found {count}"
+          open(path, "w").write(
+              src.replace(needle, needle + "\n\t\t\t\tDEVELOPMENT_TEAM = " + team + ";")
+          )
+          print(f"injected DEVELOPMENT_TEAM into {count} configs")
+          PY
+
+      - name: Install signing certificate and provisioning profile
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          IOS_CERT_B64: ${{ secrets.IOS_CERT_B64 }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_PROFILE_B64: ${{ secrets.IOS_PROFILE_B64 }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/build_cert.p12"
+          PP_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          echo -n "$IOS_CERT_B64" | base64 --decode -o "$CERT_PATH"
+          echo -n "$IOS_PROFILE_B64" | base64 --decode -o "$PP_PATH"
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$IOS_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+          cp "$PP_PATH" "$PROFILE_DIR/"
+          echo "certificate and provisioning profile installed"
+
+      - name: Build signed IPA
+        if: steps.signing.outputs.configured == 'true'
+        working-directory: mobile
+        run: flutter build ipa --release --export-method=app-store-connect --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}
+
+      - name: Upload IPA to release
+        if: steps.signing.outputs.configured == 'true'
+        working-directory: mobile
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in 1 2 3 4 5; do
+            if gh release upload "$GITHUB_REF_NAME" build/ios/ipa/*.ipa --clobber; then
+              exit 0
+            fi
+            echo "release upload failed (attempt $i/5), backing off..."
+            sleep $((i * 15))
+          done
+          echo "release upload failed after 5 attempts" >&2
+          exit 1
+
+      - name: Upload to TestFlight
+        if: env.APPLE_API_KEY_B64 != ''
+        working-directory: mobile
+        env:
+          APPLE_API_KEY_B64: ${{ secrets.APPLE_API_KEY_B64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$KEY_DIR"
+          echo -n "$APPLE_API_KEY_B64" | base64 --decode -o "$KEY_DIR/AuthKey_$APPLE_API_KEY_ID.p8"
+          xcrun altool --upload-app -f build/ios/ipa/*.ipa -t ios \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+            --verbose
