@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
-import '../../shared/widgets/glass/glass_input.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'auth_controller.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -54,118 +52,122 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       _busy = false;
       _error = error;
     });
-    // On success the router redirects to /home automatically.
   }
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(SwissSpacing.xl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: GlassCard(
-                tone: GlassTone.floating,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: g.primarySoft,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(
-                        Icons.auto_stories,
-                        size: 26,
-                        color: g.primary,
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo
+                  Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    color: fg,
+                    child: Icon(
+                      Icons.auto_stories,
+                      size: 26,
+                      color: isDark ? SwissColors.darkBackground : SwissColors.white,
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: SwissSpacing.xl),
+
+                  // Title
+                  Text(
+                    'CREATE YOUR ACCOUNT',
+                    textAlign: TextAlign.center,
+                    style: SwissTypography.section.copyWith(color: fg),
+                  ),
+                  const SizedBox(height: SwissSpacing.xs),
+                  Text(
+                    'Free to start — no card needed.',
+                    textAlign: TextAlign.center,
+                    style: SwissTypography.body.copyWith(color: mutedFg),
+                  ),
+                  const SizedBox(height: SwissSpacing.xxl),
+
+                  // Name
+                  SwissInput(
+                    controller: _name,
+                    label: 'Name',
+                    hintText: 'Your name',
+                  ),
+                  const SizedBox(height: SwissSpacing.md),
+
+                  // Email
+                  SwissInput(
+                    controller: _email,
+                    label: 'Email',
+                    hintText: 'you@example.com',
+                  ),
+                  const SizedBox(height: SwissSpacing.md),
+
+                  // Password
+                  SwissInput(
+                    controller: _password,
+                    label: 'Password',
+                    hintText: 'At least 8 characters',
+                  ),
+
+                  // Error
+                  if (_error != null) ...[
+                    const SizedBox(height: SwissSpacing.md),
                     Text(
-                      'Create your account',
+                      _error!,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Free to start — no card needed.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: g.textMuted, fontSize: 14),
-                    ),
-                    const SizedBox(height: 20),
-                    GlassInput(
-                      controller: _name,
-                      label: 'Name',
-                      hintText: 'Your name',
-                      textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.person,
-                    ),
-                    const SizedBox(height: 12),
-                    GlassInput(
-                      controller: _email,
-                      label: 'Email',
-                      hintText: 'you@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.mail,
-                    ),
-                    const SizedBox(height: 12),
-                    GlassInput(
-                      controller: _password,
-                      label: 'Password',
-                      hintText: 'At least 8 characters',
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      prefixIcon: Icons.lock,
-                      onSubmitted: (_) => _submit(),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: g.danger, fontSize: 13),
+                      style: SwissTypography.body.copyWith(
+                        color: SwissColors.red,
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    GlassButton(
-                      label: _busy ? 'Creating account…' : 'Create account',
-                      icon: Icons.person_add_alt,
-                      expand: true,
-                      onPressed: _busy ? null : _submit,
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          'Already have an account? ',
-                          style: TextStyle(color: g.textMuted, fontSize: 13),
-                        ),
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () => context.go(AppRoutes.login),
-                          child: Text(
-                            'Log in',
-                            style: TextStyle(
-                              color: g.primary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
-                ),
+                  const SizedBox(height: SwissSpacing.xl),
+
+                  // Submit
+                  SwissButton(
+                    label: _busy ? 'Creating account…' : 'Create account',
+                    icon: Icons.person_add_alt,
+                    fullWidth: true,
+                    onPressed: _busy ? null : _submit,
+                  ),
+                  const SizedBox(height: SwissSpacing.md),
+
+                  // Login link
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: SwissTypography.body.copyWith(color: mutedFg),
+                      ),
+                      TextButton(
+                        onPressed: _busy
+                            ? null
+                            : () => context.go(AppRoutes.login),
+                        child: Text(
+                          'Log in',
+                          style: SwissTypography.bodyBold.copyWith(
+                            color: fg,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

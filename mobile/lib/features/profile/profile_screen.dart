@@ -1,128 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/bauhaus_tokens.dart';
-import '../../shared/widgets/bauhaus/bauhaus.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
 
-/// Profile screen — Bauhaus editorial identity page.
+/// Profile screen — Swiss editorial identity page.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(BauhausSpacing.xl),
+        padding: const EdgeInsets.all(SwissSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            const BauhausEyebrow(text: 'Profile'),
-            const SizedBox(height: BauhausSpacing.sm),
+            const SwissEyebrow(text: 'Profile'),
+            const SizedBox(height: SwissSpacing.sm),
 
             // User info
             if (auth is AuthAuthenticated) ...[
               Text(
                 auth.user.name.toUpperCase(),
-                style: BauhausTypography.headline,
+                style: SwissTypography.headline.copyWith(color: fg),
               ),
-              const SizedBox(height: BauhausSpacing.xs),
+              const SizedBox(height: SwissSpacing.xs),
               Text(
                 auth.user.email,
-                style: BauhausTypography.bodyMuted.copyWith(
-                  color: BauhausColors.black.withValues(alpha: 0.6),
-                ),
+                style: SwissTypography.body.copyWith(color: mutedFg),
               ),
             ] else ...[
               Text(
                 'GUEST',
-                style: BauhausTypography.headline,
+                style: SwissTypography.headline.copyWith(color: fg),
               ),
             ],
 
-            const SizedBox(height: BauhausSpacing.xxxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxxl),
+            const SizedBox(height: SwissSpacing.xxxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // Study statistics
-            const BauhausSectionHeading(title: 'Study stats'),
-            const SizedBox(height: BauhausSpacing.md),
-            BauhausCard(
-              accent: BauhausCardAccent.circle,
-              accentColor: BauhausColors.blue,
+            const SwissSectionLabel(number: '01', title: 'Study stats'),
+            const SizedBox(height: SwissSpacing.md),
+            SwissCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'STREAK',
-                    style: BauhausTypography.label,
+                    style: SwissTypography.label.copyWith(color: fg),
                   ),
-                  const SizedBox(height: BauhausSpacing.xs),
+                  const SizedBox(height: SwissSpacing.xs),
                   Text(
                     '0 DAYS',
-                    style: BauhausTypography.section,
+                    style: SwissTypography.section.copyWith(color: fg),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Settings sections
-            const BauhausSectionHeading(title: 'Settings'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.person,
-              label: 'Account',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.palette,
-              label: 'Appearance',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.notifications,
-              label: 'Notifications',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.privacy_tip,
-              label: 'Privacy',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '02', title: 'Settings'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.person, label: 'Account'),
+            const _SettingsItem(icon: Icons.palette, label: 'Appearance'),
+            const _SettingsItem(icon: Icons.notifications, label: 'Notifications'),
+            const _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // About
-            const BauhausSectionHeading(title: 'About'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.info,
-              label: 'About StudyFlow',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.code,
-              label: 'Creator',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '03', title: 'About'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.info, label: 'About StudyFlow'),
+            const _SettingsItem(icon: Icons.code, label: 'Creator'),
 
-            const SizedBox(height: BauhausSpacing.xxxl),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // Sign out
-            BauhausButton(
+            SwissButton(
               label: 'Sign out',
-              variant: BauhausButtonVariant.outline,
-              expand: true,
+              variant: SwissButtonVariant.secondary,
+              fullWidth: true,
               onPressed: () {
                 // TODO: Sign out
               },
@@ -134,39 +111,39 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-/// Settings list item — Bauhaus style.
+/// Settings list item — Swiss style.
 class _SettingsItem extends StatelessWidget {
   const _SettingsItem({
     required this.icon,
     required this.label,
-    required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.4)
+        : SwissColors.black.withValues(alpha: 0.4);
+
     return InkWell(
-      onTap: onTap,
+      onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: BauhausSpacing.md),
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: BauhausColors.black),
-            const SizedBox(width: BauhausSpacing.md),
+            Icon(icon, size: 20, color: fg),
+            const SizedBox(width: SwissSpacing.md),
             Expanded(
               child: Text(
                 label.toUpperCase(),
-                style: BauhausTypography.label,
+                style: SwissTypography.label.copyWith(color: fg),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: BauhausColors.black,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: mutedFg),
           ],
         ),
       ),

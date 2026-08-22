@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/bauhaus_tokens.dart';
-import '../../shared/widgets/bauhaus/bauhaus.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 
-/// Premium screen — Bauhaus poster design.
+/// Premium screen — Swiss poster design.
 /// "STUDY WITHOUT LIMITS."
 class PremiumScreen extends ConsumerWidget {
   const PremiumScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return Scaffold(
-      backgroundColor: BauhausColors.yellow,
+      backgroundColor: bg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(BauhausSpacing.xl),
+          padding: const EdgeInsets.all(SwissSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -23,48 +30,41 @@ class PremiumScreen extends ConsumerWidget {
               Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
-                  icon: const Icon(Icons.close, size: 24),
+                  icon: Icon(Icons.close, size: 24, color: fg),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
 
-              const SizedBox(height: BauhausSpacing.xxl),
+              const SizedBox(height: SwissSpacing.xxl),
+
+              // Section number
+              Text(
+                '04',
+                style: SwissTypography.display.copyWith(
+                  color: SwissColors.red.withValues(alpha: 0.2),
+                ),
+              ),
+
+              const SizedBox(height: SwissSpacing.xl),
 
               // Hero
               Text(
                 'STUDY\nWITHOUT\nLIMITS.',
-                style: BauhausTypography.heroWhite.copyWith(
+                style: SwissTypography.display.copyWith(
                   fontSize: 48,
-                  color: BauhausColors.black,
+                  color: fg,
                 ),
               ),
 
-              const SizedBox(height: BauhausSpacing.xxxl),
-
-              // Geometric composition
-              const BauhausComposition(
-                width: 240,
-                height: 160,
-                circleColor: BauhausColors.red,
-                squareColor: BauhausColors.blue,
-                triangleColor: BauhausColors.black,
-              ),
-
-              const SizedBox(height: BauhausSpacing.xxxl),
+              const SizedBox(height: SwissSpacing.xxxl),
 
               // Benefits
-              BauhausCard(
-                color: BauhausColors.white,
-                accent: BauhausCardAccent.circle,
-                accentColor: BauhausColors.red,
+              SwissCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'PREMIUM INCLUDES',
-                      style: BauhausTypography.label,
-                    ),
-                    const SizedBox(height: BauhausSpacing.md),
+                    const SwissEyebrow(text: 'Premium includes'),
+                    const SizedBox(height: SwissSpacing.md),
                     _BenefitItem(text: 'AI — unlimited generation'),
                     _BenefitItem(text: 'AUDIO — study podcasts'),
                     _BenefitItem(text: 'FLASHCARDS — unlimited decks'),
@@ -74,70 +74,61 @@ class PremiumScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: BauhausSpacing.xxl),
+              const SizedBox(height: SwissSpacing.xxl),
 
               // Price
-              BauhausCard(
-                color: BauhausColors.white,
-                accent: BauhausCardAccent.square,
-                accentColor: BauhausColors.blue,
+              SwissCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'FOUNDING MEMBER',
-                      style: BauhausTypography.label,
-                    ),
-                    const SizedBox(height: BauhausSpacing.sm),
+                    const SwissEyebrow(text: 'Founding member'),
+                    const SizedBox(height: SwissSpacing.sm),
                     Text(
                       '\$2/month',
-                      style: BauhausTypography.headline.copyWith(fontSize: 36),
+                      style: SwissTypography.headline.copyWith(
+                        fontSize: 36,
+                        color: fg,
+                      ),
                     ),
-                    const SizedBox(height: BauhausSpacing.xs),
+                    const SizedBox(height: SwissSpacing.xs),
                     Text(
                       'First 35 members only',
-                      style: BauhausTypography.bodyMuted.copyWith(
-                        color: BauhausColors.black.withValues(alpha: 0.6),
-                      ),
+                      style: SwissTypography.body.copyWith(color: mutedFg),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: BauhausSpacing.xxl),
+              const SizedBox(height: SwissSpacing.xxl),
 
               // CTA
-              BauhausButton(
+              SwissButton(
                 label: 'Upgrade now',
-                variant: BauhausButtonVariant.primary,
-                size: BauhausButtonSize.large,
-                expand: true,
+                variant: SwissButtonVariant.primary,
+                fullWidth: true,
                 onPressed: () {
                   // TODO: Start checkout
                 },
               ),
 
-              const SizedBox(height: BauhausSpacing.md),
+              const SizedBox(height: SwissSpacing.md),
 
               // Restore
-              Center(
-                child: BauhausButton(
-                  label: 'Restore purchase',
-                  variant: BauhausButtonVariant.ghost,
-                  onPressed: () {
-                    // TODO: Restore purchase
-                  },
-                ),
+              SwissButton(
+                label: 'Restore purchase',
+                variant: SwissButtonVariant.ghost,
+                fullWidth: true,
+                onPressed: () {
+                  // TODO: Restore purchase
+                },
               ),
 
-              const SizedBox(height: BauhausSpacing.xxl),
+              const SizedBox(height: SwissSpacing.xxl),
 
               // Terms
               Text(
                 'Cancel anytime in Settings. You keep access until the end of your paid period.',
-                style: BauhausTypography.caption.copyWith(
-                  color: BauhausColors.black.withValues(alpha: 0.5),
-                ),
+                style: SwissTypography.caption.copyWith(color: mutedFg),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -156,18 +147,22 @@ class _BenefitItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: BauhausSpacing.sm),
+      padding: const EdgeInsets.only(bottom: SwissSpacing.sm),
       child: Row(
         children: [
-          const BauhausSquare(
-            size: 8,
-            color: BauhausColors.black,
+          Container(
+            width: 8,
+            height: 8,
+            color: fg,
           ),
-          const SizedBox(width: BauhausSpacing.sm),
+          const SizedBox(width: SwissSpacing.sm),
           Text(
             text.toUpperCase(),
-            style: BauhausTypography.body,
+            style: SwissTypography.body.copyWith(color: fg),
           ),
         ],
       ),

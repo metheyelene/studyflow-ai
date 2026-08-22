@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/bauhaus_tokens.dart';
-import '../../shared/widgets/bauhaus/bauhaus.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'notebooks_controller.dart';
 import 'notebook.dart';
 
-/// Notebooks screen — Bauhaus editorial list of study spaces.
+/// Notebooks screen — Swiss editorial list of study spaces.
 class NotebooksScreen extends ConsumerWidget {
   const NotebooksScreen({super.key, this.selectedId});
 
@@ -19,26 +19,26 @@ class NotebooksScreen extends ConsumerWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(BauhausSpacing.xl),
+        padding: const EdgeInsets.all(SwissSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            const BauhausEyebrow(text: 'Study spaces'),
-            const SizedBox(height: BauhausSpacing.sm),
+            const SwissEyebrow(text: 'Study spaces'),
+            const SizedBox(height: SwissSpacing.sm),
             Text(
               'YOUR\nKNOWLEDGE',
-              style: BauhausTypography.hero.copyWith(fontSize: 36),
+              style: SwissTypography.display.copyWith(fontSize: 36),
             ),
-            const SizedBox(height: BauhausSpacing.xl),
+            const SizedBox(height: SwissSpacing.xl),
 
             // Content
             Expanded(
               child: state.when(
-                loading: () => const BauhausProcessingState(
+                loading: () => const SwissProcessingState(
                   label: 'Loading study spaces',
                 ),
-                error: (e, _) => BauhausErrorState(
+                error: (e, _) => SwissErrorState(
                   title: 'Error',
                   message: 'Could not load your study spaces.',
                   onRetry: () =>
@@ -46,16 +46,13 @@ class NotebooksScreen extends ConsumerWidget {
                 ),
                 data: (notebooks) {
                   if (notebooks.isEmpty) {
-                    return BauhausEmptyState(
+                    return SwissEmptyState(
+                      sectionNumber: '01',
                       title: 'No study spaces',
                       description:
                           'Create your first study space to start learning.',
                       actionLabel: 'Create',
                       onAction: () => _showCreateSheet(context),
-                      composition: const BauhausComposition(
-                        width: 140,
-                        height: 140,
-                      ),
                     );
                   }
 
@@ -63,7 +60,7 @@ class NotebooksScreen extends ConsumerWidget {
                     itemCount: notebooks.length,
                     itemBuilder: (context, index) {
                       final notebook = notebooks[index];
-                      return _NotebookCard(
+                      return _NotebookItem(
                         notebook: notebook,
                         onTap: () =>
                             context.push('/notebooks/${notebook.id}'),
@@ -75,12 +72,12 @@ class NotebooksScreen extends ConsumerWidget {
             ),
 
             // Create button
-            const SizedBox(height: BauhausSpacing.md),
-            BauhausButton(
+            const SizedBox(height: SwissSpacing.md),
+            SwissButton(
               label: 'Create study space',
               icon: Icons.add,
-              variant: BauhausButtonVariant.primary,
-              expand: true,
+              variant: SwissButtonVariant.primary,
+              fullWidth: true,
               onPressed: () => _showCreateSheet(context),
             ),
           ],
@@ -94,9 +91,9 @@ class NotebooksScreen extends ConsumerWidget {
   }
 }
 
-/// Notebook card — Bauhaus style with geometric accent.
-class _NotebookCard extends StatelessWidget {
-  const _NotebookCard({
+/// Notebook item — Swiss numbered list.
+class _NotebookItem extends StatelessWidget {
+  const _NotebookItem({
     required this.notebook,
     required this.onTap,
   });
@@ -107,52 +104,17 @@ class _NotebookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = notebook.sourceCount;
-    final accents = [
-      BauhausCardAccent.circle,
-      BauhausCardAccent.square,
-      BauhausCardAccent.triangle,
-    ];
-    final accentColors = [
-      BauhausColors.red,
-      BauhausColors.blue,
-      BauhausColors.yellow,
-    ];
-    final accentIndex = notebook.title.hashCode.abs() % 3;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: BauhausSpacing.md),
-      child: BauhausCard(
-        accent: accents[accentIndex],
-        accentColor: accentColors[accentIndex],
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              notebook.title.toUpperCase(),
-              style: BauhausTypography.section.copyWith(fontSize: 22),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: BauhausSpacing.sm),
-            BauhausHairline(),
-            const SizedBox(height: BauhausSpacing.sm),
-            Row(
-              children: [
-                BauhausEyebrow(
-                  text: count == 1 ? '1 source' : '$count sources',
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: BauhausColors.black,
-                ),
-              ],
-            ),
-          ],
+    return Column(
+      children: [
+        SwissNumberedItem(
+          index: notebook.title.hashCode.abs() % 99 + 1,
+          title: notebook.title,
+          subtitle: count == 1 ? '1 source' : '$count sources',
+          onTap: onTap,
         ),
-      ),
+        const SwissHairline(),
+      ],
     );
   }
 }

@@ -6,7 +6,7 @@ import 'package:flutter/semantics.dart';
 import 'core/config/app_config.dart';
 import 'core/config/capture_seed.dart';
 import 'core/routing/app_router.dart';
-import 'core/theme/bauhaus_tokens.dart';
+import 'core/theme/swiss_tokens.dart';
 import 'core/theme/theme_controller.dart';
 import 'features/authentication/auth_controller.dart';
 
@@ -47,97 +47,137 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
     return MaterialApp.router(
       title: 'StudyFlow AI',
       debugShowCheckedModeBanner: false,
-      theme: _buildBauhausTheme(Brightness.light),
-      darkTheme: _buildBauhausTheme(Brightness.dark),
+      theme: _buildSwissTheme(Brightness.light),
+      darkTheme: _buildSwissTheme(Brightness.dark),
       themeMode: themeMode,
       routerConfig: appRouter,
     );
   }
 
-  /// Build the Bauhaus theme — geometric, bold, constructivist.
-  ThemeData _buildBauhausTheme(Brightness brightness) {
+  /// Swiss International theme — Black, White, Red only.
+  ThemeData _buildSwissTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
 
-    // Bauhaus colors adapt to light/dark mode.
-    final background = isDark ? const Color(0xFF121212) : BauhausColors.background;
-    final surface = isDark ? const Color(0xFF1E1E1E) : BauhausColors.white;
-    final onSurface = isDark ? BauhausColors.white : BauhausColors.black;
-    final border = isDark
-        ? BauhausColors.white.withValues(alpha: 0.2)
-        : BauhausColors.black;
+    final background = isDark ? SwissColors.darkBackground : SwissColors.background;
+    final surface = isDark ? SwissColors.darkSurface : SwissColors.surface;
+    final onSurface = isDark ? SwissColors.darkOnSurface : SwissColors.onSurface;
+    final border = isDark ? SwissColors.darkBorder : SwissColors.border;
+    final muted = isDark ? SwissColors.darkMuted : SwissColors.muted;
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       scaffoldBackgroundColor: background,
+
       colorScheme: ColorScheme(
         brightness: brightness,
-        primary: isDark ? BauhausColors.white : BauhausColors.black,
-        onPrimary: isDark ? BauhausColors.black : BauhausColors.white,
-        secondary: BauhausColors.blue,
-        onSecondary: BauhausColors.white,
-        tertiary: BauhausColors.red,
-        onTertiary: BauhausColors.white,
+        primary: isDark ? SwissColors.white : SwissColors.black,
+        onPrimary: isDark ? SwissColors.black : SwissColors.white,
+        secondary: isDark ? SwissColors.white : SwissColors.black,
+        onSecondary: isDark ? SwissColors.black : SwissColors.white,
+        tertiary: SwissColors.red,
+        onTertiary: SwissColors.white,
         surface: surface,
         onSurface: onSurface,
-        error: BauhausColors.red,
-        onError: BauhausColors.white,
+        error: SwissColors.red,
+        onError: SwissColors.white,
       ),
+
       textTheme: TextTheme(
-        displayLarge: BauhausTypography.hero.copyWith(color: onSurface),
-        displayMedium: BauhausTypography.headline.copyWith(color: onSurface),
-        displaySmall: BauhausTypography.section.copyWith(color: onSurface),
-        headlineLarge: BauhausTypography.headline.copyWith(color: onSurface),
-        headlineMedium: BauhausTypography.section.copyWith(color: onSurface),
-        headlineSmall: BauhausTypography.subheading.copyWith(color: onSurface),
-        titleLarge: BauhausTypography.subheading.copyWith(color: onSurface),
-        titleMedium: BauhausTypography.body.copyWith(color: onSurface),
-        titleSmall: BauhausTypography.caption.copyWith(color: onSurface),
-        bodyLarge: BauhausTypography.body.copyWith(color: onSurface),
-        bodyMedium: BauhausTypography.bodyMuted.copyWith(color: onSurface),
-        bodySmall: BauhausTypography.caption.copyWith(color: onSurface),
-        labelLarge: BauhausTypography.label.copyWith(color: onSurface),
-        labelMedium: BauhausTypography.label.copyWith(color: onSurface),
-        labelSmall: BauhausTypography.caption.copyWith(color: onSurface),
+        displayLarge: SwissTypography.display.copyWith(color: onSurface),
+        displayMedium: SwissTypography.headline.copyWith(color: onSurface),
+        displaySmall: SwissTypography.section.copyWith(color: onSurface),
+        headlineLarge: SwissTypography.headline.copyWith(color: onSurface),
+        headlineMedium: SwissTypography.section.copyWith(color: onSurface),
+        headlineSmall: SwissTypography.subheading.copyWith(color: onSurface),
+        titleLarge: SwissTypography.subheading.copyWith(color: onSurface),
+        titleMedium: SwissTypography.bodyBold.copyWith(color: onSurface),
+        titleSmall: SwissTypography.caption.copyWith(color: onSurface),
+        bodyLarge: SwissTypography.body.copyWith(color: onSurface),
+        bodyMedium: SwissTypography.body.copyWith(
+          color: onSurface.withValues(alpha: 0.7),
+        ),
+        bodySmall: SwissTypography.caption.copyWith(
+          color: onSurface.withValues(alpha: 0.5),
+        ),
+        labelLarge: SwissTypography.label.copyWith(color: onSurface),
+        labelMedium: SwissTypography.label.copyWith(
+          color: onSurface.withValues(alpha: 0.6),
+        ),
+        labelSmall: SwissTypography.caption.copyWith(
+          color: onSurface.withValues(alpha: 0.4),
+        ),
       ),
+
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: BauhausTypography.subheading.copyWith(color: onSurface),
+        titleTextStyle: SwissTypography.subheading.copyWith(color: onSurface),
         iconTheme: IconThemeData(color: onSurface),
       ),
+
       cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: border, width: BauhausShapes.borderMedium),
+          side: BorderSide(color: border, width: SwissShapes.borderThin),
+          borderRadius: BorderRadius.zero,
         ),
       ),
-      buttonTheme: ButtonThemeData(
-        buttonColor: isDark ? BauhausColors.white : BauhausColors.black,
-        textTheme: ButtonTextTheme.primary,
-      ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
-        border: OutlineInputBorder(
-          borderSide: BorderSide(color: border, width: BauhausShapes.borderThin),
+        fillColor: muted,
+        hintStyle: SwissTypography.body.copyWith(
+          color: onSurface.withValues(alpha: 0.4),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: border, width: BauhausShapes.borderThin),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: isDark ? BauhausColors.white : BauhausColors.black,
-            width: BauhausShapes.borderMedium,
-          ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: SwissColors.red, width: SwissShapes.borderThin),
         ),
       ),
+
       dividerTheme: DividerThemeData(
         color: border,
-        thickness: BauhausShapes.borderThin,
+        thickness: SwissShapes.borderThin,
         space: 0,
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: border, width: SwissShapes.borderThin),
+          borderRadius: BorderRadius.zero,
+        ),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+        ),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isDark ? SwissColors.white : SwissColors.black,
+        contentTextStyle: SwissTypography.body.copyWith(
+          color: isDark ? SwissColors.black : SwissColors.white,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+        ),
       ),
     );
   }

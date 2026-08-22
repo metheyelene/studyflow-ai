@@ -3,18 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/bauhaus_tokens.dart';
-import '../../shared/widgets/bauhaus/bauhaus.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
 import '../notebooks/notebook.dart';
 import '../notebooks/notebooks_controller.dart';
 import 'dashboard_controller.dart';
 
-/// Home tab — Bauhaus editorial command center.
-///
-/// Composition: greeting → hero with geometric composition →
-/// recent spaces on hairlines → quick actions → upcoming exams.
+/// Home tab — Swiss editorial command center.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -25,41 +22,43 @@ class DashboardScreen extends ConsumerWidget {
     final firstName = auth is AuthAuthenticated
         ? auth.user.name.trim().split(' ').first
         : null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          BauhausSpacing.xl,
-          BauhausSpacing.xl,
-          BauhausSpacing.xl,
+        padding: const EdgeInsets.fromLTRB(
+          SwissSpacing.xl,
+          SwissSpacing.xl,
+          SwissSpacing.xl,
           120,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Hero Section ────────────────────────────────────
-            _BauhausHero(firstName: firstName),
-            const SizedBox(height: BauhausSpacing.xxxl),
+            _SwissHero(firstName: firstName),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Usage Bar ───────────────────────────────────────
             _UsageBar(dashboard: dashboard),
-            const SizedBox(height: BauhausSpacing.xxxl),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Recent Spaces ───────────────────────────────────
-            const BauhausSectionHeading(title: 'Recent'),
-            const SizedBox(height: BauhausSpacing.md),
+            const SwissSectionLabel(number: '01', title: 'Recent'),
+            const SizedBox(height: SwissSpacing.md),
             const _RecentSpaces(),
-            const SizedBox(height: BauhausSpacing.xxxl),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Quick Actions ───────────────────────────────────
-            const BauhausSectionHeading(title: 'Quick'),
-            const SizedBox(height: BauhausSpacing.md),
+            const SwissSectionLabel(number: '02', title: 'Quick'),
+            const SizedBox(height: SwissSpacing.md),
             const _QuickActions(),
-            const SizedBox(height: BauhausSpacing.xxxl),
+            const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Upcoming Exams ──────────────────────────────────
-            const BauhausSectionHeading(title: 'Upcoming'),
-            const SizedBox(height: BauhausSpacing.md),
+            const SwissSectionLabel(number: '03', title: 'Upcoming'),
+            const SizedBox(height: SwissSpacing.md),
             _UpcomingExams(dashboard: dashboard),
           ],
         ),
@@ -68,46 +67,33 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Bauhaus hero — massive greeting + geometric composition.
-class _BauhausHero extends StatelessWidget {
-  const _BauhausHero({this.firstName});
+/// Swiss hero — massive greeting, flush left, no geometric shapes.
+class _SwissHero extends StatelessWidget {
+  const _SwissHero({this.firstName});
 
   final String? firstName;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Eyebrow
-        const BauhausEyebrow(text: 'Welcome back'),
-        const SizedBox(height: BauhausSpacing.sm),
-
-        // Name in display type
+        const SwissEyebrow(text: 'Welcome back'),
+        const SizedBox(height: SwissSpacing.sm),
         Text(
-          firstName ?? 'Friend',
-          style: BauhausTypography.hero,
+          (firstName ?? 'Friend').toUpperCase(),
+          style: SwissTypography.display.copyWith(color: fg),
         ),
-
-        const SizedBox(height: BauhausSpacing.sm),
-
-        // Tagline
+        const SizedBox(height: SwissSpacing.sm),
         Text(
           'Ready to study?',
-          style: BauhausTypography.bodyMuted.copyWith(
-            color: BauhausColors.black.withValues(alpha: 0.6),
-          ),
-        ),
-
-        const SizedBox(height: BauhausSpacing.xxl),
-
-        // Geometric composition — asymmetric, bold
-        const BauhausComposition(
-          width: 280,
-          height: 160,
-          circleColor: BauhausColors.blue,
-          squareColor: BauhausColors.yellow,
-          triangleColor: BauhausColors.red,
+          style: SwissTypography.body.copyWith(color: mutedFg),
         ),
       ],
     );
@@ -122,18 +108,21 @@ class _UsageBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+
     return dashboard.when(
       loading: () => Container(
         height: 20,
         decoration: BoxDecoration(
-          color: BauhausColors.muted,
+          color: isDark ? SwissColors.darkMuted : SwissColors.muted,
           border: Border.all(
-            color: BauhausColors.black,
-            width: BauhausShapes.borderThin,
+            color: fg,
+            width: SwissShapes.borderThin,
           ),
         ),
       ),
-      error: (_, _) => BauhausErrorState(
+      error: (_, _) => SwissErrorState(
         title: 'Error',
         message: 'Could not load your usage.',
         onRetry: () =>
@@ -149,10 +138,7 @@ class _UsageBar extends ConsumerWidget {
         final remaining = usage.remaining;
         final frac = (usage.percent / 100).clamp(0.0, 1.0);
 
-        return BauhausCard(
-          accent: BauhausCardAccent.circle,
-          accentColor: BauhausColors.blue,
-          padding: const EdgeInsets.all(BauhausSpacing.lg),
+        return SwissCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -160,36 +146,30 @@ class _UsageBar extends ConsumerWidget {
                 children: [
                   Text(
                     '$remaining',
-                    style: BauhausTypography.headline.copyWith(fontSize: 28),
+                    style: SwissTypography.headline.copyWith(
+                      fontSize: 28,
+                      color: fg,
+                    ),
                   ),
-                  const SizedBox(width: BauhausSpacing.sm),
+                  const SizedBox(width: SwissSpacing.sm),
                   Expanded(
                     child: Text(
                       'AI actions left',
-                      style: BauhausTypography.bodyMuted.copyWith(
-                        color: BauhausColors.black.withValues(alpha: 0.6),
+                      style: SwissTypography.body.copyWith(
+                        color: fg.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
-                  BauhausEyebrow(text: planLabel),
+                  SwissEyebrow(text: planLabel),
                 ],
               ),
-              const SizedBox(height: BauhausSpacing.md),
-              BauhausLine(height: 4, color: BauhausColors.muted),
-              const SizedBox(height: BauhausSpacing.xs),
-              SizedBox(
-                height: 8,
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: frac,
-                  child: const BauhausLine(color: BauhausColors.black),
-                ),
-              ),
-              const SizedBox(height: BauhausSpacing.xs),
+              const SizedBox(height: SwissSpacing.md),
+              SwissProgressBar(value: frac),
+              const SizedBox(height: SwissSpacing.xs),
               Text(
                 'Resets on the 1st',
-                style: BauhausTypography.caption.copyWith(
-                  color: BauhausColors.black.withValues(alpha: 0.5),
+                style: SwissTypography.caption.copyWith(
+                  color: fg.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -208,32 +188,33 @@ class _RecentSpaces extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(notebooksControllerProvider);
     return state.when(
-      loading: () => const BauhausProcessingState(label: 'Loading'),
-      error: (_, _) => BauhausErrorState(
+      loading: () => const SwissProcessingState(label: 'Loading'),
+      error: (_, _) => SwissErrorState(
         title: 'Error',
         message: 'Could not load your study spaces.',
       ),
       data: (notebooks) {
         if (notebooks.isEmpty) {
-          return BauhausEmptyState(
+          return SwissEmptyState(
+            sectionNumber: '01',
             title: 'No study spaces',
             description: 'Create your first study space to get started.',
             actionLabel: 'Create',
             onAction: () => context.go(AppRoutes.notebooks),
-            composition: const BauhausComposition(
-              width: 120,
-              height: 120,
-              circleColor: BauhausColors.blue,
-              squareColor: BauhausColors.yellow,
-              triangleColor: BauhausColors.red,
-            ),
           );
         }
         return Column(
           children: [
             for (var i = 0; i < notebooks.length; i++) ...[
-              _SpaceRow(index: i + 1, notebook: notebooks[i]),
-              if (i != notebooks.length - 1) const BauhausHairline(),
+              SwissNumberedItem(
+                index: i + 1,
+                title: notebooks[i].title,
+                subtitle: notebooks[i].sourceCount == 1
+                    ? '1 source'
+                    : '${notebooks[i].sourceCount} sources',
+                onTap: () => context.push('/notebooks/${notebooks[i].id}'),
+              ),
+              if (i != notebooks.length - 1) const SwissHairline(),
             ],
           ],
         );
@@ -242,96 +223,46 @@ class _RecentSpaces extends ConsumerWidget {
   }
 }
 
-/// One notebook row — index numeral, title, source count.
-class _SpaceRow extends StatelessWidget {
-  const _SpaceRow({required this.index, required this.notebook});
-
-  final int index;
-  final Notebook notebook;
-
-  @override
-  Widget build(BuildContext context) {
-    final count = notebook.sourceCount;
-    return InkWell(
-      onTap: () => context.push('/notebooks/${notebook.id}'),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: BauhausSpacing.md),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 32,
-              child: Text(
-                index.toString().padLeft(2, '0'),
-                style: BauhausTypography.label.copyWith(
-                  color: BauhausColors.black.withValues(alpha: 0.4),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notebook.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: BauhausTypography.subheading,
-                  ),
-                  const SizedBox(height: BauhausSpacing.xxs),
-                  Text(
-                    count == 1 ? '1 source' : '$count sources',
-                    style: BauhausTypography.caption.copyWith(
-                      color: BauhausColors.black.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: BauhausColors.black,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Quick actions — Bauhaus buttons.
+/// Quick actions — Swiss buttons.
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
-
-  static const _actions = [
-    (Icons.auto_awesome, 'Ask AI', AppRoutes.notebooks, true),
-    (Icons.style, 'Flashcards', AppRoutes.flashcards, false),
-    (Icons.quiz, 'Quiz', AppRoutes.quizzes, false),
-    (Icons.mic, 'Podcast', AppRoutes.audio, true),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: BauhausSpacing.sm,
-      runSpacing: BauhausSpacing.sm,
+      spacing: SwissSpacing.sm,
+      runSpacing: SwissSpacing.sm,
       children: [
-        for (final action in _actions)
-          BauhausButton(
-            label: action.$2,
-            icon: action.$1,
-            variant: BauhausButtonVariant.outline,
-            size: BauhausButtonSize.medium,
-            onPressed: () {
-              action.$4 ? context.go(action.$3) : context.push(action.$3);
-            },
-          ),
+        SwissButton(
+          label: 'Ask AI',
+          icon: Icons.auto_awesome,
+          variant: SwissButtonVariant.primary,
+          onPressed: () => context.go(AppRoutes.notebooks),
+        ),
+        SwissButton(
+          label: 'Flashcards',
+          icon: Icons.style,
+          variant: SwissButtonVariant.secondary,
+          onPressed: () => context.push(AppRoutes.flashcards),
+        ),
+        SwissButton(
+          label: 'Quiz',
+          icon: Icons.quiz,
+          variant: SwissButtonVariant.secondary,
+          onPressed: () => context.push(AppRoutes.quizzes),
+        ),
+        SwissButton(
+          label: 'Podcast',
+          icon: Icons.mic,
+          variant: SwissButtonVariant.secondary,
+          onPressed: () => context.go(AppRoutes.audio),
+        ),
       ],
     );
   }
 }
 
-/// Upcoming exams — Bauhaus cards.
+/// Upcoming exams — Swiss cards.
 class _UpcomingExams extends ConsumerWidget {
   const _UpcomingExams({required this.dashboard});
 
@@ -339,9 +270,15 @@ class _UpcomingExams extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return dashboard.when(
-      loading: () => const BauhausProcessingState(label: 'Loading exams'),
-      error: (_, _) => BauhausErrorState(
+      loading: () => const SwissProcessingState(label: 'Loading exams'),
+      error: (_, _) => SwissErrorState(
         title: 'Error',
         message: 'Could not load your exams.',
         onRetry: () =>
@@ -349,28 +286,18 @@ class _UpcomingExams extends ConsumerWidget {
       ),
       data: (snapshot) {
         if (snapshot.exams.isEmpty) {
-          return BauhausCard(
-            accent: BauhausCardAccent.triangle,
-            accentColor: BauhausColors.yellow,
+          return SwissCard(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const BauhausSquare(
-                  size: 48,
-                  color: BauhausColors.muted,
-                  strokeWidth: 2,
-                ),
-                const SizedBox(height: BauhausSpacing.md),
                 Text(
                   'NO UPCOMING EXAMS',
-                  style: BauhausTypography.subheading,
+                  style: SwissTypography.subheading.copyWith(color: fg),
                 ),
-                const SizedBox(height: BauhausSpacing.xs),
+                const SizedBox(height: SwissSpacing.xs),
                 Text(
                   'Exams from your study setup appear here.',
-                  textAlign: TextAlign.center,
-                  style: BauhausTypography.bodyMuted.copyWith(
-                    color: BauhausColors.black.withValues(alpha: 0.6),
-                  ),
+                  style: SwissTypography.body.copyWith(color: mutedFg),
                 ),
               ],
             ),
@@ -379,23 +306,18 @@ class _UpcomingExams extends ConsumerWidget {
         return Column(
           children: [
             for (final exam in snapshot.exams)
-              BauhausCard(
-                accent: BauhausCardAccent.triangle,
-                accentColor: BauhausColors.red,
-                onTap: () {},
+              SwissCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       exam.title.toUpperCase(),
-                      style: BauhausTypography.subheading,
+                      style: SwissTypography.subheading.copyWith(color: fg),
                     ),
-                    const SizedBox(height: BauhausSpacing.xs),
+                    const SizedBox(height: SwissSpacing.xs),
                     Text(
                       '${exam.daysUntil} days remaining',
-                      style: BauhausTypography.bodyMuted.copyWith(
-                        color: BauhausColors.black.withValues(alpha: 0.6),
-                      ),
+                      style: SwissTypography.body.copyWith(color: mutedFg),
                     ),
                   ],
                 ),

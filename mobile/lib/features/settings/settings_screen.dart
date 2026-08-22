@@ -1,101 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/bauhaus_tokens.dart';
+import '../../core/theme/swiss_tokens.dart';
 import '../../core/theme/theme_controller.dart';
-import '../../shared/widgets/bauhaus/bauhaus.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 
-/// Settings screen — Bauhaus structured list.
+/// Settings screen — Swiss structured list.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(BauhausSpacing.xl),
+        padding: const EdgeInsets.all(SwissSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            const BauhausEyebrow(text: 'Settings'),
-            const SizedBox(height: BauhausSpacing.sm),
+            const SwissEyebrow(text: 'Settings'),
+            const SizedBox(height: SwissSpacing.sm),
             Text(
               'SETTINGS',
-              style: BauhausTypography.headline,
+              style: SwissTypography.headline.copyWith(color: fg),
             ),
 
-            const SizedBox(height: BauhausSpacing.xxxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Account
-            const BauhausSectionHeading(title: 'Account'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.person,
-              label: 'Profile',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.lock,
-              label: 'Password',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '01', title: 'Account'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.person, label: 'Profile'),
+            const _SettingsItem(icon: Icons.lock, label: 'Password'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Study
-            const BauhausSectionHeading(title: 'Study'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.school,
-              label: 'AI Preferences',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.language,
-              label: 'Language',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '02', title: 'Study'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.school, label: 'AI Preferences'),
+            const _SettingsItem(icon: Icons.language, label: 'Language'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Audio
-            const BauhausSectionHeading(title: 'Audio'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.headphones,
-              label: 'Podcast settings',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '03', title: 'Audio'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.headphones, label: 'Podcast settings'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Notifications
-            const BauhausSectionHeading(title: 'Notifications'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.notifications,
-              label: 'Push notifications',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '04', title: 'Notifications'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.notifications, label: 'Push notifications'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Appearance
-            const BauhausSectionHeading(title: 'Appearance'),
-            const SizedBox(height: BauhausSpacing.md),
+            const SwissSectionLabel(number: '05', title: 'Appearance'),
+            const SizedBox(height: SwissSpacing.md),
             _AppearanceSetting(
               currentMode: themeMode,
               onModeChanged: (mode) {
@@ -103,56 +81,36 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Privacy
-            const BauhausSectionHeading(title: 'Privacy'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.privacy_tip,
-              label: 'Privacy policy',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.description,
-              label: 'Terms of service',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '06', title: 'Privacy'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy policy'),
+            const _SettingsItem(icon: Icons.description, label: 'Terms of service'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // Subscription
-            const BauhausSectionHeading(title: 'Subscription'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.star,
-              label: 'Manage subscription',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '07', title: 'Subscription'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.star, label: 'Manage subscription'),
 
-            const SizedBox(height: BauhausSpacing.xxl),
-            const BauhausDivider(),
-            const SizedBox(height: BauhausSpacing.xxl),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(),
+            const SizedBox(height: SwissSpacing.xxl),
 
             // About
-            const BauhausSectionHeading(title: 'About'),
-            const SizedBox(height: BauhausSpacing.md),
-            _SettingsItem(
-              icon: Icons.info,
-              label: 'About StudyFlow',
-              onTap: () {},
-            ),
-            _SettingsItem(
-              icon: Icons.code,
-              label: 'Creator',
-              onTap: () {},
-            ),
+            const SwissSectionLabel(number: '08', title: 'About'),
+            const SizedBox(height: SwissSpacing.md),
+            const _SettingsItem(icon: Icons.info, label: 'About StudyFlow'),
+            const _SettingsItem(icon: Icons.code, label: 'Creator'),
 
-            const SizedBox(height: BauhausSpacing.huge),
+            const SizedBox(height: SwissSpacing.huge),
           ],
         ),
       ),
@@ -160,39 +118,39 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-/// Settings list item — Bauhaus style.
+/// Settings list item — Swiss style.
 class _SettingsItem extends StatelessWidget {
   const _SettingsItem({
     required this.icon,
     required this.label,
-    required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.4)
+        : SwissColors.black.withValues(alpha: 0.4);
+
     return InkWell(
-      onTap: onTap,
+      onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: BauhausSpacing.md),
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: BauhausColors.black),
-            const SizedBox(width: BauhausSpacing.md),
+            Icon(icon, size: 20, color: fg),
+            const SizedBox(width: SwissSpacing.md),
             Expanded(
               child: Text(
                 label.toUpperCase(),
-                style: BauhausTypography.label,
+                style: SwissTypography.label.copyWith(color: fg),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: BauhausColors.black,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: mutedFg),
           ],
         ),
       ),
@@ -225,7 +183,7 @@ class _AppearanceSetting extends StatelessWidget {
   }
 }
 
-/// Theme option — Bauhaus radio style.
+/// Theme option — Swiss radio style.
 class _ThemeOption extends StatelessWidget {
   const _ThemeOption({
     required this.label,
@@ -239,32 +197,36 @@ class _ThemeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
+
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(BauhausSpacing.md),
-        margin: const EdgeInsets.only(bottom: BauhausSpacing.xs),
+        padding: const EdgeInsets.all(SwissSpacing.md),
+        margin: const EdgeInsets.only(bottom: SwissSpacing.xs),
         decoration: BoxDecoration(
-          color: selected ? BauhausColors.black : BauhausColors.white,
+          color: selected ? fg : bg,
           border: Border.all(
-            color: BauhausColors.black,
-            width: BauhausShapes.borderMedium,
+            color: fg,
+            width: SwissShapes.borderMedium,
           ),
         ),
         child: Row(
           children: [
             Text(
               label,
-              style: BauhausTypography.label.copyWith(
-                color: selected ? BauhausColors.white : BauhausColors.black,
+              style: SwissTypography.label.copyWith(
+                color: selected ? bg : fg,
               ),
             ),
             const Spacer(),
             if (selected)
-              const Icon(
+              Icon(
                 Icons.check,
                 size: 18,
-                color: BauhausColors.white,
+                color: bg,
               ),
           ],
         ),
