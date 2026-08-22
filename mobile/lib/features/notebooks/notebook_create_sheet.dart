@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_input.dart';
-import '../../shared/widgets/glass/glass_misc.dart';
-import '../../shared/widgets/glass/glass_sheet.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'notebooks_controller.dart';
 
 /// Create-notebook sheet. Saves to the backend (signed-in users).
 Future<String?> showCreateNotebookSheet(BuildContext context) {
-  return showGlassSheet<String>(
+  return showModalBottomSheet<String>(
     context: context,
-    builder: (sheetContext) => const _CreateNotebookSheet(),
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _CreateNotebookSheet(),
   );
 }
 
@@ -44,7 +43,9 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
     if (!mounted) return;
     if (error != null) {
       setState(() => _busy = false);
-      showGlassToast(context, error, error: true);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     Navigator.of(context).pop(title);
@@ -52,48 +53,58 @@ class _CreateNotebookSheetState extends ConsumerState<_CreateNotebookSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        20,
-        16,
-        20,
+        0,
+        0,
+        0,
         MediaQuery.viewInsetsOf(context).bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('New notebook', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(
-            'A private space for one subject or unit — paste notes or upload PDFs, '
-            'then ask StudyFlow AI anything about them.',
-            style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          GlassInput(
-            controller: _controller,
-            label: 'Name',
-            hintText: 'e.g. Cell Biology — Unit 3',
-            autofocus: true,
-            enabled: !_busy,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Saved to your account — synced across your devices.',
-            style: TextStyle(color: g.textMuted, fontSize: 11.5),
-          ),
-          const SizedBox(height: 16),
-          GlassButton(
-            label: _busy ? 'Creating…' : 'Create notebook',
-            icon: Icons.add,
-            onPressed: _busy ? null : _submit,
-            expand: true,
-          ),
-        ],
+      child: Container(
+        color: isDark ? SwissColors.darkSurface : SwissColors.white,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SwissDivider(thickness: 4),
+            const SizedBox(height: SwissSpacing.lg),
+            Text(
+              'NEW NOTEBOOK',
+              style: SwissTypography.section.copyWith(color: fg),
+            ),
+            const SizedBox(height: SwissSpacing.xs),
+            Text(
+              'A private space for one subject or unit — paste notes or upload PDFs.',
+              style: SwissTypography.body.copyWith(color: mutedFg),
+            ),
+            const SizedBox(height: SwissSpacing.xl),
+            SwissInput(
+              controller: _controller,
+              label: 'Name',
+              hintText: 'e.g. Cell Biology — Unit 3',
+              autofocus: true,
+            ),
+            const SizedBox(height: SwissSpacing.sm),
+            Text(
+              'SAVED TO YOUR ACCOUNT — SYNCED ACROSS DEVICES.',
+              style: SwissTypography.caption.copyWith(color: mutedFg),
+            ),
+            const SizedBox(height: SwissSpacing.xl),
+            SwissButton(
+              label: _busy ? 'Creating…' : 'Create notebook',
+              icon: Icons.add,
+              fullWidth: true,
+              onPressed: _busy ? null : _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

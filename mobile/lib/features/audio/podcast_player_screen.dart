@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/routing/app_router.dart';
 
-import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'audio_controller.dart';
 import 'audio_export.dart';
 import 'audio_models.dart';
@@ -17,9 +16,7 @@ import 'audio_repository.dart';
 
 const _speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
-/// Full-screen audio player: downloads the episode through the
-/// authenticated client, plays it, remembers the position, exposes
-/// chapters + transcript with tap-to-jump, and exports the MP3.
+/// Full-screen audio player.
 class PodcastPlayerScreen extends ConsumerStatefulWidget {
   const PodcastPlayerScreen({super.key, required this.episodeId});
 
@@ -57,17 +54,11 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
     _positionSub?.cancel();
     final ep = _episode;
     if (ep != null && ep.isReady && _lastPosition.inSeconds > 0) {
-      // Best-effort final position save; never blocks teardown.
       unawaited(_savePosition());
     }
-    // Intentionally do NOT dispose the player: it is a provider singleton,
-    // and playback must continue after this screen pops so the shell's
-    // mini-player can take over control (play/pause, reopen).
     super.dispose();
   }
 
-  /// Save the latest tracked position (listener-fed, so no stream read or
-  /// dangling timeout timer at teardown).
   Future<void> _savePosition() async {
     final ep = _episode;
     if (ep == null || !ep.isReady) return;
@@ -80,15 +71,12 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
             .read(audioControllerProvider.notifier)
             .upsert(ep.copyWith(playbackPositionSec: sec));
       }
-    } catch (_) {
-      // Offline/best-effort: resume sync is non-critical.
-    }
+    } catch (_) {}
   }
 
   Future<void> _load() async {
     try {
       var episode = await _repo.episode(widget.episodeId);
-      // A still-processing episode: poll the backend until it resolves.
       if (episode.isProcessing) {
         _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
           try {
@@ -99,9 +87,7 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
               _pollTimer?.cancel();
               await _startPlayback();
             }
-          } catch (_) {
-            // Transient poll failure — keep waiting.
-          }
+          } catch (_) {}
         });
       }
       if (!mounted) return;
@@ -149,8 +135,6 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
         _bytes = bytes;
         _downloadProgress = 1;
       });
-      // Track position continuously and persist every 5s while listening,
-      // so a crash or swipe away never loses the spot.
       _positionSub = player.positionStream.listen((p) => _lastPosition = p);
       _saveTimer = Timer.periodic(const Duration(seconds: 5), (_) {
         final p = _player;
@@ -217,54 +201,28 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
     final episode = _episode;
 
     if (_error != null) {
       return Scaffold(
         body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: GlassCard(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.cloud_off, size: 26, color: g.textMuted),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Could not play this episode',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: g.textMuted,
-                        fontSize: 13.5,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GlassButton(
-                      label: 'Try again',
-                      icon: Icons.refresh,
-                      variant: GlassButtonVariant.glass,
-                      onPressed: () {
-                        setState(() {
-                          _error = null;
-                          _episode = null;
-                          _bytes = null;
-                          _downloadProgress = null;
-                        });
-                        _load();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          child: SwissErrorState(
+            title: 'COULD NOT PLAY THIS EPISODE',
+            message: _error!,
+            onRetry: () {
+              setState(() {
+                _error = null;
+                _episode = null;
+                _bytes = null;
+                _downloadProgress = null;
+              });
+              _load();
+            },
           ),
         ),
       );
@@ -273,19 +231,31 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
     return Scaffold(
       body: SafeArea(
         child: episode == null
-            ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
+            ? const Center(
+                child: CircularProgressIndicator(strokeWidth: 2.5))
             : episode.isProcessing
             ? _PreparingView(episode: episode)
             : episode.isFailed
             ? _FailedView(episode: episode, onRetry: () => _load())
-            : _buildPlayer(g, episode),
+            : _buildPlayer(isDark, fg, mutedFg, episode),
       ),
     );
   }
 
-  Widget _buildPlayer(GlassTheme g, AudioEpisode episode) {
+  Widget _buildPlayer(
+    bool isDark,
+    Color fg,
+    Color mutedFg,
+    AudioEpisode episode,
+  ) {
     if (_player == null || _bytes == null) {
-      return _DownloadingView(progress: _downloadProgress, episode: episode);
+      return _DownloadingView(
+        progress: _downloadProgress,
+        episode: episode,
+        isDark: isDark,
+        fg: fg,
+        mutedFg: mutedFg,
+      );
     }
     final player = _player!;
     return Column(
@@ -309,46 +279,47 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
             ],
           ),
         ),
+        const SwissDivider(thickness: 2),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 32),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Shared element: this artwork is the flight destination
-                // of the shell mini-player's artwork (same hero tag), so
-                // tapping the mini-player morphs it into the player.
+                // Artwork
                 Hero(
                   tag: 'podcast-artwork-${episode.id}',
                   child: _Artwork(title: episode.title),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: SwissSpacing.lg),
                 Text(
-                  episode.title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
+                  episode.title.toUpperCase(),
+                  style: SwissTypography.section.copyWith(color: fg),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SwissSpacing.xs),
                 Text(
                   [
-                    if (episode.notebookTitle != null) episode.notebookTitle!,
+                    if (episode.notebookTitle != null)
+                      episode.notebookTitle!,
                     kPodcastStyleLabels[episode.style] ?? episode.style,
-                  ].join(' · '),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: g.textMuted, fontSize: 13),
+                  ].join(' · ').toUpperCase(),
+                  style: SwissTypography.caption.copyWith(color: mutedFg),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: SwissSpacing.xl),
                 _ProgressBar(player: player, episode: episode),
-                const SizedBox(height: 4),
+                const SizedBox(height: SwissSpacing.xs),
                 _TimeRow(player: player, episode: episode),
-                const SizedBox(height: 8),
+                const SizedBox(height: SwissSpacing.md),
                 _Controls(
                   player: player,
                   onToggle: _togglePlay,
                   onCycleSpeed: _cycleSpeed,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SwissSpacing.xs),
                 _SpeedLabel(speed: player.speed),
-                const SizedBox(height: 24),
+                const SizedBox(height: SwissSpacing.xxl),
+                const SwissDivider(thickness: 2),
+                const SizedBox(height: SwissSpacing.lg),
                 _ChaptersTranscript(episode: episode, player: player),
               ],
             ),
@@ -359,8 +330,6 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
   }
 }
 
-// ── player sub-widgets ───────────────────────────────────────────────
-
 class _Artwork extends StatelessWidget {
   const _Artwork({required this.title});
 
@@ -368,39 +337,16 @@ class _Artwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    // The gradient + glow are the episode's hero moment, in the warm coral
-    // audio accent (the low tier renders a flat tile with no shadow).
-    final effects = !g.reducedEffects;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 168,
       height: 168,
-      decoration: BoxDecoration(
-        gradient: effects
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [g.audio, g.audio.withValues(alpha: 0.55)],
-              )
-            : null,
-        color: effects ? null : g.audio,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: effects
-            ? [
-                BoxShadow(
-                  color: g.audio.withValues(alpha: 0.3),
-                  blurRadius: 32,
-                  offset: const Offset(0, 14),
-                ),
-              ]
-            : null,
-      ),
-      child: Center(
-        child: Icon(
-          Icons.headphones,
-          size: 56,
-          color: Colors.white.withValues(alpha: 0.92),
-        ),
+      color: isDark ? SwissColors.darkSurface : SwissColors.black,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.headphones,
+        size: 56,
+        color: SwissColors.white,
       ),
     );
   }
@@ -428,9 +374,9 @@ class _ProgressBar extends StatelessWidget {
                 : 1.0;
             return SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                trackHeight: 3.5,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                trackHeight: 3,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 0),
               ),
               child: Slider(
                 value: position.inMilliseconds.clamp(0, max.toInt()).toDouble(),
@@ -454,7 +400,11 @@ class _TimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return StreamBuilder<Duration>(
       stream: player.positionStream,
       builder: (context, posSnap) {
@@ -465,17 +415,17 @@ class _TimeRow extends StatelessWidget {
             final duration =
                 durSnap.data ?? Duration(seconds: episode.durationSec ?? 0);
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     _fmt(position.inSeconds),
-                    style: TextStyle(color: g.textMuted, fontSize: 12),
+                    style: SwissTypography.caption.copyWith(color: mutedFg),
                   ),
                   Text(
                     _fmt(duration.inSeconds),
-                    style: TextStyle(color: g.textMuted, fontSize: 12),
+                    style: SwissTypography.caption.copyWith(color: mutedFg),
                   ),
                 ],
               ),
@@ -506,6 +456,9 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+
     return StreamBuilder<Duration>(
       stream: player.positionStream,
       builder: (context, posSnap) {
@@ -517,22 +470,23 @@ class _Controls extends StatelessWidget {
               icon: Icons.replay_10,
               tooltip: 'Back 15 seconds',
               onTap: () => player.seek(position - const Duration(seconds: 15)),
+              fg: fg,
             ),
-            const SizedBox(width: 18),
-            // `playing` is read fresh each build; toggling setState()s the
-            // parent screen so the icon flips immediately.
+            const SizedBox(width: SwissSpacing.lg),
             _PlayButton(playing: player.playing, onTap: onToggle),
-            const SizedBox(width: 18),
+            const SizedBox(width: SwissSpacing.lg),
             _IconButton(
               icon: Icons.forward_10,
               tooltip: 'Forward 15 seconds',
               onTap: () => player.seek(position + const Duration(seconds: 15)),
+              fg: fg,
             ),
-            const SizedBox(width: 18),
+            const SizedBox(width: SwissSpacing.lg),
             _IconButton(
               icon: Icons.speed,
               tooltip: 'Playback speed',
               onTap: onCycleSpeed,
+              fg: fg,
             ),
           ],
         );
@@ -546,25 +500,21 @@ class _IconButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onTap,
+    required this.fg,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
+  final Color fg;
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Material(
-      color: g.surfaceSubtle,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Icon(icon, size: 22, color: g.textPrimary),
-        ),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(SwissSpacing.md),
+        child: Icon(icon, size: 22, color: fg),
       ),
     );
   }
@@ -578,23 +528,17 @@ class _PlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    final effects = !g.reducedEffects;
-    return Material(
-      color: g.audio,
-      shape: const CircleBorder(),
-      elevation: effects ? 4 : 0,
-      shadowColor: g.audio.withValues(alpha: effects ? 0.45 : 0),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Icon(
-            playing ? Icons.pause : Icons.play_arrow,
-            size: 34,
-            color: Colors.white,
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 64,
+        height: 64,
+        color: SwissColors.red,
+        alignment: Alignment.center,
+        child: Icon(
+          playing ? Icons.pause : Icons.play_arrow,
+          size: 34,
+          color: SwissColors.white,
         ),
       ),
     );
@@ -608,13 +552,17 @@ class _SpeedLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     final label = speed == 1.0
         ? '1×'
         : speed == speed.roundToDouble()
         ? '${speed.toInt()}×'
         : '$speed×';
-    return Text(label, style: TextStyle(color: g.textMuted, fontSize: 12.5));
+    return Text(label, style: SwissTypography.caption.copyWith(color: mutedFg));
   }
 }
 
@@ -626,7 +574,11 @@ class _ChaptersTranscript extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
     final sections = episode.transcript;
     if (sections.isEmpty) return const SizedBox.shrink();
 
@@ -639,32 +591,41 @@ class _ChaptersTranscript extends StatelessWidget {
           position.inSeconds,
         )?.heading;
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Chapters', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            Text(
+              'CHAPTERS',
+              style: SwissTypography.label.copyWith(
+                color: mutedFg,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: SwissSpacing.md),
             for (final s in sections) ...[
               _ChapterRow(
                 section: s,
                 active: s.heading == currentHeading,
                 onTap: () => player.seek(Duration(seconds: s.startSec)),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: SwissSpacing.xs),
             ],
-            const SizedBox(height: 20),
-            Text('Transcript', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
+            const SizedBox(height: SwissSpacing.xxl),
+            const SwissDivider(thickness: 1),
+            const SizedBox(height: SwissSpacing.lg),
             Text(
-              'Tap a paragraph to jump to that moment. Sources shown are the ones that section is grounded in.',
-              style: TextStyle(color: g.textMuted, fontSize: 12.5, height: 1.4),
+              'TRANSCRIPT',
+              style: SwissTypography.label.copyWith(
+                color: mutedFg,
+                letterSpacing: 1.5,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: SwissSpacing.md),
             for (final s in sections) ...[
               _TranscriptBlock(
                 section: s,
                 onTap: () => player.seek(Duration(seconds: s.startSec)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SwissSpacing.md),
             ],
           ],
         );
@@ -697,39 +658,43 @@ class _ChapterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Material(
-      color: active ? g.primarySoft : Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Icon(
-                Icons.play_circle,
-                size: 18,
-                color: active ? g.primary : g.textMuted,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  section.heading,
-                  style: TextStyle(
-                    color: active ? g.primary : g.textPrimary,
-                    fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 14,
-                  ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: SwissSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            if (active)
+              Container(
+                width: 3,
+                height: 24,
+                margin: const EdgeInsets.only(right: SwissSpacing.sm),
+                color: SwissColors.red,
+              )
+            else
+              const SizedBox(width: SwissSpacing.sm + 3),
+            Expanded(
+              child: Text(
+                section.heading.toUpperCase(),
+                style: SwissTypography.body.copyWith(
+                  color: active ? SwissColors.red : fg,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
-              Text(
-                '${section.startSec ~/ 60}:${(section.startSec % 60).toString().padLeft(2, '0')}',
-                style: TextStyle(color: g.textMuted, fontSize: 12.5),
-              ),
-            ],
-          ),
+            ),
+            Text(
+              '${section.startSec ~/ 60}:${(section.startSec % 60).toString().padLeft(2, '0')}',
+              style: SwissTypography.caption.copyWith(color: mutedFg),
+            ),
+          ],
         ),
       ),
     );
@@ -744,75 +709,56 @@ class _TranscriptBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return GlassCard(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        section.heading,
-                        style: TextStyle(
-                          color: g.primary,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${section.startSec ~/ 60}:${(section.startSec % 60).toString().padLeft(2, '0')}',
-                      style: TextStyle(color: g.textMuted, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  section.text,
-                  style: TextStyle(
-                    color: g.textPrimary,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-                if (section.sources.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final source in section.sources)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: g.surfaceSubtle,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            source,
-                            style: TextStyle(
-                              color: g.textMuted,
-                              fontSize: 11.5,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(SwissSpacing.md),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: SwissColors.red,
+              width: SwissShapes.borderMedium,
             ),
           ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    section.heading.toUpperCase(),
+                    style: SwissTypography.label.copyWith(
+                      color: SwissColors.red,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${section.startSec ~/ 60}:${(section.startSec % 60).toString().padLeft(2, '0')}',
+                  style: SwissTypography.caption.copyWith(color: mutedFg),
+                ),
+              ],
+            ),
+            const SizedBox(height: SwissSpacing.xs),
+            Text(
+              section.text,
+              style: SwissTypography.body.copyWith(color: fg),
+            ),
+            if (section.sources.isNotEmpty) ...[
+              const SizedBox(height: SwissSpacing.sm),
+              for (final source in section.sources)
+                SwissCitation(sourceTitle: source),
+            ],
+          ],
         ),
       ),
     );
@@ -826,34 +772,14 @@ class _PreparingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(strokeWidth: 3),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              episode.title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              kPipelineStageLabels[episode.pipelineStage] ??
-                  'Preparing your episode…',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: g.textMuted, fontSize: 13.5),
-            ),
-          ],
-        ),
-      ),
+    return SwissProcessingState(
+      label: episode.title,
+      steps: [
+        (label: 'UPLOADED', done: true),
+        (label: 'SCRIPT', done: episode.pipelineStage == 'script' || episode.pipelineStage == 'voice' || episode.isReady),
+        (label: 'VOICE', done: episode.pipelineStage == 'voice' || episode.isReady),
+        (label: 'READY', done: episode.isReady),
+      ],
     );
   }
 }
@@ -866,83 +792,40 @@ class _FailedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error, size: 26, color: g.danger),
-              const SizedBox(height: 12),
-              Text(
-                'This episode failed to generate',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                episode.errorMessage ?? 'Something went wrong.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: g.textMuted,
-                  fontSize: 13.5,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GlassButton(
-                label: 'Try again',
-                icon: Icons.refresh,
-                variant: GlassButtonVariant.glass,
-                onPressed: onRetry,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return SwissErrorState(
+      title: 'EPISODE FAILED',
+      message: episode.errorMessage ?? 'Something went wrong.',
+      onRetry: onRetry,
     );
   }
 }
 
 class _DownloadingView extends StatelessWidget {
-  const _DownloadingView({required this.progress, required this.episode});
+  const _DownloadingView({
+    required this.progress,
+    required this.episode,
+    required this.isDark,
+    required this.fg,
+    required this.mutedFg,
+  });
 
   final double? progress;
   final AudioEpisode episode;
+  final bool isDark;
+  final Color fg;
+  final Color mutedFg;
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
     final pct = progress == null ? null : (progress! * 100).round();
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(strokeWidth: 3),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              episode.title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              pct == null
-                  ? 'Loading your episode…'
-                  : 'Loading your episode… $pct%',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: g.textMuted, fontSize: 13.5),
-            ),
-          ],
-        ),
-      ),
+    return SwissProcessingState(
+      label: episode.title,
+      steps: [
+        (label: 'DOWNLOADING', done: pct != null && pct >= 100),
+        (label: 'LOADING', done: false),
+      ],
     );
   }
 }
+
+

@@ -3,17 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
-import '../../shared/widgets/glass/glass_misc.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import '../dashboard/dashboard_controller.dart';
 import '../dashboard/dashboard_repository.dart';
 import 'study_planner.dart';
 
 /// "Today's plan" — the adaptive daily plan for the nearest upcoming exam.
-/// Tasks come from the backend plan (real data, checkable), with an
-/// honest empty state and a link to the full plan screen.
 class TodayPlanSection extends ConsumerWidget {
   const TodayPlanSection({super.key, required this.dashboard});
 
@@ -21,7 +17,12 @@ class TodayPlanSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     final plans = ref.watch(studyPlannerControllerProvider);
     final exams = dashboard.valueOrNull?.exams ?? const <UpcomingExam>[];
     final todayKey = _dateKey(DateTime.now().toUtc());
@@ -30,94 +31,71 @@ class TodayPlanSection extends ConsumerWidget {
     final nearest = exams.where((e) => e.daysUntil(now) >= 0).firstOrNull;
 
     if (nearest == null) {
-      return GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(
-                Icons.event_busy,
-                size: 22,
-                color: g.textMuted.withValues(alpha: 0.6),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Set an exam date and StudyFlow will build an adaptive daily plan toward it.',
-                  style: AppText.small.copyWith(
-                    color: g.textMuted,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
+      return SwissCard(
+        child: Text(
+          'SET AN EXAM DATE AND STUDYFLOW WILL BUILD AN ADAPTIVE DAILY PLAN.',
+          style: SwissTypography.body.copyWith(color: mutedFg, height: 1.4),
         ),
       );
     }
 
     return plans.when(
-      loading: () => const GlassSkeleton(height: 130, radius: 20),
-      error: (err, _) => GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(Icons.error, size: 20, color: g.danger),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Could not load your study plan.',
-                  style: AppText.small.copyWith(color: g.textMuted),
-                ),
+      loading: () => SwissCard(
+        child: Container(
+          height: 120,
+          color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+        ),
+      ),
+      error: (err, _) => SwissCard(
+        child: Row(
+          children: [
+            Icon(Icons.error, size: 20, color: SwissColors.red),
+            const SizedBox(width: SwissSpacing.sm),
+            Expanded(
+              child: Text(
+                'COULD NOT LOAD YOUR STUDY PLAN.',
+                style: SwissTypography.body.copyWith(color: mutedFg),
               ),
-              TextButton(
-                onPressed: () =>
-                    ref.read(studyPlannerControllerProvider.notifier).refresh(),
-                style: TextButton.styleFrom(foregroundColor: g.primary),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+            ),
+            SwissButton(
+              label: 'Retry',
+              variant: SwissButtonVariant.ghost,
+              compact: true,
+              onPressed: () =>
+                  ref.read(studyPlannerControllerProvider.notifier).refresh(),
+            ),
+          ],
         ),
       ),
       data: (planList) {
-        final plan = planList.where((p) => p.examId == nearest.id).firstOrNull;
+        final plan =
+            planList.where((p) => p.examId == nearest.id).firstOrNull;
 
         if (plan == null) {
-          return GlassCard(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${nearest.title} — no plan yet',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Generate a daily plan from today to your exam date. It adapts as the date approaches.',
-                    style: AppText.small.copyWith(
-                      color: g.textMuted,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  GlassButton(
-                    label: 'Plan this exam',
-                    icon: Icons.event_note,
-                    onPressed: () async {
-                      await ref
-                          .read(studyPlannerControllerProvider.notifier)
-                          .generate(nearest.id);
-                    },
-                  ),
-                ],
-              ),
+          return SwissCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${nearest.title.toUpperCase()} — NO PLAN YET',
+                  style: SwissTypography.subheading.copyWith(color: fg),
+                ),
+                const SizedBox(height: SwissSpacing.xs),
+                Text(
+                  'Generate a daily plan from today to your exam date.',
+                  style: SwissTypography.body.copyWith(color: mutedFg),
+                ),
+                const SizedBox(height: SwissSpacing.md),
+                SwissButton(
+                  label: 'Plan this exam',
+                  icon: Icons.event_note,
+                  onPressed: () async {
+                    await ref
+                        .read(studyPlannerControllerProvider.notifier)
+                        .generate(nearest.id);
+                  },
+                ),
+              ],
             ),
           );
         }
@@ -127,127 +105,101 @@ class TodayPlanSection extends ConsumerWidget {
             .where((t) => t.isPending && t.date.compareTo(todayKey) < 0)
             .toList();
 
-        return GlassCard(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${plan.examTitle} · v${plan.version}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+        return SwissCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${plan.examTitle.toUpperCase()} · V${plan.version}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SwissTypography.subheading.copyWith(color: fg),
                     ),
-                    Text(
-                      '${plan.doneCount}/${plan.tasks.length} done',
-                      style: AppText.small.copyWith(color: g.textMuted),
-                    ),
-                  ],
-                ),
-                if (plan.focus != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: g.warning.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.track_changes, size: 14, color: g.warning),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Focusing on ${plan.focus!.subjectName} — ${plan.focus!.accuracy}% recent quiz accuracy',
-                            style: TextStyle(
-                              color: g.warning,
-                              fontSize: 12.5,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  ),
+                  Text(
+                    '${plan.doneCount}/${plan.tasks.length}',
+                    style: SwissTypography.caption.copyWith(color: mutedFg),
                   ),
                 ],
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
-                    minHeight: 5,
-                    backgroundColor: g.surfaceSubtle,
-                    color: g.primary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (overdue.isNotEmpty) ...[
-                  Text(
-                    '${overdue.length} overdue task${overdue.length == 1 ? '' : 's'} from earlier days',
-                    style: TextStyle(color: g.warning, fontSize: 12.5),
-                  ),
-                  const SizedBox(height: 6),
-                ],
-                if (todayTasks.isEmpty && overdue.isEmpty)
-                  Text(
-                    'Nothing scheduled today — take a lighter day or regenerate for a new plan.',
-                    style: AppText.small.copyWith(
-                      color: g.textMuted,
-                      height: 1.4,
-                    ),
-                  )
-                else
-                  for (final task in [...todayTasks, ...overdue]) ...[
-                    _PlanTaskRow(
-                      task: task,
-                      onToggle: () => ref
-                          .read(studyPlannerControllerProvider.notifier)
-                          .updateTask(
-                            plan,
-                            task,
-                            task.isDone ? 'pending' : 'done',
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    GlassButton(
-                      label: 'Full plan',
-                      icon: Icons.view_list,
-                      variant: GlassButtonVariant.glass,
-                      size: GlassButtonSize.small,
-                      onPressed: () => context.push(
-                        '${AppRoutes.studyPlans}/${plan.examId}',
+              ),
+              if (plan.focus != null) ...[
+                const SizedBox(height: SwissSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(SwissSpacing.sm),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: SwissColors.red,
+                        width: SwissShapes.borderMedium,
                       ),
                     ),
-                    TextButton.icon(
-                      onPressed: () => ref
-                          .read(studyPlannerControllerProvider.notifier)
-                          .generate(plan.examId),
-                      style: TextButton.styleFrom(foregroundColor: g.primary),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text('Regenerate'),
+                  ),
+                  child: Text(
+                    'FOCUSING ON ${plan.focus!.subjectName} — ${plan.focus!.accuracy}% ACCURACY',
+                    style: SwissTypography.caption.copyWith(
+                      color: SwissColors.red,
                     ),
-                  ],
+                  ),
                 ),
               ],
-            ),
+              const SizedBox(height: SwissSpacing.md),
+              SwissProgressBar(
+                value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
+                height: 6,
+              ),
+              const SizedBox(height: SwissSpacing.md),
+              if (overdue.isNotEmpty) ...[
+                Text(
+                  '${overdue.length} OVERDUE TASK${overdue.length == 1 ? '' : 'S'}',
+                  style: SwissTypography.caption.copyWith(color: SwissColors.red),
+                ),
+                const SizedBox(height: SwissSpacing.xs),
+              ],
+              if (todayTasks.isEmpty && overdue.isEmpty)
+                Text(
+                  'NOTHING SCHEDULED TODAY.',
+                  style: SwissTypography.body.copyWith(color: mutedFg),
+                )
+              else
+                for (final task in [...todayTasks, ...overdue]) ...[
+                  _PlanTaskRow(
+                    task: task,
+                    onToggle: () => ref
+                        .read(studyPlannerControllerProvider.notifier)
+                        .updateTask(
+                          plan,
+                          task,
+                          task.isDone ? 'pending' : 'done',
+                        ),
+                  ),
+                  const SizedBox(height: SwissSpacing.xs),
+                ],
+              const SizedBox(height: SwissSpacing.sm),
+              Row(
+                children: [
+                  SwissButton(
+                    label: 'Full plan',
+                    variant: SwissButtonVariant.ghost,
+                    compact: true,
+                    onPressed: () => context.push(
+                      '${AppRoutes.studyPlans}/${plan.examId}',
+                    ),
+                  ),
+                  const SizedBox(width: SwissSpacing.sm),
+                  SwissButton(
+                    label: 'Regenerate',
+                    variant: SwissButtonVariant.ghost,
+                    compact: true,
+                    onPressed: () => ref
+                        .read(studyPlannerControllerProvider.notifier)
+                        .generate(plan.examId),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -266,35 +218,45 @@ class _PlanTaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     return InkWell(
       onTap: onToggle,
-      borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.xs),
         child: Row(
           children: [
-            Checkbox(
-              value: task.isDone,
-              onChanged: (_) => onToggle(),
-              activeColor: g.primary,
-              visualDensity: VisualDensity.compact,
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: task.isDone ? fg : Colors.transparent,
+                border: Border.all(
+                  color: task.isDone ? fg : mutedFg,
+                  width: 2,
+                ),
+              ),
+              child: task.isDone
+                  ? const Icon(Icons.check, size: 14, color: SwissColors.white)
+                  : null,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SwissSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
-                    style: TextStyle(
-                      color: g.textPrimary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w500,
-                      decoration: task.isDone
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationColor: g.textMuted,
+                    task.title.toUpperCase(),
+                    style: SwissTypography.body.copyWith(
+                      color: task.isDone ? mutedFg : fg,
+                      fontSize: 13,
+                      decoration:
+                          task.isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedFg,
                     ),
                   ),
                   if (task.detail.isNotEmpty)
@@ -302,18 +264,14 @@ class _PlanTaskRow extends StatelessWidget {
                       task.detail,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: g.textMuted,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
+                      style: SwissTypography.caption.copyWith(color: mutedFg),
                     ),
                 ],
               ),
             ),
             Text(
               '${task.durationMin}m',
-              style: AppText.small.copyWith(color: g.textMuted),
+              style: SwissTypography.caption.copyWith(color: mutedFg),
             ),
           ],
         ),

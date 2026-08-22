@@ -6,18 +6,11 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../features/audio/audio_playback_service.dart';
 import '../../features/audio/now_playing.dart';
-import '../../shared/widgets/glass/glass_mini_player.dart';
-import '../../shared/widgets/glass/glass_background.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
+import '../../shared/widgets/swiss/swiss_mini_player.dart';
 
-/// Tab mood mapping — kept for backward compatibility with tests.
-BackgroundMood moodForTab(int index) => switch (index) {
-  0 => BackgroundMood.ambient,
-  1 || 2 => BackgroundMood.study,
-  3 => BackgroundMood.audio,
-  4 => BackgroundMood.ai,
-  _ => BackgroundMood.premium,
-};
+/// Kept for backward compatibility with tests.
+int moodForTab(int index) => index;
 
 const kHomeNavItems = [
   (Icons.home, 'Home'),
@@ -63,7 +56,7 @@ class HomeShell extends ConsumerWidget {
               left: SwissSpacing.md,
               right: SwissSpacing.md,
               bottom: isWide ? SwissSpacing.md : 84,
-              child: GlassMiniPlayer(
+              child: SwissMiniPlayer(
                 title: nowPlaying.title,
                 subtitle: nowPlaying.subtitle,
                 playing: nowPlaying.playing,

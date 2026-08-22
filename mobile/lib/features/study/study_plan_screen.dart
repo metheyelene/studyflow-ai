@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/routing/app_router.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/theme/responsive.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'study_planner.dart';
 
 /// The full adaptive plan for one exam: date-grouped tasks with
@@ -23,6 +22,7 @@ class StudyPlanScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
             child: Row(
@@ -32,15 +32,13 @@ class StudyPlanScreen extends ConsumerWidget {
                   icon: const Icon(Icons.arrow_back),
                   tooltip: 'Back',
                 ),
-                Expanded(
-                  child: Text(
-                    'Study plan',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                const Expanded(
+                  child: Text('STUDY PLAN', style: SwissTypography.subheading),
                 ),
               ],
             ),
           ),
+          const SwissDivider(thickness: 2),
           Expanded(
             child: plans.when(
               loading: () => const Center(
@@ -54,9 +52,8 @@ class StudyPlanScreen extends ConsumerWidget {
                     ref.read(studyPlannerControllerProvider.notifier).refresh(),
               ),
               data: (planList) {
-                final plan = planList
-                    .where((p) => p.examId == examId)
-                    .firstOrNull;
+                final plan =
+                    planList.where((p) => p.examId == examId).firstOrNull;
                 if (plan == null) {
                   return _ErrorState(
                     message: 'No plan yet for this exam.',
@@ -107,9 +104,12 @@ class _PlanBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
 
-    // Group tasks by date, keeping plan order.
     final dates = <String>[];
     for (final t in plan.tasks) {
       if (!dates.contains(t.date)) dates.add(t.date);
@@ -119,103 +119,83 @@ class _PlanBody extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.fromLTRB(20, 8, 20, context.isPhone ? 110 : 32),
       children: [
-        GlassCard(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        plan.examTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+        // Plan header
+        SwissCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      plan.examTitle.toUpperCase(),
+                      style: SwissTypography.subheading.copyWith(color: fg),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: g.primarySoft,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'v${plan.version}',
-                        style: TextStyle(
-                          color: g.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${plan.doneCount} of ${plan.tasks.length} tasks done',
-                  style: AppText.small.copyWith(color: g.textMuted),
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
-                    minHeight: 6,
-                    backgroundColor: g.surfaceSubtle,
-                    color: g.primary,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Generated ${_dayLabel(plan.generatedForDate, today)}. Regenerating rebuilds from today and keeps completed tasks.',
-                  style: AppText.small.copyWith(
-                    color: g.textMuted,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        for (final date in dates) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 6, 4, 8),
-            child: Text(
-              _dayLabel(date, today),
-              style: AppText.eyebrow.copyWith(color: g.textMuted),
-            ),
-          ),
-          GlassCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (var i = 0; i < plan.tasksOn(date).length; i++) ...[
-                  if (i > 0)
-                    Divider(
-                      color: g.textPrimary.withValues(alpha: 0.06),
-                      height: 1,
-                      indent: 48,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SwissSpacing.sm,
+                      vertical: SwissSpacing.xxs,
                     ),
-                  _TaskTile(
-                    task: plan.tasksOn(date)[i],
-                    onToggle: () => onToggle(plan.tasksOn(date)[i]),
-                    onSkip: () => onSkip(plan.tasksOn(date)[i]),
+                    color: SwissColors.red,
+                    child: Text(
+                      'V${plan.version}',
+                      style: SwissTypography.label.copyWith(
+                        color: SwissColors.white,
+                      ),
+                    ),
                   ),
                 ],
-              ],
+              ),
+              const SizedBox(height: SwissSpacing.xs),
+              Text(
+                '${plan.doneCount} OF ${plan.tasks.length} TASKS DONE',
+                style: SwissTypography.caption.copyWith(color: mutedFg),
+              ),
+              const SizedBox(height: SwissSpacing.md),
+              SwissProgressBar(
+                value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
+                height: 6,
+              ),
+              const SizedBox(height: SwissSpacing.sm),
+              Text(
+                'Generated ${_dayLabel(plan.generatedForDate, today)}.',
+                style: SwissTypography.caption.copyWith(color: mutedFg),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: SwissSpacing.lg),
+
+        // Date groups
+        for (final date in dates) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: SwissSpacing.xs),
+            child: Text(
+              _dayLabel(date, today).toUpperCase(),
+              style: SwissTypography.label.copyWith(
+                color: SwissColors.red,
+                letterSpacing: 1.5,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          for (var i = 0; i < plan.tasksOn(date).length; i++) ...[
+            if (i > 0) const SwissHairline(),
+            _TaskTile(
+              task: plan.tasksOn(date)[i],
+              onToggle: () => onToggle(plan.tasksOn(date)[i]),
+              onSkip: () => onSkip(plan.tasksOn(date)[i]),
+            ),
+          ],
+          const SizedBox(height: SwissSpacing.md),
         ],
-        const SizedBox(height: 6),
-        GlassButton(
+
+        const SwissDivider(thickness: 1),
+        const SizedBox(height: SwissSpacing.md),
+        SwissButton(
           label: 'Regenerate plan',
           icon: Icons.refresh,
-          variant: GlassButtonVariant.glass,
+          variant: SwissButtonVariant.secondary,
           onPressed: onRegenerate,
         ),
       ],
@@ -233,18 +213,8 @@ class _PlanBody extends StatelessWidget {
     if (date == _dateKey(tomorrow)) return 'Tomorrow';
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${days[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
   }
@@ -263,57 +233,71 @@ class _TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-      child: Row(
-        children: [
-          Checkbox(
-            value: task.isDone,
-            onChanged: (_) => onToggle(),
-            activeColor: g.primary,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: TextStyle(
-                    color: g.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    decoration: task.isDone ? TextDecoration.lineThrough : null,
-                    decorationColor: g.textMuted,
-                  ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: onToggle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.sm),
+        child: Row(
+          children: [
+            // Checkbox area
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: task.isDone ? fg : Colors.transparent,
+                border: Border.all(
+                  color: task.isDone ? fg : mutedFg,
+                  width: 2,
                 ),
-                if (task.detail.isNotEmpty)
+              ),
+              child: task.isDone
+                  ? const Icon(Icons.check, size: 16, color: SwissColors.white)
+                  : null,
+            ),
+            const SizedBox(width: SwissSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    task.detail,
-                    style: TextStyle(
-                      color: g.textMuted,
-                      fontSize: 12.5,
-                      height: 1.35,
+                    task.title.toUpperCase(),
+                    style: SwissTypography.body.copyWith(
+                      color: task.isDone ? mutedFg : fg,
+                      decoration:
+                          task.isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedFg,
                     ),
                   ),
-                const SizedBox(height: 2),
-                Text(
-                  '${task.durationMin} min',
-                  style: AppText.small.copyWith(color: g.textMuted),
-                ),
-              ],
+                  if (task.detail.isNotEmpty) ...[
+                    const SizedBox(height: SwissSpacing.xxs),
+                    Text(
+                      task.detail,
+                      style:
+                          SwissTypography.caption.copyWith(color: mutedFg),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: onSkip,
-            style: TextButton.styleFrom(
-              foregroundColor: task.isSkipped ? g.textMuted : g.warning,
-              textStyle: const TextStyle(fontSize: 12.5),
+            Text(
+              '${task.durationMin}m',
+              style: SwissTypography.caption.copyWith(color: mutedFg),
             ),
-            child: Text(task.isSkipped ? 'Unskip' : 'Skip'),
-          ),
-        ],
+            const SizedBox(width: SwissSpacing.sm),
+            SwissButton(
+              label: task.isSkipped ? 'Unskip' : 'Skip',
+              variant: SwissButtonVariant.ghost,
+              compact: true,
+              onPressed: onSkip,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -327,32 +311,10 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: GlassCard(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.event_busy, size: 26, color: g.textMuted),
-              const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-              GlassButton(
-                label: 'Try again',
-                icon: Icons.refresh,
-                variant: GlassButtonVariant.glass,
-                onPressed: onRetry,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return SwissErrorState(
+      title: message,
+      message: 'Please try again.',
+      onRetry: onRetry,
     );
   }
 }

@@ -3,20 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/swiss_tokens.dart';
 import '../../core/utils/time.dart';
 import '../../core/theme/responsive.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
-import '../../shared/widgets/glass/glass_input.dart';
-import '../../shared/widgets/glass/glass_misc.dart';
-import '../../shared/widgets/graphics/sf_graphics.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'notebook.dart';
 import 'notebook_create_sheet.dart';
 import 'notebooks_controller.dart';
 
-/// Notebook list — search, create, and open. On phones this is the whole
-/// tab; on tablet/desktop it is the left pane of the master-detail split.
+/// Notebook list — search, create, and open.
 class NotebookListPane extends ConsumerStatefulWidget {
   const NotebookListPane({super.key, required this.selectedId});
 
@@ -34,6 +29,8 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
     final asyncNotebooks = ref.watch(notebooksControllerProvider);
     final query = _query.trim().toLowerCase();
     final selectedId = widget.selectedId;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
 
     return SafeArea(
       child: Column(
@@ -45,28 +42,29 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
               children: [
                 Expanded(
                   child: Text(
-                    'Notebooks',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    'NOTEBOOKS',
+                    style: SwissTypography.section.copyWith(color: fg),
                   ),
                 ),
-                GlassButton(
+                SwissButton(
                   label: 'New',
                   icon: Icons.add,
-                  size: GlassButtonSize.small,
+                  compact: true,
                   onPressed: () => showCreateNotebookSheet(context),
                 ),
               ],
             ),
           ),
+          const SwissDivider(thickness: 2),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: GlassInput(
+            padding: const EdgeInsets.fromLTRB(20, SwissSpacing.md, 20, 0),
+            child: SwissInput(
               hintText: 'Search notebooks',
-              prefixIcon: Icons.search,
+              prefixIcon: const Icon(Icons.search),
               onChanged: (value) => setState(() => _query = value),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SwissSpacing.md),
           Expanded(
             child: asyncNotebooks.when(
               loading: () => const _LoadingState(),
@@ -87,11 +85,12 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
                   itemCount: visible.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SwissHairline(),
                   itemBuilder: (context, i) {
                     final n = visible[i];
                     return _NotebookCard(
                       notebook: n,
+                      index: i + 1,
                       selected: n.id == selectedId,
                       onTap: () => _open(context, n),
                     );
@@ -107,8 +106,6 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
 
   void _open(BuildContext context, Notebook notebook) {
     final path = AppRoutes.notebookDetail.replaceFirst(':id', notebook.id);
-    // Phone: push so back returns to the list. Wide screens already show
-    // the detail pane — just update the selected notebook via the URL.
     if (context.isPhone) {
       context.push(path);
     } else {
@@ -120,64 +117,75 @@ class _NotebookListPaneState extends ConsumerState<NotebookListPane> {
 class _NotebookCard extends StatelessWidget {
   const _NotebookCard({
     required this.notebook,
+    required this.index,
     required this.selected,
     required this.onTap,
   });
 
   final Notebook notebook;
+  final int index;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return GlassCard(
-      tone: selected ? GlassTone.floating : GlassTone.surface,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: g.primarySoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.library_books, size: 20, color: g.primary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        notebook.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: g.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${notebook.sourceCount} sources · updated ${relativeTime(notebook.updatedAt, DateTime.now())}',
-                        style: TextStyle(color: g.textMuted, fontSize: 12.5),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, size: 20, color: g.textMuted),
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: SwissSpacing.md,
+          horizontal: 0,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: selected ? SwissColors.red : Colors.transparent,
+              width: SwissShapes.borderMedium,
             ),
           ),
+        ),
+        child: Row(
+          children: [
+            // Index number
+            SizedBox(
+              width: 36,
+              child: Text(
+                index.toString().padLeft(2, '0'),
+                style: SwissTypography.label.copyWith(
+                  color: selected ? SwissColors.red : mutedFg,
+                ),
+              ),
+            ),
+            const SizedBox(width: SwissSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notebook.title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SwissTypography.subheading.copyWith(
+                      color: fg,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: SwissSpacing.xxs),
+                  Text(
+                    '${notebook.sourceCount} SOURCES · UPDATED ${relativeTime(notebook.updatedAt, DateTime.now())}',
+                    style: SwissTypography.caption.copyWith(color: mutedFg),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: mutedFg),
+          ],
         ),
       ),
     );
@@ -189,22 +197,36 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       itemCount: 4,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, _) => GlassCard(
+      separatorBuilder: (_, _) => const SwissHairline(),
+      itemBuilder: (_, _) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
         child: Row(
           children: [
-            const GlassSkeleton(width: 40, height: 40, radius: 12),
-            const SizedBox(width: 12),
+            Container(
+              width: 36,
+              height: 15,
+              color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+            ),
+            const SizedBox(width: SwissSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  GlassSkeleton(width: 160, height: 15),
-                  SizedBox(height: 8),
-                  GlassSkeleton(width: 110, height: 12),
+                children: [
+                  Container(
+                    width: 160,
+                    height: 15,
+                    color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+                  ),
+                  const SizedBox(height: SwissSpacing.xs),
+                  Container(
+                    width: 110,
+                    height: 12,
+                    color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+                  ),
                 ],
               ),
             ),
@@ -222,41 +244,10 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Center(
-      child: GlassCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.cloud_off,
-              size: 30,
-              color: g.textMuted.withValues(alpha: 0.7),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Could not load your notebooks',
-              style: TextStyle(
-                color: g.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Check your connection and try again.',
-              style: TextStyle(color: g.textMuted, fontSize: 13),
-            ),
-            const SizedBox(height: 14),
-            GlassButton(
-              label: 'Try again',
-              icon: Icons.refresh,
-              variant: GlassButtonVariant.glass,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
-      ),
+    return SwissErrorState(
+      title: 'COULD NOT LOAD YOUR NOTEBOOKS',
+      message: 'Check your connection and try again.',
+      onRetry: onRetry,
     );
   }
 }
@@ -268,57 +259,15 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-        child: GlassCard(
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: g.primarySoft,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(Icons.library_books, size: 26, color: g.primary),
-              ),
-              const SizedBox(height: 20),
-              // A small knowledge structure assembling — the empty state
-              // stays calm but alive.
-              const SFKnowledgeGraphic(size: Size(96, 88)),
-              const SizedBox(height: 16),
-              Text(
-                hasQuery ? 'No matching notebooks' : 'No notebooks yet',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                hasQuery
-                    ? 'Nothing matches your search. Try a different name or create a new notebook.'
-                    : 'Create your first notebook and add your notes — StudyFlow AI will '
-                          'answer questions and build flashcards, quizzes, and study guides '
-                          'from them.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: g.textMuted,
-                  fontSize: 14,
-                  height: 1.45,
-                ),
-              ),
-              if (!hasQuery) ...[
-                const SizedBox(height: 16),
-                GlassButton(
-                  label: 'New notebook',
-                  icon: Icons.add,
-                  onPressed: () => showCreateNotebookSheet(context),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+    return SwissEmptyState(
+      sectionNumber: '01',
+      title: hasQuery ? 'NO MATCHING NOTEBOOKS' : 'NO NOTEBOOKS YET',
+      description: hasQuery
+          ? 'Nothing matches your search. Try a different name or create a new notebook.'
+          : 'Create your first notebook and add your notes — StudyFlow AI will '
+                'answer questions and build flashcards, quizzes, and study guides from them.',
+      actionLabel: hasQuery ? null : 'New notebook',
+      onAction: hasQuery ? null : () => showCreateNotebookSheet(context),
     );
   }
 }

@@ -1,19 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
+import '../../core/theme/swiss_tokens.dart';
+import '../../shared/widgets/swiss/swiss_components.dart';
 import 'notebook_sources.dart';
 import 'notebooks_repository.dart';
 import 'source_upload.dart';
 
-/// The "Add source" glass sheet: how the user brings material into a Study
-/// Space. Only genuinely implemented options are shown — uploading files
-/// (native picker) and pasting text.
-///
-/// [onPickFiles] is injectable so tests can drive the flow without the
-/// platform plugin; the production default opens the native file picker.
+/// The "Add source" sheet: how the user brings material into a Study Space.
 class AddSourceSheet extends StatefulWidget {
   const AddSourceSheet({
     super.key,
@@ -22,20 +16,14 @@ class AddSourceSheet extends StatefulWidget {
     this.onPickFiles,
   });
 
-  /// Uploads the selected files to the backend. [onProgress] receives
-  /// (filesDone, totalFiles) as each upload completes.
   final Future<List<NotebookSource>> Function(
     List<UploadFile> files,
     void Function(int done, int total) onProgress,
   )
   onUpload;
 
-  /// Called when the user chooses Paste text; the sheet closes and the
-  /// host opens the paste sheet.
   final VoidCallback onPaste;
 
-  /// Opens the native file picker. Defaults to [FilePicker]; tests inject
-  /// a fake.
   final Future<List<UploadFile>> Function()? onPickFiles;
 
   @override
@@ -56,8 +44,6 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
       type: FileType.custom,
       allowedExtensions: const ['pdf', 'docx', 'txt', 'md', 'markdown'],
     );
-    // Cancellation returns an empty list; bytes load on demand per file so
-    // memory stays flat even when several large files are selected.
     return [
       for (final f in files)
         UploadFile(name: f.name, bytes: await f.readAsBytes()),
@@ -69,7 +55,6 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
     final files = await picker();
     if (!mounted || files.isEmpty) return;
 
-    // Client-side gate mirrors the backend: whitelist, empty file, 25 MB.
     final errors = <String>[];
     for (final f in files) {
       final problem = validateUploadFile(f);
@@ -121,7 +106,11 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
     final validCount = _selected.length - _errors.length;
 
     return SingleChildScrollView(
@@ -135,28 +124,32 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Add source', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 4),
+          const SwissDivider(thickness: 4),
+          const SizedBox(height: SwissSpacing.lg),
           Text(
-            'Bring your study material here — StudyFlow AI extracts it, '
-            'indexes it, and grounds every answer, flashcard, and quiz in it.',
-            style: TextStyle(color: g.textMuted, fontSize: 13, height: 1.4),
+            'ADD SOURCE',
+            style: SwissTypography.section.copyWith(color: fg),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SwissSpacing.xs),
+          Text(
+            'Bring your study material here — StudyFlow AI extracts and indexes it.',
+            style: SwissTypography.body.copyWith(color: mutedFg),
+          ),
+          const SizedBox(height: SwissSpacing.xl),
 
-          // Upload files — the primary path.
+          // Upload files
           _OptionRow(
             icon: Icons.upload_file,
-            title: 'Upload files',
-            subtitle: 'PDF, Word (DOCX), TXT, Markdown — pick several at once',
+            title: 'UPLOAD FILES',
+            subtitle: 'PDF, Word (DOCX), TXT, Markdown',
             onTap: _uploading ? null : _chooseFiles,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: SwissSpacing.sm),
 
-          // Paste text — closes this sheet and hands over to the paste flow.
+          // Paste text
           _OptionRow(
             icon: Icons.content_paste,
-            title: 'Paste text',
+            title: 'PASTE TEXT',
             subtitle: 'Copy notes or a transcript straight in',
             onTap: _uploading
                 ? null
@@ -167,53 +160,52 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
           ),
 
           if (_selected.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: SwissSpacing.xl),
             for (final file in _selected) ...[
               _SelectedFileTile(
                 file: file,
                 disabled: _uploading,
                 onRemove: () => _remove(file),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: SwissSpacing.xs),
             ],
           ],
 
           if (_errors.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: SwissSpacing.xs),
             for (final e in _errors.take(3))
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(e, style: TextStyle(color: g.danger, fontSize: 13)),
+                child: Text(
+                  e,
+                  style: SwissTypography.caption.copyWith(color: SwissColors.red),
+                ),
               ),
           ],
 
           if (_uploadError != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: SwissSpacing.xs),
             Text(
               _uploadError!,
-              style: TextStyle(color: g.danger, fontSize: 13),
+              style: SwissTypography.caption.copyWith(color: SwissColors.red),
             ),
           ],
 
           if (_uploading) ...[
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: _total == 0 ? null : _done / _total,
-                minHeight: 6,
-                backgroundColor: g.textMuted.withValues(alpha: 0.15),
-              ),
+            const SizedBox(height: SwissSpacing.md),
+            SwissProgressBar(
+              value: _total == 0 ? 0 : _done / _total,
+              height: 4,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SwissSpacing.xs),
             Text(
-              'Uploading $_done of $_total…',
-              style: TextStyle(color: g.textMuted, fontSize: 12),
+              'UPLOADING $_done OF $_total…',
+              style: SwissTypography.caption.copyWith(color: mutedFg),
             ),
           ],
 
-          const SizedBox(height: 16),
-          GlassButton(
+          const SizedBox(height: SwissSpacing.xl),
+          SwissButton(
             label: _selected.isEmpty
                 ? 'Choose files'
                 : _uploading
@@ -222,7 +214,7 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
                 ? 'Add $validCount source${validCount == 1 ? '' : 's'}'
                 : 'Add sources',
             icon: _selected.isEmpty ? Icons.folder_open : Icons.cloud_upload,
-            expand: true,
+            fullWidth: true,
             onPressed: _uploading || _selected.isEmpty || validCount == 0
                 ? null
                 : _upload,
@@ -248,53 +240,53 @@ class _OptionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return GlassCard(
-      tone: GlassTone.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(SwissSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+          border: Border.all(
+            color: isDark ? SwissColors.darkBorder : SwissColors.black,
+            width: SwissShapes.borderThin,
+          ),
+        ),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: g.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: g.primary, size: 20),
+              color: fg,
+              alignment: Alignment.center,
+              child: Icon(icon, color: SwissColors.white, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SwissSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: SwissTypography.subheading.copyWith(
+                      color: fg,
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: SwissSpacing.xxs),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: g.textMuted,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
+                    style: SwissTypography.caption.copyWith(color: mutedFg),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: g.textMuted.withValues(alpha: 0.6),
-              size: 20,
-            ),
+            Icon(Icons.chevron_right, color: mutedFg, size: 20),
           ],
         ),
       ),
@@ -315,35 +307,44 @@ class _SelectedFileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return GlassCard(
-      tone: GlassTone.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SwissSpacing.md,
+        vertical: SwissSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isDark ? SwissColors.darkBorder : SwissColors.black,
+          width: SwissShapes.borderThin,
+        ),
+      ),
       child: Row(
         children: [
           Icon(
             fileIconFor(file.name),
-            color: fileIconColorFor(file.name, g.primary),
-            size: 22,
+            color: fg,
+            size: 20,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SwissSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  file.name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  file.name.toUpperCase(),
+                  style: SwissTypography.body.copyWith(color: fg),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
                 Text(
                   formatBytes(file.bytes.length),
-                  style: TextStyle(color: g.textMuted, fontSize: 12),
+                  style: SwissTypography.caption.copyWith(color: mutedFg),
                 ),
               ],
             ),

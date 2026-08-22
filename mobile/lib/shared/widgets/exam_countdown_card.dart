@@ -3,21 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/swiss_tokens.dart';
 import '../../features/dashboard/dashboard_repository.dart';
 import '../../features/study/study_planner.dart';
-import 'glass/glass_card.dart';
-import 'glass/glass_misc.dart';
+import 'swiss/swiss_components.dart';
 
-/// Exam countdown card, shared by the dashboard (UPCOMING) and the Study
-/// tab. Communicates urgency through hierarchy, not alarms.
-///
-/// The footer is fed by real plan data ([studyPlannerControllerProvider]):
-/// when a study plan exists for the exam it shows plan progress and a
-/// View Study Plan action; when the exam is still ahead and unplanned it
-/// offers to build the plan. If the plan fetch is still loading a thin
-/// skeleton keeps the card calm; if it failed, the countdown still stands
-/// alone rather than showing an error inside every card.
+/// Exam countdown card, shared by the dashboard and Study tab.
 class ExamCountdownCard extends ConsumerWidget {
   const ExamCountdownCard({super.key, required this.exam});
 
@@ -25,154 +16,132 @@ class ExamCountdownCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
+
     final days = exam.daysUntil(DateTime.now());
     final countdown = days < 0
-        ? 'Date set'
+        ? 'DATE SET'
         : days == 0
-        ? 'Today'
-        : '$days days';
+        ? 'TODAY'
+        : '$days DAYS';
     final soon = days >= 0 && days <= 7;
     final plans = ref.watch(studyPlannerControllerProvider);
     final plan = plans.valueOrNull
         ?.where((p) => p.examId == exam.id)
         .firstOrNull;
 
-    return GlassCard(
-      tone: soon ? GlassTone.floating : GlassTone.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: soon
-                        ? g.amber.withValues(alpha: 0.18)
-                        : g.primarySoft,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    Icons.event,
-                    size: 22,
-                    color: soon ? g.amber : g.primary,
+    return SwissCard(
+      padding: const EdgeInsets.all(SwissSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Numbered indicator
+              Container(
+                width: 44,
+                height: 44,
+                color: soon ? SwissColors.red : fg,
+                alignment: Alignment.center,
+                child: Text(
+                  days < 0 ? '—' : '$days',
+                  style: SwissTypography.subheading.copyWith(
+                    color: SwissColors.white,
+                    fontSize: 18,
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        exam.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: g.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+              ),
+              const SizedBox(width: SwissSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exam.title.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SwissTypography.subheading.copyWith(
+                        color: fg,
+                        fontSize: 16,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        exam.displayDate,
-                        style: TextStyle(color: g.textMuted, fontSize: 12.5),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: SwissSpacing.xxs),
+                    Text(
+                      exam.displayDate,
+                      style: SwissTypography.caption.copyWith(color: mutedFg),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  countdown,
-                  style: TextStyle(
-                    color: soon ? g.amber : g.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              Text(
+                countdown,
+                style: SwissTypography.label.copyWith(
+                  color: soon ? SwissColors.red : fg,
+                  letterSpacing: 1.5,
                 ),
-              ],
-            ),
-            _buildFooter(
-              context,
-              ref,
-              g,
-              plan: plan,
-              plansLoading: plans.isLoading,
-              days: days,
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          _buildFooter(
+            context,
+            ref,
+            isDark: isDark,
+            fg: fg,
+            mutedFg: mutedFg,
+            plan: plan,
+            plansLoading: plans.isLoading,
+            days: days,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFooter(
     BuildContext context,
-    WidgetRef ref,
-    GlassTheme g, {
+    WidgetRef ref, {
+    required bool isDark,
+    required Color fg,
+    required Color mutedFg,
     required StudyPlan? plan,
     required bool plansLoading,
     required int days,
   }) {
-    // Plans still loading — a thin skeleton keeps the layout stable.
     if (plansLoading) {
       return Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            GlassSkeleton(height: 5, radius: 99),
-            SizedBox(height: 8),
-            GlassSkeleton(width: 140, height: 12),
-          ],
-        ),
+        padding: const EdgeInsets.only(top: SwissSpacing.md),
+        child: SwissProgressBar(value: 0, height: 4),
       );
     }
 
-    // A real plan exists — progress plus the way into the full plan.
     if (plan != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
-              minHeight: 5,
-              backgroundColor: g.surfaceSubtle,
-              color: g.primary,
-            ),
+          const SizedBox(height: SwissSpacing.md),
+          SwissProgressBar(
+            value: plan.tasks.isEmpty ? 0 : plan.progressPercent / 100,
+            height: 4,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SwissSpacing.sm),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  '${plan.doneCount}/${plan.tasks.length} tasks · ${plan.progressPercent}%',
-                  style: TextStyle(color: g.textMuted, fontSize: 12.5),
+                  '${plan.doneCount}/${plan.tasks.length} TASKS · ${plan.progressPercent}%',
+                  style: SwissTypography.caption.copyWith(color: mutedFg),
                 ),
               ),
-              TextButton(
+              SwissButton(
+                label: 'View plan',
+                variant: SwissButtonVariant.ghost,
+                compact: true,
                 onPressed: () =>
                     context.push('${AppRoutes.studyPlans}/${plan.examId}'),
-                style: TextButton.styleFrom(
-                  foregroundColor: g.primary,
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('View Study Plan'),
-                    SizedBox(width: 2),
-                    Icon(Icons.chevron_right, size: 18),
-                  ],
-                ),
               ),
             ],
           ),
@@ -180,12 +149,14 @@ class ExamCountdownCard extends ConsumerWidget {
       );
     }
 
-    // No plan yet and the exam is still ahead — offer to build one.
-    // Past exams ("Date set") get no footer: there is nothing to schedule.
     if (days >= 0) {
       return Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: TextButton.icon(
+        padding: const EdgeInsets.only(top: SwissSpacing.xs),
+        child: SwissButton(
+          label: 'Build study plan',
+          icon: Icons.event_note,
+          variant: SwissButtonVariant.ghost,
+          compact: true,
           onPressed: () async {
             try {
               await ref
@@ -199,13 +170,6 @@ class ExamCountdownCard extends ConsumerWidget {
               }
             }
           },
-          style: TextButton.styleFrom(
-            foregroundColor: g.primary,
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-          ),
-          icon: const Icon(Icons.event_note, size: 16),
-          label: const Text('Build study plan'),
         ),
       );
     }
