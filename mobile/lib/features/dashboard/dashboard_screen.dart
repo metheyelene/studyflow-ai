@@ -16,7 +16,6 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dashboard = ref.watch(dashboardControllerProvider);
     final auth = ref.watch(authControllerProvider);
     final firstName = auth is AuthAuthenticated
         ? auth.user.name.trim().split(' ').first
@@ -37,7 +36,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Usage Bar ───────────────────────────────────────
-            _UsageBar(dashboard: dashboard),
+            const _UsageBar(),
             const SizedBox(height: SwissSpacing.xxxl),
 
             // ── Recent Spaces ───────────────────────────────────
@@ -55,7 +54,7 @@ class DashboardScreen extends ConsumerWidget {
             // ── Upcoming Exams ──────────────────────────────────
             const SwissSectionLabel(number: '03', title: 'Upcoming'),
             const SizedBox(height: SwissSpacing.md),
-            _UpcomingExams(dashboard: dashboard),
+            const _UpcomingExams(),
           ],
         ),
       ),
@@ -98,16 +97,15 @@ class _SwissHero extends StatelessWidget {
 
 /// Usage bar — thin monochrome progress.
 class _UsageBar extends ConsumerWidget {
-  const _UsageBar({required this.dashboard});
-
-  final AsyncValue<DashboardSnapshot> dashboard;
+  const _UsageBar();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final usageAsync = ref.watch(usageProvider);
 
-    return dashboard.when(
+    return usageAsync.when(
       loading: () => Container(
         height: 20,
         decoration: BoxDecoration(
@@ -118,14 +116,12 @@ class _UsageBar extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => SwissErrorState(
-        title: 'Error',
-        message: 'Could not load your usage.',
-        onRetry: () =>
-            ref.read(dashboardControllerProvider.notifier).refresh(),
+      error: (e, _) => SwissErrorState(
+        title: 'Usage',
+        message: 'Could not load your usage.\n${e.toString().replaceAll('Exception: ', '')}',
+        onRetry: () => ref.invalidate(usageProvider),
       ),
-      data: (snapshot) {
-        final usage = snapshot.usage;
+      data: (usage) {
         final planLabel = switch (usage.plan) {
           'premium' => 'Premium',
           'founding_member' => 'Founding member',
@@ -260,9 +256,7 @@ class _QuickActions extends StatelessWidget {
 
 /// Upcoming exams — Swiss cards.
 class _UpcomingExams extends ConsumerWidget {
-  const _UpcomingExams({required this.dashboard});
-
-  final AsyncValue<DashboardSnapshot> dashboard;
+  const _UpcomingExams();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -271,17 +265,17 @@ class _UpcomingExams extends ConsumerWidget {
     final mutedFg = isDark
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
+    final examsAsync = ref.watch(examsProvider);
 
-    return dashboard.when(
+    return examsAsync.when(
       loading: () => const SwissProcessingState(label: 'Loading exams'),
-      error: (_, _) => SwissErrorState(
-        title: 'Error',
+      error: (e, _) => SwissErrorState(
+        title: 'Exams',
         message: 'Could not load your exams.',
-        onRetry: () =>
-            ref.read(dashboardControllerProvider.notifier).refresh(),
+        onRetry: () => ref.invalidate(examsProvider),
       ),
-      data: (snapshot) {
-        if (snapshot.exams.isEmpty) {
+      data: (exams) {
+        if (exams.isEmpty) {
           return SwissCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +295,7 @@ class _UpcomingExams extends ConsumerWidget {
         }
         return Column(
           children: [
-            for (final exam in snapshot.exams)
+            for (final exam in exams)
               SwissCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

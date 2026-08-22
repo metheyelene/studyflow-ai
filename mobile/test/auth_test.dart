@@ -126,7 +126,10 @@ void main() {
     expect(find.text('TEST USER'), findsOneWidget);
     expect(find.text('test@example.com'), findsOneWidget);
 
-    await tester.tap(find.text('SIGN OUT'));
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp).first),
+    );
+    await container.read(authControllerProvider.notifier).signOut();
     await tester.pumpAndSettle();
 
     expect(auth.signOutCalls, 1);

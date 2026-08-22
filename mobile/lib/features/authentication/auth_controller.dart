@@ -113,6 +113,8 @@ class AuthController extends Notifier<AuthState> {
   /// the next screen build.
   void _resetUserScopedState() {
     ref.invalidate(dashboardControllerProvider);
+    ref.invalidate(usageProvider);
+    ref.invalidate(examsProvider);
     ref.invalidate(notebooksControllerProvider);
     ref.invalidate(notebookChatControllerProvider);
   }

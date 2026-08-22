@@ -27,6 +27,13 @@ class ProfileScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Back button
+            IconButton(
+              icon: Icon(Icons.arrow_back, size: 24, color: fg),
+              onPressed: () => context.popOrHome(),
+            ),
+            const SizedBox(height: SwissSpacing.lg),
+
             // Header
             const SwissEyebrow(text: 'Profile'),
             const SizedBox(height: SwissSpacing.sm),
@@ -77,13 +84,29 @@ class ProfileScreen extends ConsumerWidget {
             const SwissDivider(),
             const SizedBox(height: SwissSpacing.xxl),
 
-            // Settings sections
+            // Settings sections — all navigate to settings screen
             const SwissSectionLabel(number: '02', title: 'Settings'),
             const SizedBox(height: SwissSpacing.md),
-            _SettingsItem(icon: Icons.person, label: 'Account', onTap: () {}),
-            _SettingsItem(icon: Icons.palette, label: 'Appearance', onTap: () {}),
-            _SettingsItem(icon: Icons.notifications, label: 'Notifications', onTap: () {}),
-            _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy', onTap: () {}),
+            _SettingsItem(
+              icon: Icons.person,
+              label: 'Account',
+              onTap: () => context.push(AppRoutes.settings),
+            ),
+            _SettingsItem(
+              icon: Icons.palette,
+              label: 'Appearance',
+              onTap: () => context.push(AppRoutes.settings),
+            ),
+            _SettingsItem(
+              icon: Icons.notifications,
+              label: 'Notifications',
+              onTap: () => context.push(AppRoutes.settings),
+            ),
+            _SettingsItem(
+              icon: Icons.privacy_tip,
+              label: 'Privacy',
+              onTap: () => context.push(AppRoutes.settings),
+            ),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -107,11 +130,14 @@ class ProfileScreen extends ConsumerWidget {
 
             // Sign out
             SwissButton(
-              label: 'Sign out',
+              label: 'SIGN OUT',
               variant: SwissButtonVariant.secondary,
               fullWidth: true,
-              onPressed: () {
-                // TODO: Sign out
+              onPressed: () async {
+                await ref.read(authControllerProvider.notifier).signOut();
+                if (context.mounted) {
+                  context.go(AppRoutes.login);
+                }
               },
             ),
           ],
