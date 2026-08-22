@@ -68,6 +68,8 @@ Future<FakeNotebooksRepository> _openEditor(
   await tester.pumpAndSettle();
   await tester.tap(find.text('CELL BIOLOGY'));
   await tester.pumpAndSettle();
+  await tester.tap(find.text('ADD SOURCE'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('PASTE TEXT'));
   await tester.pumpAndSettle();
   return fake;
@@ -79,16 +81,10 @@ Future<void> _selectText(
   int base = 0,
   int extent = 12,
 }) async {
-  await tester.enterText(_noteField(), _notes);
-  await tester.pumpAndSettle();
-  final editable = tester.state<EditableTextState>(
-    find.descendant(of: _noteField(), matching: find.byType(EditableText)),
-  );
-  editable.updateEditingValue(
-    TextEditingValue(
-      text: _notes,
-      selection: TextSelection(baseOffset: base, extentOffset: extent),
-    ),
+  final controller = tester.widget<TextField>(_noteField()).controller!;
+  controller.value = TextEditingValue(
+    text: _notes,
+    selection: TextSelection(baseOffset: base, extentOffset: extent),
   );
   await tester.pumpAndSettle();
 }

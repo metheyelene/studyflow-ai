@@ -984,6 +984,7 @@ class _ChatEmptyState extends StatelessWidget {
         : SwissColors.black.withValues(alpha: 0.5);
 
     return SingleChildScrollView(
+      key: const Key('chat-empty-state'),
       padding: EdgeInsets.fromLTRB(24, 16, 24, context.isPhone ? 96 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1400,14 +1401,73 @@ class _PasteSourceSheet extends StatefulWidget {
 class _PasteSourceSheetState extends State<_PasteSourceSheet> {
   final _title = TextEditingController();
   final _text = TextEditingController();
+  final _textSelection = ValueNotifier<TextSelection>(const TextSelection.collapsed(offset: 0));
   bool _busy = false;
   String? _error;
+  String? _assistError;
+  bool _assistBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _text.addListener(_onTextChange);
+  }
+
+  void _onTextChange() {
+    _textSelection.value = _text.selection;
+  }
 
   @override
   void dispose() {
+    _text.removeListener(_onTextChange);
     _title.dispose();
     _text.dispose();
+    _textSelection.dispose();
     super.dispose();
+  }
+
+  Future<void> _assist(NoteAssistMode mode) async {
+    final sel = _textSelection.value;
+    if (!sel.isCollapsed && sel.textInside(_text.text).isNotEmpty) {
+      final selected = sel.textInside(_text.text);
+      setState(() {
+        _assistBusy = true;
+        _assistError = null;
+      });
+      try {
+        final result = await widget.onAssist(mode, selected);
+        if (!mounted) return;
+        final t = _text.text;
+        final before = t.substring(0, sel.start);
+        final after = t.substring(sel.end);
+        final pastTense = switch (mode) {
+          NoteAssistMode.explain => 'EXPLAINED',
+          NoteAssistMode.summarize => 'SUMMARIZED',
+          NoteAssistMode.simplify => 'SIMPLIFIED',
+          NoteAssistMode.quiz => 'QUIZ',
+        };
+        _text.text = '$before\n▸ $pastTense\n$result\n$after';
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _assistError = e is NotebooksException ? e.message : 'Something went wrong.';
+        });
+      } finally {
+        if (mounted) setState(() => _assistBusy = false);
+      }
+    }
+  }
+
+  Future<void> _listen() async {
+    final sel = _textSelection.value;
+    if (!sel.isCollapsed && sel.textInside(_text.text).isNotEmpty) {
+      final selected = sel.textInside(_text.text);
+      await widget.tts?.speak(selected);
+    }
+  }
+
+  Future<void> _stopListening() async {
+    await widget.tts?.stop();
   }
 
   Future<void> _add() async {
@@ -1473,12 +1533,75 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
             hintText: 'e.g. Lecture 4 — Photosynthesis',
           ),
           const SizedBox(height: SwissSpacing.md),
-          SwissInput(
+          TextField(
             controller: _text,
-            label: 'Text',
-            hintText: 'Paste your notes here…',
             maxLines: 8,
+            style: SwissTypography.body.copyWith(color: fg),
+            decoration: InputDecoration(
+              labelText: 'Text',
+              hintText: 'Paste your notes here…',
+              labelStyle: SwissTypography.label.copyWith(color: mutedFg),
+              hintStyle: SwissTypography.body.copyWith(color: mutedFg),
+              filled: true,
+              fillColor: isDark ? SwissColors.darkMuted : SwissColors.muted,
+              contentPadding: const EdgeInsets.all(SwissSpacing.md),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
+              ),
+            ),
           ),
+          // Selection AI toolbar
+          ValueListenableBuilder<TextSelection>(
+            valueListenable: _textSelection,
+            builder: (context, sel, _) {
+              final hasSelection = !sel.isCollapsed && _text.text.isNotEmpty;
+              if (!hasSelection) return const SizedBox.shrink();
+              return KeyedSubtree(
+                key: const ValueKey('selection-ai-toolbar'),
+                child: Container(
+                  margin: const EdgeInsets.only(top: SwissSpacing.sm),
+                  padding: const EdgeInsets.symmetric(horizontal: SwissSpacing.xs, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark ? SwissColors.darkSurface : SwissColors.surface,
+                    border: Border.all(color: fg, width: SwissShapes.borderThin),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final mode in NoteAssistMode.values) ...[
+                        if (mode.index > 0) const SizedBox(width: 6),
+                        _ToolbarChip(
+                          label: mode.label,
+                          onTap: _assistBusy ? null : () => _assist(mode),
+                        ),
+                      ],
+                      if (widget.tts != null) ...[
+                        const SizedBox(width: 6),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: widget.tts!.speaking,
+                          builder: (_, speaking, __) => _ToolbarChip(
+                            label: speaking ? 'Stop' : 'Listen',
+                            onTap: speaking ? _stopListening : _listen,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (_assistError != null) ...[
+            const SizedBox(height: SwissSpacing.sm),
+            Text(
+              _assistError!,
+              style: SwissTypography.caption.copyWith(color: SwissColors.red),
+            ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: SwissSpacing.sm),
             Text(
@@ -1494,6 +1617,39 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
             onPressed: _busy ? null : _add,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Small chip for the selection AI toolbar.
+class _ToolbarChip extends StatelessWidget {
+  const _ToolbarChip({required this.label, this.onTap});
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: onTap != null ? fg : fg.withValues(alpha: 0.3),
+          border: Border.all(color: fg, width: SwissShapes.borderThin),
+        ),
+        child: Text(
+          label,
+          style: SwissTypography.caption.copyWith(
+            color: onTap != null
+                ? (isDark ? SwissColors.darkBackground : SwissColors.background)
+                : fg.withValues(alpha: 0.5),
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }

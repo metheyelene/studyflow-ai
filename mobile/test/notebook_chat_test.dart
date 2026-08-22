@@ -124,7 +124,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       expect(fake.chatCalls, 1);
@@ -161,7 +161,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.textContaining('Biology Notes'));
@@ -201,7 +201,7 @@ void main() {
           'Explain photosynthesis',
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Ask'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
         expect(
@@ -293,7 +293,7 @@ void main() {
           'Explain photosynthesis',
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Ask'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
         // The response is an editorial block, not a chat bubble: an
@@ -343,7 +343,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       final actions = find.byKey(const Key('chat-answer-actions'));
