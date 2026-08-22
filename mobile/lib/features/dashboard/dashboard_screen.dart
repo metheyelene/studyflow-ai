@@ -3,33 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/theme/responsive.dart';
-import '../../shared/widgets/exam_countdown_card.dart';
+import '../../core/theme/bauhaus_tokens.dart';
+import '../../shared/widgets/bauhaus/bauhaus.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
 import '../notebooks/notebook.dart';
 import '../notebooks/notebooks_controller.dart';
-import '../../shared/widgets/glass/glass_button.dart';
-import '../../shared/widgets/glass/glass_card.dart';
-import '../../shared/widgets/glass/glass_misc.dart';
 import 'dashboard_controller.dart';
 
-/// Home tab — an editorial command center, not a dashboard.
+/// Home tab — Bauhaus editorial command center.
 ///
-/// Composition: greeting → a single subject-led hero (the study space you
-/// should continue, in display type, with one CTA) → a quiet AI-allowance
-/// bar → numbered recent spaces on hairlines → compact action pills →
-/// the next exam. Large type and open canvas carry the hierarchy; the
-/// only "box" on the screen is the white glossy CTA.
+/// Composition: greeting → hero with geometric composition →
+/// recent spaces on hairlines → quick actions → upcoming exams.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardControllerProvider);
-    // Personal, but deterministic: a time-of-day greeting would make the
-    // Home golden (and any regenerated baseline) hour-dependent.
     final auth = ref.watch(authControllerProvider);
     final firstName = auth is AuthAuthenticated
         ? auth.user.name.trim().split(' ').first
@@ -38,223 +29,92 @@ class DashboardScreen extends ConsumerWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
-          24,
-          AppSpacing.xl,
-          24,
-          context.isPhone ? 120 : 40,
+          BauhausSpacing.xl,
+          BauhausSpacing.xl,
+          BauhausSpacing.xl,
+          120,
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _Greeting(firstName: firstName),
-                const SizedBox(height: AppSpacing.xxl),
-                const _ContinueHero(),
-                const SizedBox(height: AppSpacing.xl),
-                _UsageBar(dashboard: dashboard),
-                const SizedBox(height: AppSpacing.xxxl),
-                const _SectionTitle(title: 'RECENT'),
-                const SizedBox(height: 6),
-                const _RecentSpaces(),
-                const SizedBox(height: AppSpacing.xxxl),
-                const _SectionTitle(title: 'QUICK'),
-                const SizedBox(height: 12),
-                const _QuickActions(),
-                const SizedBox(height: AppSpacing.xxxl),
-                const _SectionTitle(title: 'UPCOMING'),
-                const SizedBox(height: 12),
-                _UpcomingExams(dashboard: dashboard),
-              ],
-            ),
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Hero Section ────────────────────────────────────
+            _BauhausHero(firstName: firstName),
+            const SizedBox(height: BauhausSpacing.xxxl),
+
+            // ── Usage Bar ───────────────────────────────────────
+            _UsageBar(dashboard: dashboard),
+            const SizedBox(height: BauhausSpacing.xxxl),
+
+            // ── Recent Spaces ───────────────────────────────────
+            const BauhausSectionHeading(title: 'Recent'),
+            const SizedBox(height: BauhausSpacing.md),
+            const _RecentSpaces(),
+            const SizedBox(height: BauhausSpacing.xxxl),
+
+            // ── Quick Actions ───────────────────────────────────
+            const BauhausSectionHeading(title: 'Quick'),
+            const SizedBox(height: BauhausSpacing.md),
+            const _QuickActions(),
+            const SizedBox(height: BauhausSpacing.xxxl),
+
+            // ── Upcoming Exams ──────────────────────────────────
+            const BauhausSectionHeading(title: 'Upcoming'),
+            const SizedBox(height: BauhausSpacing.md),
+            _UpcomingExams(dashboard: dashboard),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Editorial greeting: a tracked eyebrow, the first name in confident
-/// display type, and one quiet line. The name — not a card — opens the
-/// screen.
-class _Greeting extends StatelessWidget {
-  const _Greeting({this.firstName});
+/// Bauhaus hero — massive greeting + geometric composition.
+class _BauhausHero extends StatelessWidget {
+  const _BauhausHero({this.firstName});
 
   final String? firstName;
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'WELCOME BACK',
-          style: AppText.eyebrow.copyWith(
-            color: g.textMuted,
-            letterSpacing: 1.4,
-          ),
-        ),
-        const SizedBox(height: 4),
+        // Eyebrow
+        const BauhausEyebrow(text: 'Welcome back'),
+        const SizedBox(height: BauhausSpacing.sm),
+
+        // Name in display type
         Text(
           firstName ?? 'Friend',
-          style: TextStyle(
-            color: g.textPrimary,
-            fontSize: 34,
-            height: 1.12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.6,
-          ),
+          style: BauhausTypography.hero,
         ),
-        const SizedBox(height: 6),
+
+        const SizedBox(height: BauhausSpacing.sm),
+
+        // Tagline
         Text(
           'Ready to study?',
-          style: TextStyle(color: g.textMuted, fontSize: 15, height: 1.4),
-        ),
-      ],
-    );
-  }
-}
-
-/// The single dominant moment: the study space to continue, in large
-/// display type on the open canvas, with one primary CTA. The subject —
-/// not a stat — is the hero.
-class _ContinueHero extends ConsumerWidget {
-  const _ContinueHero();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
-    final state = ref.watch(notebooksControllerProvider);
-
-    return state.when(
-      loading: () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          GlassSkeleton(width: 150, height: 14),
-          SizedBox(height: 12),
-          GlassSkeleton(width: 260, height: 44),
-          SizedBox(height: 12),
-          GlassSkeleton(width: 190, height: 13),
-        ],
-      ),
-      error: (_, _) => _HeroEmpty(
-        onTap: () => context.go(AppRoutes.notebooks),
-        title: 'Add your first study space',
-        sub: 'Upload a PDF or your notes and StudyFlow will organize them.',
-      ),
-      data: (notebooks) {
-        if (notebooks.isEmpty) {
-          return _HeroEmpty(
-            onTap: () => context.go(AppRoutes.notebooks),
-            title: 'Your study space is empty',
-            sub: 'Upload a PDF or your notes and StudyFlow will organize them.',
-          );
-        }
-        final focus = notebooks.first;
-        final count = focus.sourceCount;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'CONTINUE STUDYING',
-              style: AppText.eyebrow.copyWith(
-                color: g.primary,
-                letterSpacing: 1.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              focus.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: g.textPrimary,
-                fontSize: 40,
-                height: 1.04,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.8,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              count == 1 ? '1 source' : '$count sources',
-              style: AppText.eyebrow.copyWith(
-                color: g.textMuted,
-                fontSize: 12,
-                letterSpacing: 1.0,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            GlassButton(
-              label: 'Continue studying',
-              icon: Icons.arrow_forward,
-              size: GlassButtonSize.large,
-              expand: true,
-              onPressed: () => context.push('/notebooks/${focus.id}'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// A calm empty-hero for a brand-new user: the same editorial moment, but
-/// inviting creation.
-class _HeroEmpty extends StatelessWidget {
-  const _HeroEmpty({
-    required this.title,
-    required this.sub,
-    required this.onTap,
-  });
-
-  final String title;
-  final String sub;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'START HERE',
-          style: AppText.eyebrow.copyWith(color: g.primary, letterSpacing: 1.4),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          title,
-          style: TextStyle(
-            color: g.textPrimary,
-            fontSize: 38,
-            height: 1.05,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.8,
+          style: BauhausTypography.bodyMuted.copyWith(
+            color: BauhausColors.black.withValues(alpha: 0.6),
           ),
         ),
-        const SizedBox(height: 10),
-        Text(
-          sub,
-          style: TextStyle(color: g.textMuted, fontSize: 15, height: 1.45),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        GlassButton(
-          label: 'Create a study space',
-          icon: Icons.add,
-          size: GlassButtonSize.large,
-          expand: true,
-          onPressed: onTap,
+
+        const SizedBox(height: BauhausSpacing.xxl),
+
+        // Geometric composition — asymmetric, bold
+        const BauhausComposition(
+          width: 280,
+          height: 160,
+          circleColor: BauhausColors.blue,
+          squareColor: BauhausColors.yellow,
+          triangleColor: BauhausColors.red,
         ),
       ],
     );
   }
 }
 
-/// The AI allowance — a supporting detail, not the hero. A thin progress
-/// bar and a compact line carry the stat that used to dominate.
+/// Usage bar — thin monochrome progress.
 class _UsageBar extends ConsumerWidget {
   const _UsageBar({required this.dashboard});
 
@@ -262,33 +122,22 @@ class _UsageBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
     return dashboard.when(
-      loading: () => const GlassSkeleton(width: 220, height: 20),
-      error: (_, _) => Row(
-        children: [
-          Icon(
-            Icons.cloud_off,
-            size: 18,
-            color: g.textMuted.withValues(alpha: 0.7),
+      loading: () => Container(
+        height: 20,
+        decoration: BoxDecoration(
+          color: BauhausColors.muted,
+          border: Border.all(
+            color: BauhausColors.black,
+            width: BauhausShapes.borderThin,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Could not load your usage.',
-              style: AppText.small.copyWith(color: g.textMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () =>
-                ref.read(dashboardControllerProvider.notifier).refresh(),
-            style: TextButton.styleFrom(
-              foregroundColor: g.primary,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: const Text('Retry'),
-          ),
-        ],
+        ),
+      ),
+      error: (_, _) => BauhausErrorState(
+        title: 'Error',
+        message: 'Could not load your usage.',
+        onRetry: () =>
+            ref.read(dashboardControllerProvider.notifier).refresh(),
       ),
       data: (snapshot) {
         final usage = snapshot.usage;
@@ -299,147 +148,92 @@ class _UsageBar extends ConsumerWidget {
         };
         final remaining = usage.remaining;
         final frac = (usage.percent / 100).clamp(0.0, 1.0);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '$remaining',
-                  style: TextStyle(
-                    color: g.textPrimary,
-                    fontSize: 22,
-                    height: 1.0,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
+
+        return BauhausCard(
+          accent: BauhausCardAccent.circle,
+          accentColor: BauhausColors.blue,
+          padding: const EdgeInsets.all(BauhausSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    '$remaining',
+                    style: BauhausTypography.headline.copyWith(fontSize: 28),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 1),
+                  const SizedBox(width: BauhausSpacing.sm),
+                  Expanded(
                     child: Text(
                       'AI actions left',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.small.copyWith(color: g.textMuted),
+                      style: BauhausTypography.bodyMuted.copyWith(
+                        color: BauhausColors.black.withValues(alpha: 0.6),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 1),
-                    child: Text(
-                      planLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: AppText.caption.copyWith(color: g.textMuted),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Thin monochrome allowance bar.
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: SizedBox(
-                height: 3,
-                child: Stack(
-                  children: [
-                    Container(color: g.textPrimary.withValues(alpha: 0.10)),
-                    FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: frac,
-                      child: Container(color: g.primary),
-                    ),
-                  ],
+                  BauhausEyebrow(text: planLabel),
+                ],
+              ),
+              const SizedBox(height: BauhausSpacing.md),
+              BauhausLine(height: 4, color: BauhausColors.muted),
+              const SizedBox(height: BauhausSpacing.xs),
+              SizedBox(
+                height: 8,
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: frac,
+                  child: const BauhausLine(color: BauhausColors.black),
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Resets on the 1st',
-              style: AppText.caption.copyWith(
-                color: g.textMuted.withValues(alpha: 0.8),
+              const SizedBox(height: BauhausSpacing.xs),
+              Text(
+                'Resets on the 1st',
+                style: BauhausTypography.caption.copyWith(
+                  color: BauhausColors.black.withValues(alpha: 0.5),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          title,
-          style: AppText.eyebrow.copyWith(
-            color: context.glass.textMuted,
-            letterSpacing: 1.4,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: context.glass.textPrimary.withValues(alpha: 0.07),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Recent study spaces — a numbered editorial list on the open canvas
-/// (hairline dividers, no card box).
+/// Recent study spaces — numbered editorial list.
 class _RecentSpaces extends ConsumerWidget {
   const _RecentSpaces();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
     final state = ref.watch(notebooksControllerProvider);
     return state.when(
-      loading: () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          GlassSkeleton(width: 210, height: 16),
-          SizedBox(height: 10),
-          GlassSkeleton(width: 150, height: 13),
-        ],
-      ),
-      error: (_, _) => Text(
-        'Could not load your study spaces.',
-        style: AppText.small.copyWith(color: g.textMuted),
+      loading: () => const BauhausProcessingState(label: 'Loading'),
+      error: (_, _) => BauhausErrorState(
+        title: 'Error',
+        message: 'Could not load your study spaces.',
       ),
       data: (notebooks) {
         if (notebooks.isEmpty) {
-          return Text(
-            'Your study spaces will appear here.',
-            style: AppText.small.copyWith(color: g.textMuted),
+          return BauhausEmptyState(
+            title: 'No study spaces',
+            description: 'Create your first study space to get started.',
+            actionLabel: 'Create',
+            onAction: () => context.go(AppRoutes.notebooks),
+            composition: const BauhausComposition(
+              width: 120,
+              height: 120,
+              circleColor: BauhausColors.blue,
+              squareColor: BauhausColors.yellow,
+              triangleColor: BauhausColors.red,
+            ),
           );
         }
         return Column(
           children: [
             for (var i = 0; i < notebooks.length; i++) ...[
               _SpaceRow(index: i + 1, notebook: notebooks[i]),
-              if (i != notebooks.length - 1)
-                Divider(
-                  color: g.textPrimary.withValues(alpha: 0.06),
-                  height: 1,
-                ),
+              if (i != notebooks.length - 1) const BauhausHairline(),
             ],
           ],
         );
@@ -448,7 +242,7 @@ class _RecentSpaces extends ConsumerWidget {
   }
 }
 
-/// One notebook row: index numeral, title, source metadata, chevron.
+/// One notebook row — index numeral, title, source count.
 class _SpaceRow extends StatelessWidget {
   const _SpaceRow({required this.index, required this.notebook});
 
@@ -457,24 +251,19 @@ class _SpaceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
     final count = notebook.sourceCount;
     return InkWell(
       onTap: () => context.push('/notebooks/${notebook.id}'),
-      borderRadius: BorderRadius.circular(AppShapes.card),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: BauhausSpacing.md),
         child: Row(
           children: [
             SizedBox(
-              width: 30,
+              width: 32,
               child: Text(
                 index.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  color: g.textMuted.withValues(alpha: 0.55),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
+                style: BauhausTypography.label.copyWith(
+                  color: BauhausColors.black.withValues(alpha: 0.4),
                 ),
               ),
             ),
@@ -486,20 +275,22 @@ class _SpaceRow extends StatelessWidget {
                     notebook.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppText.bodyMedium.copyWith(color: g.textPrimary),
+                    style: BauhausTypography.subheading,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: BauhausSpacing.xxs),
                   Text(
                     count == 1 ? '1 source' : '$count sources',
-                    style: AppText.small.copyWith(color: g.textMuted),
+                    style: BauhausTypography.caption.copyWith(
+                      color: BauhausColors.black.withValues(alpha: 0.5),
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right,
-              size: 18,
-              color: g.textMuted.withValues(alpha: 0.5),
+              size: 20,
+              color: BauhausColors.black,
             ),
           ],
         ),
@@ -508,13 +299,10 @@ class _SpaceRow extends StatelessWidget {
   }
 }
 
-/// Compact glossy action pills in one horizontal row — floating controls,
-/// not a tile grid.
+/// Quick actions — Bauhaus buttons.
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
 
-  // (icon, label, route, isShellTab): shell tabs switch via context.go;
-  // dedicated screens push over the shell.
   static const _actions = [
     (Icons.auto_awesome, 'Ask AI', AppRoutes.notebooks, true),
     (Icons.style, 'Flashcards', AppRoutes.flashcards, false),
@@ -524,31 +312,26 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (var i = 0; i < _actions.length; i++) ...[
-            if (i != 0) const SizedBox(width: 10),
-            GlassButton(
-              label: _actions[i].$2,
-              icon: _actions[i].$1,
-              variant: GlassButtonVariant.glass,
-              size: GlassButtonSize.medium,
-              onPressed: () {
-                final action = _actions[i];
-                // Shell tabs switch via go; dedicated screens push over
-                // the shell (matching the pre-pill behavior).
-                action.$4 ? context.go(action.$3) : context.push(action.$3);
-              },
-            ),
-          ],
-        ],
-      ),
+    return Wrap(
+      spacing: BauhausSpacing.sm,
+      runSpacing: BauhausSpacing.sm,
+      children: [
+        for (final action in _actions)
+          BauhausButton(
+            label: action.$2,
+            icon: action.$1,
+            variant: BauhausButtonVariant.outline,
+            size: BauhausButtonSize.medium,
+            onPressed: () {
+              action.$4 ? context.go(action.$3) : context.push(action.$3);
+            },
+          ),
+      ],
     );
   }
 }
 
+/// Upcoming exams — Bauhaus cards.
 class _UpcomingExams extends ConsumerWidget {
   const _UpcomingExams({required this.dashboard});
 
@@ -556,79 +339,67 @@ class _UpcomingExams extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
     return dashboard.when(
-      loading: () => GlassCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            GlassSkeleton(width: 180, height: 15),
-            SizedBox(height: 10),
-            GlassSkeleton(width: 260, height: 12),
-          ],
-        ),
-      ),
-      error: (_, _) => GlassCard(
-        child: Row(
-          children: [
-            Icon(
-              Icons.cloud_off,
-              size: 22,
-              color: g.textMuted.withValues(alpha: 0.7),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Could not load your exams.',
-                style: AppText.small.copyWith(color: g.textMuted),
-              ),
-            ),
-            TextButton(
-              onPressed: () =>
-                  ref.read(dashboardControllerProvider.notifier).refresh(),
-              style: TextButton.styleFrom(foregroundColor: g.primary),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+      loading: () => const BauhausProcessingState(label: 'Loading exams'),
+      error: (_, _) => BauhausErrorState(
+        title: 'Error',
+        message: 'Could not load your exams.',
+        onRetry: () =>
+            ref.read(dashboardControllerProvider.notifier).refresh(),
       ),
       data: (snapshot) {
         if (snapshot.exams.isEmpty) {
-          return GlassCard(
+          return BauhausCard(
+            accent: BauhausCardAccent.triangle,
+            accentColor: BauhausColors.yellow,
             child: Column(
               children: [
-                const SizedBox(height: 8),
-                Icon(
-                  Icons.event,
-                  size: 26,
-                  color: g.textMuted.withValues(alpha: 0.6),
+                const BauhausSquare(
+                  size: 48,
+                  color: BauhausColors.muted,
+                  strokeWidth: 2,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: BauhausSpacing.md),
                 Text(
-                  'No upcoming exams',
-                  style: TextStyle(
-                    color: g.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                  'NO UPCOMING EXAMS',
+                  style: BauhausTypography.subheading,
+                ),
+                const SizedBox(height: BauhausSpacing.xs),
+                Text(
+                  'Exams from your study setup appear here.',
+                  textAlign: TextAlign.center,
+                  style: BauhausTypography.bodyMuted.copyWith(
+                    color: BauhausColors.black.withValues(alpha: 0.6),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Exams from your study setup appear here with a countdown as they approach.',
-                  textAlign: TextAlign.center,
-                  style: AppText.small.copyWith(color: g.textMuted),
-                ),
-                const SizedBox(height: 8),
               ],
             ),
           );
         }
         return Column(
           children: [
-            for (final exam in snapshot.exams) ...[
-              ExamCountdownCard(exam: exam),
-              const SizedBox(height: 10),
-            ],
+            for (final exam in snapshot.exams)
+              BauhausCard(
+                accent: BauhausCardAccent.triangle,
+                accentColor: BauhausColors.red,
+                onTap: () {},
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exam.title.toUpperCase(),
+                      style: BauhausTypography.subheading,
+                    ),
+                    const SizedBox(height: BauhausSpacing.xs),
+                    Text(
+                      '${exam.daysUntil} days remaining',
+                      style: BauhausTypography.bodyMuted.copyWith(
+                        color: BauhausColors.black.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         );
       },

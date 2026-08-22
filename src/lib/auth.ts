@@ -124,6 +124,8 @@ export const auth = betterAuth({
       "http://localhost:3100",
       "http://127.0.0.1:3100",
       "http://localhost:3200",
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
       "http://127.0.0.1:3200",
       "http://localhost:52378",
       ...extras,

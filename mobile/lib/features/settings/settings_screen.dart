@@ -1,410 +1,233 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../core/performance/device_tier.dart';
-import '../../core/routing/app_router.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/bauhaus_tokens.dart';
 import '../../core/theme/theme_controller.dart';
-import '../../shared/widgets/glass/glass_card.dart';
-import '../../shared/widgets/glass/glass_misc.dart';
-import 'ai_preferences.dart';
+import '../../shared/widgets/bauhaus/bauhaus.dart';
 
-/// Settings — AI preferences (style/level/language), appearance
-/// (light/dark/system), and About StudyFlow → Creator.
-class SettingsScreen extends ConsumerStatefulWidget {
+/// Settings screen — Bauhaus structured list.
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _showAppearance = false;
-  bool _showAiPreferences = false;
-
-  void _toggleAppearance() =>
-      setState(() => _showAppearance = !_showAppearance);
-
-  void _toggleAiPreferences() =>
-      setState(() => _showAiPreferences = !_showAiPreferences);
-
-  @override
-  Widget build(BuildContext context) {
-    final g = context.glass;
+  Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final reduceEffects = ref.watch(reduceEffectsProvider);
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => context.popOrHome(),
-                        icon: const Icon(Icons.arrow_back),
-                        tooltip: 'Back',
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Settings',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  GlassCard(
-                    padding: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        GlassListTile(
-                          title: 'Profile',
-                          subtitle: 'Name, study level, preferences',
-                          leading: Icon(
-                            Icons.person,
-                            size: 22,
-                            color: g.primary,
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            size: 20,
-                            color: g.textMuted,
-                          ),
-                          onTap: () => showGlassToast(
-                            context,
-                            'Profile editing arrives with sign-in.',
-                          ),
-                        ),
-                        const Divider(
-                          color: Color(0x14000000),
-                          height: 1,
-                          indent: 50,
-                        ),
-                        GlassListTile(
-                          title: 'Appearance',
-                          subtitle: 'Light / dark / system',
-                          leading: Icon(
-                            Icons.palette,
-                            size: 22,
-                            color: g.primary,
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                switch (themeMode) {
-                                  ThemeMode.light => 'Light',
-                                  ThemeMode.dark => 'Dark',
-                                  ThemeMode.system => 'System',
-                                },
-                                style: AppText.small.copyWith(
-                                  color: g.textMuted,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                _showAppearance
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                size: 20,
-                                color: g.textMuted,
-                              ),
-                            ],
-                          ),
-                          onTap: _toggleAppearance,
-                        ),
-                        if (_showAppearance)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
-                            child: SegmentedButton<ThemeMode>(
-                              segments: const [
-                                ButtonSegment(
-                                  value: ThemeMode.light,
-                                  icon: Icon(Icons.light_mode),
-                                  label: Text('Light'),
-                                ),
-                                ButtonSegment(
-                                  value: ThemeMode.dark,
-                                  icon: Icon(Icons.dark_mode),
-                                  label: Text('Dark'),
-                                ),
-                                ButtonSegment(
-                                  value: ThemeMode.system,
-                                  icon: Icon(Icons.brightness_auto),
-                                  label: Text('System'),
-                                ),
-                              ],
-                              selected: {themeMode},
-                              showSelectedIcon: false,
-                              onSelectionChanged: (selection) => ref
-                                  .read(themeModeProvider.notifier)
-                                  .setMode(selection.first),
-                            ),
-                          ),
-                        if (_showAppearance)
-                          GlassListTile(
-                            title: 'Reduce visual effects',
-                            subtitle:
-                                'Smaller blur and a plainer background — '
-                                'smoother on low-end devices.',
-                            leading: Icon(
-                              Icons.animation,
-                              size: 22,
-                              color: g.primary,
-                            ),
-                            trailing: Switch(
-                              value: reduceEffects,
-                              onChanged: (value) => ref
-                                  .read(reduceEffectsProvider.notifier)
-                                  .setEnabled(value),
-                            ),
-                          ),
-                        const Divider(
-                          color: Color(0x14000000),
-                          height: 1,
-                          indent: 50,
-                        ),
-                        GlassListTile(
-                          title: 'AI preferences',
-                          subtitle: 'Response style, level, language',
-                          leading: Icon(Icons.tune, size: 22, color: g.primary),
-                          trailing: Icon(
-                            _showAiPreferences
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                            size: 20,
-                            color: g.textMuted,
-                          ),
-                          onTap: _toggleAiPreferences,
-                        ),
-                        if (_showAiPreferences)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
-                            child: _AiPreferencesPanel(
-                              onChanged: (next) =>
-                                  _saveAiPreferences(context, ref, next),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  GlassCard(
-                    padding: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        GlassListTile(
-                          title: 'About StudyFlow',
-                          subtitle: 'About the app and its creator',
-                          leading: Icon(Icons.info, size: 22, color: g.primary),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            size: 20,
-                            color: g.textMuted,
-                          ),
-                          onTap: () => context.go(AppRoutes.aboutCreator),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(BauhausSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            const BauhausEyebrow(text: 'Settings'),
+            const SizedBox(height: BauhausSpacing.sm),
+            Text(
+              'SETTINGS',
+              style: BauhausTypography.headline,
             ),
-          ),
+
+            const SizedBox(height: BauhausSpacing.xxxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Account
+            const BauhausSectionHeading(title: 'Account'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.person,
+              label: 'Profile',
+              onTap: () {},
+            ),
+            _SettingsItem(
+              icon: Icons.lock,
+              label: 'Password',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Study
+            const BauhausSectionHeading(title: 'Study'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.school,
+              label: 'AI Preferences',
+              onTap: () {},
+            ),
+            _SettingsItem(
+              icon: Icons.language,
+              label: 'Language',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Audio
+            const BauhausSectionHeading(title: 'Audio'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.headphones,
+              label: 'Podcast settings',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Notifications
+            const BauhausSectionHeading(title: 'Notifications'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.notifications,
+              label: 'Push notifications',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Appearance
+            const BauhausSectionHeading(title: 'Appearance'),
+            const SizedBox(height: BauhausSpacing.md),
+            _AppearanceSetting(
+              currentMode: themeMode,
+              onModeChanged: (mode) {
+                ref.read(themeModeProvider.notifier).setMode(mode);
+              },
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Privacy
+            const BauhausSectionHeading(title: 'Privacy'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.privacy_tip,
+              label: 'Privacy policy',
+              onTap: () {},
+            ),
+            _SettingsItem(
+              icon: Icons.description,
+              label: 'Terms of service',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // Subscription
+            const BauhausSectionHeading(title: 'Subscription'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.star,
+              label: 'Manage subscription',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.xxl),
+            const BauhausDivider(),
+            const SizedBox(height: BauhausSpacing.xxl),
+
+            // About
+            const BauhausSectionHeading(title: 'About'),
+            const SizedBox(height: BauhausSpacing.md),
+            _SettingsItem(
+              icon: Icons.info,
+              label: 'About StudyFlow',
+              onTap: () {},
+            ),
+            _SettingsItem(
+              icon: Icons.code,
+              label: 'Creator',
+              onTap: () {},
+            ),
+
+            const SizedBox(height: BauhausSpacing.huge),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Optimistically apply a preference change, persist it server-side, and
-/// revert with a friendly toast when the save fails. The optimistic value
-/// keeps the UI feeling instant; the server is the source of truth.
-Future<void> _saveAiPreferences(
-  BuildContext context,
-  WidgetRef ref,
-  AiPreferences next,
-) async {
-  final notifier = ref.read(aiPreferencesControllerProvider.notifier);
-  final previous = ref.read(aiPreferencesControllerProvider).valueOrNull;
-  notifier.set(next);
-  try {
-    await ref.read(aiPreferencesRepositoryProvider).save(next);
-  } catch (_) {
-    if (previous != null) notifier.set(previous);
-    if (context.mounted) {
-      showGlassToast(
-        context,
-        "We couldn't save your preferences. Please try again.",
-      );
-    }
-  }
-}
+/// Settings list item — Bauhaus style.
+class _SettingsItem extends StatelessWidget {
+  const _SettingsItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-/// The expanded AI preferences panel: response style, study level, and
-/// language — the only AI configuration the app shows. It loads lazily
-/// from the backend when first expanded and shows honest loading/error
-/// states instead of fake defaults.
-class _AiPreferencesPanel extends ConsumerWidget {
-  const _AiPreferencesPanel({required this.onChanged});
-
-  final ValueChanged<AiPreferences> onChanged;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final g = context.glass;
-    final prefs = ref.watch(aiPreferencesControllerProvider);
-    return prefs.when(
-      loading: () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          GlassSkeleton(width: 110, height: 13),
-          SizedBox(height: 8),
-          GlassSkeleton(width: double.infinity, height: 38),
-          SizedBox(height: 14),
-          GlassSkeleton(width: 90, height: 13),
-          SizedBox(height: 8),
-          GlassSkeleton(width: double.infinity, height: 38),
-        ],
-      ),
-      error: (_, _) => Row(
-        children: [
-          Icon(
-            Icons.cloud_off,
-            size: 18,
-            color: g.textMuted.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Could not load your AI preferences.',
-              style: AppText.small.copyWith(color: g.textMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () => ref.invalidate(aiPreferencesControllerProvider),
-            style: TextButton.styleFrom(foregroundColor: g.primary),
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-      data: (prefs) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _PrefLabel('Response style'),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<AiResponseStyle>(
-              segments: const [
-                ButtonSegment(
-                  value: AiResponseStyle.concise,
-                  label: Text('Concise'),
-                ),
-                ButtonSegment(
-                  value: AiResponseStyle.balanced,
-                  label: Text('Balanced'),
-                ),
-                ButtonSegment(
-                  value: AiResponseStyle.detailed,
-                  label: Text('Detailed'),
-                ),
-              ],
-              selected: {prefs.responseStyle},
-              showSelectedIcon: false,
-              onSelectionChanged: (selection) =>
-                  onChanged(prefs.copyWith(responseStyle: selection.first)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const _PrefLabel('Study level'),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<AiStudyLevel>(
-              segments: const [
-                ButtonSegment(
-                  value: AiStudyLevel.school,
-                  label: Text('School'),
-                ),
-                ButtonSegment(
-                  value: AiStudyLevel.university,
-                  label: Text('University'),
-                ),
-                ButtonSegment(
-                  value: AiStudyLevel.professional,
-                  label: Text('Professional'),
-                ),
-              ],
-              selected: {prefs.studyLevel},
-              showSelectedIcon: false,
-              onSelectionChanged: (selection) =>
-                  onChanged(prefs.copyWith(studyLevel: selection.first)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const _PrefLabel('Language'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final lang in kAiPreferenceLanguages)
-                _LanguageChip(
-                  label: lang,
-                  selected: prefs.language == lang,
-                  onTap: () => onChanged(prefs.copyWith(language: lang)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'These preferences shape every StudyFlow answer.',
-            style: AppText.small.copyWith(
-              color: g.textMuted.withValues(alpha: 0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Curated common study languages. The backend accepts any language; these
-/// presets keep the picker a clean product surface.
-const kAiPreferenceLanguages = [
-  'English',
-  'Spanish',
-  'Hindi',
-  'French',
-  'German',
-  'Arabic',
-  'Chinese',
-  'Portuguese',
-];
-
-class _PrefLabel extends StatelessWidget {
-  const _PrefLabel(this.label);
-
+  final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: AppText.eyebrow.copyWith(color: context.glass.textMuted),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: BauhausSpacing.md),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: BauhausColors.black),
+            const SizedBox(width: BauhausSpacing.md),
+            Expanded(
+              child: Text(
+                label.toUpperCase(),
+                style: BauhausTypography.label,
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: BauhausColors.black,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _LanguageChip extends StatelessWidget {
-  const _LanguageChip({
+/// Appearance setting — theme toggle.
+class _AppearanceSetting extends StatelessWidget {
+  const _AppearanceSetting({
+    required this.currentMode,
+    required this.onModeChanged,
+  });
+
+  final ThemeMode currentMode;
+  final ValueChanged<ThemeMode> onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final mode in ThemeMode.values)
+          _ThemeOption(
+            label: mode.name.toUpperCase(),
+            selected: currentMode == mode,
+            onTap: () => onModeChanged(mode),
+          ),
+      ],
+    );
+  }
+}
+
+/// Theme option — Bauhaus radio style.
+class _ThemeOption extends StatelessWidget {
+  const _ThemeOption({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -416,29 +239,34 @@ class _LanguageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final g = context.glass;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: selected ? g.primarySoft : g.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? g.primary.withValues(alpha: 0.5) : g.border,
-            ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(BauhausSpacing.md),
+        margin: const EdgeInsets.only(bottom: BauhausSpacing.xs),
+        decoration: BoxDecoration(
+          color: selected ? BauhausColors.black : BauhausColors.white,
+          border: Border.all(
+            color: BauhausColors.black,
+            width: BauhausShapes.borderMedium,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? g.primary : g.textPrimary,
-              fontSize: 12.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        ),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: BauhausTypography.label.copyWith(
+                color: selected ? BauhausColors.white : BauhausColors.black,
+              ),
             ),
-          ),
+            const Spacer(),
+            if (selected)
+              const Icon(
+                Icons.check,
+                size: 18,
+                color: BauhausColors.white,
+              ),
+          ],
         ),
       ),
     );
