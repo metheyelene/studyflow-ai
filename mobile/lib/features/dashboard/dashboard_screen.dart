@@ -316,7 +316,7 @@ class _UpcomingExams extends ConsumerWidget {
                     ),
                     const SizedBox(height: SwissSpacing.xs),
                     Text(
-                      '${exam.daysUntil} days remaining',
+                      '${exam.daysUntil(DateTime.now())} DAYS REMAINING',
                       style: SwissTypography.body.copyWith(color: mutedFg),
                     ),
                   ],

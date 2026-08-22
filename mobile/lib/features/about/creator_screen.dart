@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 
@@ -26,7 +28,7 @@ class CreatorScreen extends StatelessWidget {
               // Back button
               IconButton(
                 icon: Icon(Icons.arrow_back, size: 24, color: fg),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.popOrHome(),
               ),
 
               const SizedBox(height: SwissSpacing.xxxl),

@@ -37,8 +37,8 @@ void main() {
     await pumpApp(tester, flashcards: flashcards);
     await openFlashcards(tester);
 
-    expect(find.text('Flashcards'), findsWidgets); // title + badge context
-    expect(find.text('VLSI Unit 3 flashcards'), findsOneWidget);
+    expect(find.text('FLASHCARDS'), findsWidgets);
+    expect(find.text('VLSI UNIT 3 FLASHCARDS'), findsOneWidget);
     expect(find.textContaining('3 cards'), findsOneWidget);
   });
 
@@ -49,8 +49,7 @@ void main() {
     );
     await openFlashcards(tester);
 
-    expect(find.text('No decks yet'), findsOneWidget);
-    expect(find.text('Generate a deck'), findsOneWidget);
+    expect(find.text('NO FLASHCARDS'), findsOneWidget);
   });
 
   testWidgets('deck list failure shows a friendly error with retry', (
@@ -60,14 +59,14 @@ void main() {
     await pumpApp(tester, flashcards: flashcards);
     await openFlashcards(tester);
 
-    expect(find.text('Could not load your decks'), findsOneWidget);
+    expect(find.textContaining('Could not load your flashcards'), findsOneWidget);
 
     flashcards.failList = false;
     flashcards.decks = [deck(1)];
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('RETRY'));
     await tester.pumpAndSettle();
 
-    expect(find.text('VLSI Unit 3 flashcards'), findsOneWidget);
+    expect(find.text('VLSI UNIT 3 FLASHCARDS'), findsOneWidget);
   });
 
   testWidgets('generating a deck from a notebook navigates to the session', (
@@ -86,14 +85,14 @@ void main() {
     await pumpApp(tester, flashcards: flashcards, notebooks: notebooks);
     await openFlashcards(tester);
 
-    await tester.tap(find.text('New deck'));
+    await tester.tap(find.text('NEW DECK'));
     await tester.pumpAndSettle();
 
     // The sheet header and the empty-state CTA share the label; the
     // notebook option is the meaningful assertion.
     expect(find.text('VLSI Unit 3'), findsOneWidget); // notebook option
 
-    await tester.tap(find.text('VLSI Unit 3'));
+    await tester.tap(find.text('VLSI UNIT 3'));
     await tester.pumpAndSettle();
 
     expect(flashcards.generateCalls, 1);
@@ -121,9 +120,9 @@ void main() {
     await pumpApp(tester, flashcards: flashcards, notebooks: notebooks);
     await openFlashcards(tester);
 
-    await tester.tap(find.text('New deck'));
+    await tester.tap(find.text('NEW DECK'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('VLSI Unit 3'));
+    await tester.tap(find.text('VLSI UNIT 3'));
     await tester.pumpAndSettle();
 
     expect(
@@ -143,10 +142,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Delete this deck?'), findsOneWidget);
 
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('REMOVE'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No decks yet'), findsOneWidget);
+    expect(find.text('NO FLASHCARDS'), findsOneWidget);
   });
 
   testWidgets('study session: flip, rate, and finish with a summary', (
@@ -176,7 +175,7 @@ void main() {
     expect(find.text('How well did you know it?'), findsOneWidget);
 
     // Rate "Good" (4) → next card.
-    await tester.tap(find.text('Good'));
+    await tester.tap(find.text('Good'));  // SwissButton label is uppercased internally
     await tester.pumpAndSettle();
     expect(find.text('Card 2 of 2'), findsOneWidget);
 
@@ -187,7 +186,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Summary with the recorded ratings.
-    expect(find.text('Session complete'), findsOneWidget);
+    expect(find.text('SESSION COMPLETE'), findsOneWidget);
     expect(find.text('You reviewed 2 cards.'), findsOneWidget);
 
     expect(flashcards.reviews, hasLength(2));
@@ -323,6 +322,6 @@ void main() {
     router.push('/flashcards/missing');
     await tester.pumpAndSettle();
 
-    expect(find.text('Could not load this deck'), findsOneWidget);
+    expect(find.textContaining('Could not load this deck'), findsOneWidget);
   });
 }

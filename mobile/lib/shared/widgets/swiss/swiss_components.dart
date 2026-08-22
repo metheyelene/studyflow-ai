@@ -559,7 +559,7 @@ class SwissNumberedItem extends StatelessWidget {
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
