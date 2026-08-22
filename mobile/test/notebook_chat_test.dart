@@ -113,13 +113,13 @@ void main() {
       );
       await pumpApp(tester, notebooks: fake);
 
-      await tester.tap(find.text('Notebooks'));
+      await tester.tap(find.text('NOTEBOOKS'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cell Biology'));
+      await tester.tap(find.text('CELL BIOLOGY'));
       await tester.pumpAndSettle();
 
       // Ask-AI tab is selected by default? No — Sources is tab 0.
-      await tester.tap(find.text('Ask AI'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
@@ -152,11 +152,11 @@ void main() {
       );
       await pumpApp(tester, notebooks: fake);
 
-      await tester.tap(find.text('Notebooks'));
+      await tester.tap(find.text('NOTEBOOKS'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cell Biology'));
+      await tester.tap(find.text('CELL BIOLOGY'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask AI'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
@@ -189,11 +189,11 @@ void main() {
         );
         await pumpApp(tester, notebooks: fake);
 
-        await tester.tap(find.text('Notebooks'));
+        await tester.tap(find.text('NOTEBOOKS'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Cell Biology'));
+        await tester.tap(find.text('CELL BIOLOGY'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Ask AI'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
         await tester.enterText(
@@ -232,11 +232,11 @@ void main() {
         );
         await pumpApp(tester, notebooks: fake);
 
-        await tester.tap(find.text('Notebooks'));
+        await tester.tap(find.text('NOTEBOOKS'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Cell Biology'));
+        await tester.tap(find.text('CELL BIOLOGY'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Ask AI'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
         // Reading-first welcome: the orb anchor and an editorial headline
@@ -245,7 +245,7 @@ void main() {
         final emptyState = find.byKey(const Key('chat-empty-state'));
         expect(emptyState, findsOneWidget);
         expect(
-          find.descendant(of: emptyState, matching: find.text('Ask StudyFlow')),
+          find.descendant(of: emptyState, matching: find.text('ASK STUDYFLOW')),
           findsOneWidget,
         );
         expect(
@@ -281,11 +281,11 @@ void main() {
         );
         await pumpApp(tester, notebooks: fake);
 
-        await tester.tap(find.text('Notebooks'));
+        await tester.tap(find.text('NOTEBOOKS'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Cell Biology'));
+        await tester.tap(find.text('CELL BIOLOGY'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Ask AI'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
         await tester.enterText(
@@ -310,7 +310,7 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.descendant(of: actions, matching: find.text('Flashcards')),
+          find.descendant(of: actions, matching: find.text('FLASHCARDS')),
           findsOneWidget,
         );
         expect(
@@ -334,11 +334,11 @@ void main() {
       );
       await pumpApp(tester, notebooks: fake, tts: tts);
 
-      await tester.tap(find.text('Notebooks'));
+      await tester.tap(find.text('NOTEBOOKS'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cell Biology'));
+      await tester.tap(find.text('CELL BIOLOGY'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask AI'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Explain photosynthesis');

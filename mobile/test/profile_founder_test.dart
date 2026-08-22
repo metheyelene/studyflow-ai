@@ -51,7 +51,7 @@ void main() {
       auth: FakeAuthRepository(current: _founderUser),
     );
 
-    expect(find.text('Founder Dashboard'), findsOneWidget);
+    expect(find.text('FOUNDER DASHBOARD'), findsOneWidget);
     expect(find.text('Users, subscriptions, revenue'), findsOneWidget);
   });
 
@@ -63,7 +63,7 @@ void main() {
       router: buildAppRouter(initialLocation: AppRoutes.profile),
     );
 
-    expect(find.text('Founder Dashboard'), findsNothing);
+    expect(find.text('FOUNDER DASHBOARD'), findsNothing);
   });
 
   testWidgets('tapping the card opens the web /admin dashboard', (
@@ -75,7 +75,7 @@ void main() {
       auth: FakeAuthRepository(current: _founderUser),
     );
 
-    await tester.tap(find.text('Founder Dashboard'));
+    await tester.tap(find.text('FOUNDER DASHBOARD'));
     await tester.pump();
 
     expect(launcher.launched, [

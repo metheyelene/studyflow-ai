@@ -13,12 +13,12 @@ import 'helpers.dart';
 
 void main() {
   Future<void> openNotebooksTab(WidgetTester tester) async {
-    await tester.tap(find.text('Notebooks'));
+    await tester.tap(find.text('NOTEBOOKS'));
     await tester.pumpAndSettle();
   }
 
   Future<void> createNotebook(WidgetTester tester, String name) async {
-    await tester.tap(find.text('New'));
+    await tester.tap(find.text('NEW'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.descendant(
@@ -37,7 +37,7 @@ void main() {
     await pumpApp(tester);
     await openNotebooksTab(tester);
 
-    expect(find.text('No notebooks yet'), findsOneWidget);
+    expect(find.text('NO STUDY SPACES'), findsOneWidget);
 
     await createNotebook(tester, 'Cell Biology — Unit 3');
     expect(find.text('Cell Biology — Unit 3'), findsOneWidget);
@@ -60,19 +60,19 @@ void main() {
     await openNotebooksTab(tester);
     await createNotebook(tester, 'VLSI Design');
 
-    await tester.tap(find.text('VLSI Design'));
+    await tester.tap(find.text('VLSI DESIGN'));
     await tester.pumpAndSettle();
 
     // Detail workspace: tabs + honest empty states.
     expect(find.text('Sources'), findsOneWidget);
-    expect(find.text('Ask AI'), findsOneWidget);
+    expect(find.text('ASK AI'), findsOneWidget);
     expect(find.text('Study tools'), findsOneWidget);
-    expect(find.text('No sources yet'), findsOneWidget);
+    expect(find.text('NO SOURCES YET'), findsOneWidget);
     expect(find.byTooltip('Back'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('VLSI Design'), findsOneWidget);
+    expect(find.text('VLSI DESIGN'), findsOneWidget);
   });
 
   testWidgets('tablet/desktop shows master-detail: list + detail panes', (
@@ -92,7 +92,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Select a notebook'), findsNothing);
-    expect(find.text('No sources yet'), findsOneWidget);
+    expect(find.text('NO SOURCES YET'), findsOneWidget);
     // Both panes are visible at once on wide screens.
     expect(
       find.text('Thermodynamics'),
@@ -107,7 +107,7 @@ void main() {
     await pumpApp(tester, notebooks: repo);
     await openNotebooksTab(tester);
 
-    await tester.tap(find.text('New'));
+    await tester.tap(find.text('NEW'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.descendant(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import '../authentication/auth_controller.dart';
@@ -78,10 +80,10 @@ class ProfileScreen extends ConsumerWidget {
             // Settings sections
             const SwissSectionLabel(number: '02', title: 'Settings'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.person, label: 'Account'),
-            const _SettingsItem(icon: Icons.palette, label: 'Appearance'),
-            const _SettingsItem(icon: Icons.notifications, label: 'Notifications'),
-            const _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy'),
+            _SettingsItem(icon: Icons.person, label: 'Account', onTap: () {}),
+            _SettingsItem(icon: Icons.palette, label: 'Appearance', onTap: () {}),
+            _SettingsItem(icon: Icons.notifications, label: 'Notifications', onTap: () {}),
+            _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy', onTap: () {}),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -90,8 +92,16 @@ class ProfileScreen extends ConsumerWidget {
             // About
             const SwissSectionLabel(number: '03', title: 'About'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.info, label: 'About StudyFlow'),
-            const _SettingsItem(icon: Icons.code, label: 'Creator'),
+            _SettingsItem(
+              icon: Icons.info,
+              label: 'About StudyFlow',
+              onTap: () => context.push(AppRoutes.aboutCreator),
+            ),
+            _SettingsItem(
+              icon: Icons.code,
+              label: 'Creator',
+              onTap: () => context.push(AppRoutes.aboutCreator),
+            ),
 
             const SizedBox(height: SwissSpacing.xxxl),
 
@@ -116,10 +126,12 @@ class _SettingsItem extends StatelessWidget {
   const _SettingsItem({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +142,7 @@ class _SettingsItem extends StatelessWidget {
         : SwissColors.black.withValues(alpha: 0.4);
 
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
         child: Row(

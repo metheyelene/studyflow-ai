@@ -23,7 +23,7 @@ void main() {
   ) async {
     await pumpPremium(tester);
 
-    expect(find.text('StudyFlow Premium'), findsOneWidget);
+    expect(find.text('STUDYFLOW PREMIUM'), findsOneWidget);
     expect(find.text('\$2'), findsOneWidget);
     expect(find.text('/ month'), findsOneWidget);
     // The remaining count comes from the backend, never hard-coded.
@@ -48,7 +48,7 @@ void main() {
       ),
     );
 
-    expect(find.text('The founding offer is complete'), findsOneWidget);
+    expect(find.text('THE FOUNDING OFFER IS COMPLETE'), findsOneWidget);
     expect(find.text('23 of 35 left'), findsNothing);
   });
 
@@ -64,7 +64,7 @@ void main() {
     await pumpPremium(tester, premium: fake);
 
     // Start free.
-    expect(find.text('Your plan'), findsOneWidget);
+    expect(find.text('YOUR PLAN'), findsOneWidget);
     expect(find.text('Free'), findsWidgets);
 
     await tester.ensureVisible(find.text('Subscribe — Founding Member'));
@@ -128,15 +128,15 @@ void main() {
     final fake = FakePlayBillingRepository(plan: 'premium');
     await pumpApp(tester, premium: fake);
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text('PROFILE'));
     await tester.pumpAndSettle();
 
     // Real plan from the backend, not a placeholder.
-    expect(find.text('Premium'), findsWidgets);
+    expect(find.text('PREMIUM'), findsWidgets);
 
-    await tester.tap(find.text('StudyFlow Premium'));
+    await tester.tap(find.text('STUDYFLOW PREMIUM'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Your plan'), findsOneWidget);
+    expect(find.text('YOUR PLAN'), findsOneWidget);
   });
 }

@@ -59,9 +59,9 @@ final class FakePlatformFile extends PlatformFile {
 }
 
 Future<void> openNotebookSourcesTab(WidgetTester tester) async {
-  await tester.tap(find.text('Notebooks'));
+  await tester.tap(find.text('NOTEBOOKS'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cell Biology'));
+  await tester.tap(find.text('CELL BIOLOGY'));
   await tester.pumpAndSettle();
 }
 
@@ -86,15 +86,15 @@ void main() {
     await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    expect(find.text('No sources yet'), findsOneWidget);
-    expect(find.text('Paste text'), findsOneWidget);
+    expect(find.text('NO SOURCES YET'), findsOneWidget);
+    expect(find.text('PASTE TEXT'), findsOneWidget);
   });
 
   testWidgets('pasting a source adds it to the list for real', (tester) async {
     final fake = await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    await tester.tap(find.text('Paste text'));
+    await tester.tap(find.text('PASTE TEXT'));
     await tester.pumpAndSettle();
 
     // Sheet: title + text.
@@ -113,7 +113,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(BottomSheet),
-        matching: find.text('Add source'),
+        matching: find.text('ADD SOURCE'),
       ),
     );
     await tester.pumpAndSettle();
@@ -131,12 +131,12 @@ void main() {
     await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    await tester.tap(find.text('Paste text'));
+    await tester.tap(find.text('PASTE TEXT'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(
         of: find.byType(BottomSheet),
-        matching: find.text('Add source'),
+        matching: find.text('ADD SOURCE'),
       ),
     );
     await tester.pumpAndSettle();
@@ -154,7 +154,7 @@ void main() {
     await openNotebookSourcesTab(tester);
 
     // Add a real source first.
-    await tester.tap(find.text('Paste text'));
+    await tester.tap(find.text('PASTE TEXT'));
     await tester.pumpAndSettle();
     final fields = find.descendant(
       of: find.byType(BottomSheet),
@@ -166,7 +166,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(BottomSheet),
-        matching: find.text('Add source'),
+        matching: find.text('ADD SOURCE'),
       ),
     );
     await tester.pumpAndSettle();
@@ -183,7 +183,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fake.sources, isEmpty);
-    expect(find.text('No sources yet'), findsOneWidget);
+    expect(find.text('NO SOURCES YET'), findsOneWidget);
   });
 
   testWidgets('Add Source sheet uploads through the repository for real', (
@@ -212,27 +212,27 @@ void main() {
     await openNotebookSourcesTab(tester);
 
     // Empty state → Add source → the sheet offers Upload files.
-    expect(find.text('No sources yet'), findsOneWidget);
-    await tester.tap(find.text('Add source'));
+    expect(find.text('NO SOURCES YET'), findsOneWidget);
+    await tester.tap(find.text('ADD SOURCE'));
     await tester.pumpAndSettle();
-    expect(find.text('Upload files'), findsOneWidget);
+    expect(find.text('UPLOAD FILES'), findsOneWidget);
 
     // Picking a file runs the real picker abstraction and shows a tile.
-    await tester.tap(find.text('Upload files'));
+    await tester.tap(find.text('UPLOAD FILES'));
     await tester.pumpAndSettle();
-    expect(find.text('VLSI_Unit_3.pdf'), findsOneWidget);
+    expect(find.text('VLSI_UNIT_3.PDF'), findsOneWidget);
     expect(find.text('4.0 KB'), findsOneWidget);
-    expect(find.text('Add 1 source'), findsOneWidget);
+    expect(find.text('ADD 1 SOURCE'), findsOneWidget);
 
     // Uploading goes through the repository: the fake repo now owns the
     // source, and the pane reloads with the honest processing state.
-    await tester.tap(find.text('Add 1 source'));
+    await tester.tap(find.text('ADD 1 SOURCE'));
     await tester.pumpAndSettle();
 
     expect(fake.sources, hasLength(1));
     expect(fake.sources.first.title, 'VLSI_Unit_3.pdf');
     expect(fake.sources.first.kind, 'uploaded');
-    expect(find.text('VLSI_Unit_3.pdf'), findsOneWidget);
+    expect(find.text('VLSI_UNIT_3.PDF'), findsOneWidget);
     expect(find.text('Indexing'), findsOneWidget);
   });
 }

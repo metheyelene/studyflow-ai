@@ -38,7 +38,7 @@ void main() {
 
     // The screen asks one question and answers it honestly: no ring
     // percentage, no weak-topic list, one recommended action.
-    expect(find.text('How am I doing?'), findsOneWidget);
+    expect(find.text('HOW AM I DOING?'), findsOneWidget);
     expect(find.text('—'), findsOneWidget); // ring shows no mastery yet
     expect(
       find.textContaining('Review a deck and your mastery builds'),
@@ -61,7 +61,7 @@ void main() {
       // Mastery = weighted average accuracy: (75*4 + 0*2) / 6 = 50%.
       expect(find.text('50%'), findsOneWidget); // ring
       expect(find.textContaining('2 decks'), findsOneWidget);
-      expect(find.textContaining('6 reviews'), findsOneWidget);
+      expect(find.textContaining('6 REVIEWS'), findsOneWidget);
 
       // Weakest first: Thermo (0%) sits above VLSI Unit 3 (75%).
       expect(find.text('WEAKEST TOPICS FIRST'), findsOneWidget);
@@ -88,7 +88,7 @@ void main() {
     await pumpApp(tester, router: router, flashcards: failing);
     router.go('/progress');
     await tester.pumpAndSettle();
-    expect(find.text('Could not load your flashcard history.'), findsOneWidget);
+    expect(find.text('COULD NOT LOAD YOUR FLASHCARD HISTORY.'), findsOneWidget);
 
     failNext = false;
     await tester.tap(find.text('Retry'));

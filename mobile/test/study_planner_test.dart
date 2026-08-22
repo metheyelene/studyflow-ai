@@ -75,13 +75,13 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
 
-    expect(find.text('Physics Midterm — no plan yet'), findsOneWidget);
-    await tester.tap(find.text('Plan this exam'));
+    expect(find.text('PHYSICS MIDTERM — NO PLAN YET'), findsOneWidget);
+    await tester.tap(find.text('PLAN THIS EXAM'));
     await tester.pumpAndSettle();
 
     expect(planner.generateCalls, 1);
     expect(planner.lastGeneratedExamId, 'ex-1');
-    expect(find.text('Review core concepts'), findsOneWidget);
+    expect(find.text('REVIEW CORE CONCEPTS'), findsOneWidget);
     expect(find.text('0/1 done'), findsOneWidget);
   });
 
@@ -98,9 +98,9 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
 
-    expect(find.text('Review core concepts'), findsOneWidget);
+    expect(find.text('REVIEW CORE CONCEPTS'), findsOneWidget);
     // The overdue task from yesterday surfaces too.
-    expect(find.textContaining('1 overdue task'), findsOneWidget);
+    expect(find.textContaining('1 OVERDUE TASK'), findsOneWidget);
 
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
@@ -121,8 +121,8 @@ void main() {
     router.go('/study/plans/ex-1');
     await tester.pumpAndSettle();
 
-    expect(find.text('v2'), findsOneWidget);
-    expect(find.text('Today'), findsOneWidget);
+    expect(find.text('V2'), findsOneWidget);
+    expect(find.text('TODAY'), findsOneWidget);
     expect(find.text('Tomorrow'), findsOneWidget);
     expect(find.text('Practice problems'), findsOneWidget);
 
@@ -153,7 +153,7 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
     expect(planner.listCalls, 2);
-    expect(find.text('Review core concepts'), findsOneWidget);
+    expect(find.text('REVIEW CORE CONCEPTS'), findsOneWidget);
 
     // Leaving and returning must trigger a background refresh so the
     // backend's lazy regeneration reaches the UI on every visit.
@@ -162,7 +162,7 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
     expect(planner.listCalls, 3);
-    expect(find.text('Review core concepts'), findsOneWidget);
+    expect(find.text('REVIEW CORE CONCEPTS'), findsOneWidget);
   });
 
   testWidgets('shows the weak-subject focus banner on a weighted plan', (
@@ -190,7 +190,7 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Focusing on Physics'), findsOneWidget);
+    expect(find.textContaining('FOCUSING ON PHYSICS'), findsOneWidget);
     expect(find.textContaining('55% recent quiz accuracy'), findsOneWidget);
   });
 

@@ -64,11 +64,11 @@ Future<FakeNotebooksRepository> _openEditor(
     ),
   );
   await pumpApp(tester, notebooks: fake, tts: tts);
-  await tester.tap(find.text('Notebooks'));
+  await tester.tap(find.text('NOTEBOOKS'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Cell Biology'));
+  await tester.tap(find.text('CELL BIOLOGY'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Paste text'));
+  await tester.tap(find.text('PASTE TEXT'));
   await tester.pumpAndSettle();
   return fake;
 }

@@ -36,17 +36,17 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Study'));
+    await tester.tap(find.text('STUDY'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Organic Chemistry'), findsOneWidget);
-    expect(find.text('6 days'), findsOneWidget);
+    expect(find.text('ORGANIC CHEMISTRY'), findsOneWidget);
+    expect(find.text('6 DAYS'), findsOneWidget);
     expect(find.text('UPCOMING EXAMS'), findsOneWidget);
 
     // The material CTA navigates to a real screen — the notebooks tab.
     await tester.tap(find.text('Open notebooks'));
     await tester.pumpAndSettle();
-    expect(find.text('Notebooks'), findsWidgets);
+    expect(find.text('NOTEBOOKS'), findsWidgets);
   });
 
   testWidgets('Progress tab asks the question and demotes raw counts', (
@@ -75,12 +75,12 @@ void main() {
       dashboard: FakeDashboardRepository(currentUsage: _progressUsage),
     );
 
-    await tester.tap(find.text('Progress'));
+    await tester.tap(find.text('PROGRESS'));
     await tester.pumpAndSettle();
 
     // One question, honest empty mastery, and the counts demoted to a
     // single quiet metadata line instead of a three-stat-card wall.
-    expect(find.text('How am I doing?'), findsOneWidget);
+    expect(find.text('HOW AM I DOING?'), findsOneWidget);
     expect(find.text('—'), findsOneWidget); // no reviews yet
     expect(find.text('2 notebooks · 3 sources · 5 AI actions'), findsOneWidget);
     expect(find.text('AI actions'), findsNothing); // no stat card label

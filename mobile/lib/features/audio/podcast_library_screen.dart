@@ -21,6 +21,14 @@ class PodcastLibraryScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Back button
+            IconButton(
+              icon: const Icon(Icons.arrow_back, size: 24),
+              onPressed: () => context.popOrHome(),
+              tooltip: 'Back',
+            ),
+            const SizedBox(height: SwissSpacing.lg),
+
             const SwissEyebrow(text: 'Audio'),
             const SizedBox(height: SwissSpacing.sm),
             Text('LISTEN\nTO YOUR\nNOTES.', style: SwissTypography.display.copyWith(fontSize: 36)),

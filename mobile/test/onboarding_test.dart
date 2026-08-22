@@ -11,25 +11,25 @@ Future<void> completeOnboardingFlow(WidgetTester tester) async {
   // Step 1/5 — course.
   await tester.enterText(find.byType(TextField).first, 'Medicine');
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Continue'));
+  await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 2/5 — subjects.
   await tester.enterText(find.byType(TextField).first, 'Anatomy, Physiology');
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Continue'));
+  await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 3/5 — exams (optional; skip).
-  await tester.tap(find.text('Continue'));
+  await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 4/5 — daily minutes (60 preselected; skip).
-  await tester.tap(find.text('Continue'));
+  await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 5/5 — goals.
-  await tester.tap(find.text('Flashcards'));
+  await tester.tap(find.text('FLASHCARDS'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Finish setup'));
   await tester.pumpAndSettle();
@@ -45,7 +45,7 @@ void main() {
     (tester) async {
       await pumpApp(tester, onboardingStatus: OnboardingStatus.needed);
 
-      expect(find.text('Set up your study flow'), findsOneWidget);
+      expect(find.text('SET UP YOUR STUDY FLOW'), findsOneWidget);
       expect(find.text('Step 1 of 5 — Your course'), findsOneWidget);
     },
   );
@@ -56,7 +56,7 @@ void main() {
     await pumpApp(tester, onboardingStatus: OnboardingStatus.done);
 
     expect(find.text('Ready to study?'), findsOneWidget);
-    expect(find.text('Set up your study flow'), findsNothing);
+    expect(find.text('SET UP YOUR STUDY FLOW'), findsNothing);
   });
 
   testWidgets('unauthenticated users never see onboarding', (tester) async {
@@ -66,8 +66,8 @@ void main() {
       onboardingStatus: OnboardingStatus.needed,
     );
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Set up your study flow'), findsNothing);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    expect(find.text('SET UP YOUR STUDY FLOW'), findsNothing);
   });
 
   testWidgets(
@@ -109,7 +109,7 @@ void main() {
       find.text('Please fill in every field to continue.'),
       findsOneWidget,
     );
-    expect(find.text('Set up your study flow'), findsOneWidget);
+    expect(find.text('SET UP YOUR STUDY FLOW'), findsOneWidget);
   });
 }
 

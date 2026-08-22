@@ -46,7 +46,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ready to study?'), findsOneWidget);
-    expect(find.text('Profile'), findsOneWidget); // bottom nav
+    expect(find.text('PROFILE'), findsOneWidget); // bottom nav (Swiss uppercase)
   });
 
   testWidgets('quick actions render and Ask AI navigates to notebooks', (
@@ -55,19 +55,19 @@ void main() {
     await pumpApp(tester);
 
     expect(find.text('QUICK'), findsOneWidget);
-    expect(find.text('Ask AI'), findsOneWidget);
-    expect(find.text('Flashcards'), findsOneWidget);
-    expect(find.text('Quiz'), findsOneWidget);
-    expect(find.text('Podcast'), findsOneWidget);
+    expect(find.text('ASK AI'), findsOneWidget);
+    expect(find.text('FLASHCARDS'), findsOneWidget);
+    expect(find.text('QUIZ'), findsOneWidget);
+    expect(find.text('PODCAST'), findsOneWidget);
     expect(find.text('UPCOMING'), findsOneWidget);
-    expect(find.text('No upcoming exams'), findsOneWidget);
+    expect(find.text('NO UPCOMING EXAMS'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Ask AI'));
-    await tester.tap(find.text('Ask AI'));
+    await tester.ensureVisible(find.text('ASK AI'));
+    await tester.tap(find.text('ASK AI'));
     await tester.pumpAndSettle();
 
     // Real navigation: the notebooks tab opens with its honest empty state.
-    expect(find.text('No notebooks yet'), findsOneWidget);
+    expect(find.text('NO STUDY SPACES'), findsOneWidget);
   });
 
   testWidgets(
@@ -78,24 +78,24 @@ void main() {
       // Mirrors the web dashboard QUICK_ACTIONS: Ask AI links to the
       // notebooks tab; Flashcards, Quiz, and Podcast have their own real
       // destinations.
-      await tester.ensureVisible(find.text('Ask AI'));
-      await tester.tap(find.text('Ask AI'));
+      await tester.ensureVisible(find.text('ASK AI'));
+      await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
       expect(
-        find.text('No notebooks yet'),
+        find.text('NO STUDY SPACES'),
         findsOneWidget,
         reason: 'Ask AI should open the notebooks tab',
       );
-      await tester.tap(find.text('Home'));
+      await tester.tap(find.text('HOME'));
       await tester.pumpAndSettle();
       expect(find.text('QUICK'), findsOneWidget);
 
       // Flashcards now has its own real screen (deck list).
-      await tester.ensureVisible(find.text('Flashcards'));
-      await tester.tap(find.text('Flashcards'));
+      await tester.ensureVisible(find.text('FLASHCARDS'));
+      await tester.tap(find.text('FLASHCARDS'));
       await tester.pumpAndSettle();
       expect(
-        find.text('No decks yet'),
+        find.text('NO FLASHCARDS'),
         findsOneWidget,
         reason: 'Flashcards should open the flashcards screen',
       );
@@ -103,11 +103,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Quiz now has its own real screen (quiz history).
-      await tester.ensureVisible(find.text('Quiz'));
-      await tester.tap(find.text('Quiz'));
+      await tester.ensureVisible(find.text('QUIZ'));
+      await tester.tap(find.text('QUIZ'));
       await tester.pumpAndSettle();
       expect(
-        find.text('No quizzes yet'),
+        find.text('NO QUIZZES'),
         findsOneWidget,
         reason: 'Quiz should open the quizzes screen',
       );
@@ -115,11 +115,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Podcast mirrors the audio tab (web: /audio).
-      await tester.ensureVisible(find.text('Podcast'));
-      await tester.tap(find.text('Podcast'));
+      await tester.ensureVisible(find.text('PODCAST'));
+      await tester.tap(find.text('PODCAST'));
       await tester.pumpAndSettle();
       expect(
-        find.text('No podcasts yet'),
+        find.text('NO EPISODES'),
         findsOneWidget,
         reason: 'Podcast should open the audio tab',
       );
@@ -132,9 +132,8 @@ void main() {
       final router = buildAppRouter(initialLocation: AppRoutes.aboutCreator);
       await pumpApp(tester, router: router);
 
-      expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
-      expect(find.text('MV'), findsOneWidget);
-      expect(find.text('Contact Creator'), findsOneWidget);
+      expect(find.text('MITHIL VISWAS KASI'), findsOneWidget);
+      expect(find.text('CREATED BY'), findsOneWidget);
     },
   );
 
@@ -147,38 +146,35 @@ void main() {
     router.go(AppRoutes.aboutCreator);
     await tester.pumpAndSettle();
 
-    expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
-    expect(find.text('Contact Creator'), findsOneWidget);
+    expect(find.text('MITHIL VISWAS KASI'), findsOneWidget);
+    expect(find.text('CREATED BY'), findsOneWidget);
   });
 
   testWidgets('profile tab links to About StudyFlow → Creator', (tester) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text('PROFILE'));
     await tester.pumpAndSettle();
-    expect(find.text('About StudyFlow'), findsWidgets);
+    expect(find.text('ABOUT STUDYFLOW'), findsWidgets);
 
-    await tester.tap(find.text('About StudyFlow').last);
+    await tester.ensureVisible(find.text('ABOUT STUDYFLOW').last);
+    await tester.tap(find.text('ABOUT STUDYFLOW').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
-    expect(find.text('MV'), findsOneWidget);
-    expect(find.text('Contact Creator'), findsOneWidget);
+    expect(find.text('MITHIL VISWAS KASI'), findsOneWidget);
+    expect(find.text('CREATED BY'), findsOneWidget);
   });
 
   testWidgets('settings path reaches the Creator screen', (tester) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text('PROFILE'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Settings'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('About StudyFlow'), findsOneWidget);
-    await tester.tap(find.text('About StudyFlow'));
+    await tester.ensureVisible(find.text('CREATOR'));
+    await tester.tap(find.text('CREATOR'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Mithil Viswas Kasi'), findsOneWidget);
-    expect(find.text('Contact Creator'), findsOneWidget);
+    expect(find.text('MITHIL VISWAS KASI'), findsOneWidget);
+    expect(find.text('CREATED BY'), findsOneWidget);
   });
 }

@@ -9,7 +9,7 @@ import 'helpers.dart';
 
 void main() {
   Future<void> openNotebooksTab(WidgetTester tester) async {
-    await tester.tap(find.text('Notebooks'));
+    await tester.tap(find.text('NOTEBOOKS'));
     await tester.pumpAndSettle();
   }
 
@@ -70,7 +70,7 @@ void main() {
         connectivity: connectivity,
       );
       await openNotebooksTab(tester);
-      await tester.tap(find.text('VLSI Design'));
+      await tester.tap(find.text('VLSI DESIGN'));
       await tester.pumpAndSettle();
 
       // The notebook detail is a pushed route over the shell — the banner
@@ -97,22 +97,22 @@ void main() {
           connectivity: connectivity,
         );
         await openNotebooksTab(tester);
-        await tester.tap(find.text('VLSI Design'));
+        await tester.tap(find.text('VLSI DESIGN'));
         await tester.pumpAndSettle();
 
         // Online: the hero CTA is live.
-        expect(find.text('Ask StudyFlow'), findsOneWidget);
+        expect(find.text('ASK STUDYFLOW'), findsOneWidget);
 
         connectivity.add([ConnectivityResult.none]);
         await tester.pumpAndSettle();
 
         // The CTA flips to the paused copy and is no longer tappable.
         expect(find.text('AI paused — offline'), findsOneWidget);
-        expect(find.text('Ask StudyFlow'), findsNothing);
+        expect(find.text('ASK STUDYFLOW'), findsNothing);
 
         // The chat tab explains the pause instead of pretending to work.
         freezeOrbMotion(tester);
-        await tester.tap(find.text('Ask AI'));
+        await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
         expect(
           find.textContaining("reconnect to ask StudyFlow"),

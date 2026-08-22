@@ -21,6 +21,14 @@ class QuizzesScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Back button
+            IconButton(
+              icon: const Icon(Icons.arrow_back, size: 24),
+              onPressed: () => context.popOrHome(),
+              tooltip: 'Back',
+            ),
+            const SizedBox(height: SwissSpacing.lg),
+
             const SwissEyebrow(text: 'Quizzes'),
             const SizedBox(height: SwissSpacing.sm),
             Text(

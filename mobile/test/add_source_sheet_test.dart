@@ -31,11 +31,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Add source'), findsOneWidget);
-    expect(find.text('Upload files'), findsOneWidget);
-    expect(find.text('Paste text'), findsOneWidget);
+    expect(find.text('ADD SOURCE'), findsOneWidget);
+    expect(find.text('UPLOAD FILES'), findsOneWidget);
+    expect(find.text('PASTE TEXT'), findsOneWidget);
     // No files selected yet — the CTA is a "Choose files" disabled state.
-    expect(find.text('Choose files'), findsOneWidget);
+    expect(find.text('CHOOSE FILES'), findsOneWidget);
   });
 
   testWidgets('selected files appear as removable tiles with real sizes', (
@@ -58,18 +58,18 @@ void main() {
     await tester.pumpAndSettle();
 
     // Select the file.
-    await tester.tap(find.text('Upload files'));
+    await tester.tap(find.text('UPLOAD FILES'));
     await tester.pumpAndSettle();
 
-    expect(find.text('VLSI_Unit_3.pdf'), findsOneWidget);
+    expect(find.text('VLSI_UNIT_3.PDF'), findsOneWidget);
     expect(find.text('2.0 KB'), findsOneWidget);
-    expect(find.text('Add 1 source'), findsOneWidget);
+    expect(find.text('ADD 1 SOURCE'), findsOneWidget);
 
     // Remove it again.
     await tester.tap(find.byTooltip('Remove'));
     await tester.pumpAndSettle();
-    expect(find.text('VLSI_Unit_3.pdf'), findsNothing);
-    expect(find.text('Choose files'), findsOneWidget);
+    expect(find.text('VLSI_UNIT_3.PDF'), findsNothing);
+    expect(find.text('CHOOSE FILES'), findsOneWidget);
   });
 
   testWidgets('unsupported files are rejected before any upload', (
@@ -95,13 +95,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Upload files'));
+    await tester.tap(find.text('UPLOAD FILES'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('not supported'), findsOneWidget);
     // The CTA is disabled when nothing valid is selected.
-    expect(find.text('Add sources'), findsOneWidget);
-    await tester.tap(find.text('Add sources'));
+    expect(find.text('ADD SOURCES'), findsOneWidget);
+    await tester.tap(find.text('ADD SOURCES'));
     await tester.pumpAndSettle();
     expect(uploadCalls, 0);
   });
@@ -160,11 +160,11 @@ void main() {
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Upload files'));
+    await tester.tap(find.text('UPLOAD FILES'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Add 1 source'), findsOneWidget);
-    await tester.tap(find.text('Add 1 source'));
+    expect(find.text('ADD 1 SOURCE'), findsOneWidget);
+    await tester.tap(find.text('ADD 1 SOURCE'));
     await tester.pumpAndSettle();
 
     // Sheet closed with the upload's result.
@@ -186,7 +186,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Paste text'));
+    await tester.tap(find.text('PASTE TEXT'));
     await tester.pumpAndSettle();
 
     expect(pasted, isTrue);

@@ -25,15 +25,15 @@ void main() {
   testWidgets('unauthenticated boot lands on the login screen', (tester) async {
     await pumpApp(tester, signedIn: false);
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Log in'), findsOneWidget);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    expect(find.text('LOG IN'), findsOneWidget);
   });
 
   testWidgets('successful login reaches the dashboard', (tester) async {
     final auth = await pumpApp(tester, signedIn: false);
 
     await enterEmailPassword(tester, 'student@example.com', 'password123');
-    await tester.tap(find.text('Log in'));
+    await tester.tap(find.text('LOG IN'));
     await tester.pumpAndSettle();
 
     expect(auth.signInCalls, 1);
@@ -47,11 +47,11 @@ void main() {
     await pumpApp(tester, signedIn: false);
 
     await enterEmailPassword(tester, 'fail@example.com', 'wrong');
-    await tester.tap(find.text('Log in'));
+    await tester.tap(find.text('LOG IN'));
     await tester.pumpAndSettle();
 
     expect(find.text('Incorrect email or password.'), findsOneWidget);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
   });
 
   testWidgets('login links to signup; signing up reaches the dashboard', (
@@ -61,14 +61,14 @@ void main() {
 
     await tester.tap(find.text('Create an account'));
     await tester.pumpAndSettle();
-    expect(find.text('Create your account'), findsOneWidget);
+    expect(find.text('CREATE YOUR ACCOUNT'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(0), 'New Student');
     await tester.enterText(find.byType(TextField).at(1), 'new@example.com');
     await tester.enterText(find.byType(TextField).at(2), 'password123');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Create account'));
+    await tester.tap(find.text('CREATE ACCOUNT'));
     await tester.pumpAndSettle();
 
     expect(auth.signUpCalls, 1);
@@ -104,7 +104,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     // While restoring, the app sits on the splash.
-    expect(find.text('StudyFlow'), findsOneWidget);
+    expect(find.text('STUDYFLOW'), findsOneWidget);
 
     // main.dart fires restore() from initState; mimic it.
     final container = ProviderScope.containerOf(
@@ -114,23 +114,23 @@ void main() {
     await tester.pumpAndSettle();
 
     // The splash must not linger — signed out means login.
-    expect(find.text('StudyFlow'), findsNothing);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('STUDYFLOW'), findsNothing);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
   });
 
   testWidgets('signing out from the profile returns to login', (tester) async {
     final auth = await pumpApp(tester);
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text('PROFILE'));
     await tester.pumpAndSettle();
-    expect(find.text('Test User'), findsOneWidget);
+    expect(find.text('TEST USER'), findsOneWidget);
     expect(find.text('test@example.com'), findsOneWidget);
 
-    await tester.tap(find.text('Sign out'));
+    await tester.tap(find.text('SIGN OUT'));
     await tester.pumpAndSettle();
 
     expect(auth.signOutCalls, 1);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
   });
 
   testWidgets(
@@ -148,14 +148,14 @@ void main() {
         ],
       );
       await pumpApp(tester, dashboard: dashboard);
-      expect(find.text('User A Exam'), findsOneWidget);
+      expect(find.text('USER A EXAM'), findsOneWidget);
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MaterialApp).first),
       );
       await container.read(authControllerProvider.notifier).signOut();
       await tester.pumpAndSettle();
-      expect(find.text('Welcome back'), findsOneWidget);
+      expect(find.text('WELCOME BACK'), findsOneWidget);
 
       // The next account's data differs; the dashboard must refetch.
       dashboard.currentExams = [
@@ -170,8 +170,8 @@ void main() {
           .signIn(email: 'b@example.com', password: 'password123');
       await tester.pumpAndSettle();
 
-      expect(find.text('User B Exam'), findsOneWidget);
-      expect(find.text('User A Exam'), findsNothing);
+      expect(find.text('USER B EXAM'), findsOneWidget);
+      expect(find.text('USER A EXAM'), findsNothing);
     },
   );
 }

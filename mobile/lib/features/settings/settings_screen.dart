@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
@@ -21,6 +23,13 @@ class SettingsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Back button
+            IconButton(
+              icon: Icon(Icons.arrow_back, size: 24, color: fg),
+              onPressed: () => context.popOrHome(),
+            ),
+            const SizedBox(height: SwissSpacing.lg),
+
             // Header
             const SwissEyebrow(text: 'Settings'),
             const SizedBox(height: SwissSpacing.sm),
@@ -107,8 +116,16 @@ class SettingsScreen extends ConsumerWidget {
             // About
             const SwissSectionLabel(number: '08', title: 'About'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.info, label: 'About StudyFlow'),
-            const _SettingsItem(icon: Icons.code, label: 'Creator'),
+            _SettingsItem(
+              icon: Icons.info,
+              label: 'About StudyFlow',
+              onTap: () => context.push(AppRoutes.aboutCreator),
+            ),
+            _SettingsItem(
+              icon: Icons.code,
+              label: 'Creator',
+              onTap: () => context.push(AppRoutes.aboutCreator),
+            ),
 
             const SizedBox(height: SwissSpacing.huge),
           ],
@@ -123,10 +140,12 @@ class _SettingsItem extends StatelessWidget {
   const _SettingsItem({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +156,7 @@ class _SettingsItem extends StatelessWidget {
         : SwissColors.black.withValues(alpha: 0.4);
 
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
         child: Row(
