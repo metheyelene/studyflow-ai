@@ -42,7 +42,6 @@ export default function SignupPage() {
         setError(friendlyAuthError(authError));
         return;
       }
-      // Session cookie is set — the app shell routes to onboarding.
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -56,7 +55,7 @@ export default function SignupPage() {
     <Card>
       <CardHeader className="text-center">
         <div className="mb-2 flex justify-center">
-          <div className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-xl">
+          <div className="bg-foreground text-background flex size-11 items-center justify-center">
             <BookOpen className="size-5" />
           </div>
         </div>
@@ -70,13 +69,13 @@ export default function SignupPage() {
           {error && (
             <p
               role="alert"
-              className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm"
+              className="border-2 border-swiss-red bg-swiss-red/10 text-swiss-red px-3 py-2 text-sm font-medium"
             >
               {error}
             </p>
           )}
           <div className="grid gap-2">
-            <Label htmlFor="name">Your name</Label>
+            <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider">Your name</Label>
             <Input
               id="name"
               type="text"
@@ -88,7 +87,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider">Email</Label>
             <Input
               id="email"
               type="email"
@@ -100,7 +99,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider">Password</Label>
             <Input
               id="password"
               type="password"
@@ -123,7 +122,7 @@ export default function SignupPage() {
             <Separator />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-background/70 text-muted-foreground px-2 text-xs backdrop-blur-sm">or</span>
+            <span className="bg-background text-muted-foreground px-2 text-xs">or</span>
           </div>
         </div>
 
@@ -131,7 +130,7 @@ export default function SignupPage() {
 
         <p className="text-muted-foreground mt-4 text-center text-sm">
           Already have an account?{" "}
-          <Link href="/login" className="text-foreground font-medium underline-offset-4 hover:underline">
+          <Link href="/login" className="text-foreground font-bold underline-offset-4 hover:underline">
             Log in
           </Link>
         </p>

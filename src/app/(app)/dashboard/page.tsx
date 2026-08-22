@@ -81,7 +81,6 @@ export default async function DashboardPage() {
 
   const firstName = session.user.name.split(" ")[0];
 
-  // ── Real data across every section (all auth-scoped) ──────────────
   const [nextExam, upcomingExams, notesCount, notebooks, attempts, sourcesCount] = await Promise.all([
     db.query.exams.findFirst({
       where: and(eq(schema.exams.userId, userId), gte(schema.exams.examDate, new Date())),
@@ -123,7 +122,6 @@ export default async function DashboardPage() {
   const founding = await getFoundingStatusSafe();
   const isFoundingMember = planContext?.subscriptionPlan === "founding_member";
 
-  // ── Derived values ─────────────────────────────────────────────────
   const streakDays = profile.studyStreak ?? 0;
   const quizzesCompleted = attempts.length;
   const avgScorePct =
@@ -135,7 +133,6 @@ export default async function DashboardPage() {
         )
       : null;
 
-  // Recommended activity — real, exam-first, then continuation, then start.
   let recommended: { title: string; body: string; href: string; cta: string };
   if (nextExam) {
     const d = daysUntil(nextExam.examDate);
@@ -178,19 +175,18 @@ export default async function DashboardPage() {
       {/* Time-based greeting */}
       <Greeting firstName={firstName} />
 
-      {/* Today's Focus — floating hero */}
+      {/* Today's Focus — Swiss hero card */}
       <GlassCard tone="floating" className="relative overflow-hidden p-6 md:p-8">
-        <div aria-hidden className="bg-primary/10 absolute -top-24 -right-16 size-64 rounded-full blur-3xl" />
         <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div className="max-w-md">
-            <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
+            <p className="swiss-section-label mb-2">
               Today&apos;s Focus
             </p>
-            <h2 className="mt-1 text-xl font-semibold md:text-2xl">{focusLine}</h2>
+            <h2 className="mt-1 text-xl font-black uppercase tracking-tight md:text-2xl">{focusLine}</h2>
             <p className="text-muted-foreground mt-2 text-sm">{recommended.body}</p>
             <Link
               href={recommended.href}
-              className="bg-primary text-primary-foreground mt-5 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
+              className="bg-foreground text-background mt-5 inline-flex h-9 items-center gap-2 px-4 text-sm font-bold uppercase tracking-wider transition-all duration-150 hover:bg-swiss-red active:translate-x-[2px] active:translate-y-[2px]"
             >
               {recommended.cta}
               <ArrowRight className="size-4" />
@@ -201,7 +197,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-4">
               <ProgressRing percent={usage.percent} label={`${usage.used}/${usage.limit}`} />
               <div className="text-sm">
-                <p className="text-muted-foreground">AI actions</p>
+                <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">AI actions</p>
                 <p className="font-medium">resets on the 1st</p>
               </div>
             </div>
@@ -209,17 +205,17 @@ export default async function DashboardPage() {
         </div>
       </GlassCard>
 
-      {/* Quick actions — floating glass buttons */}
+      {/* Quick actions — Swiss bordered buttons */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {QUICK_ACTIONS.map((action) => (
           <Link
             key={action.label}
             href={action.href}
-            className="glass-float group flex flex-col items-center gap-2 rounded-2xl px-3 py-4 text-center transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.97]"
+            className="border-2 border-border bg-card group flex flex-col items-center gap-2 px-3 py-4 text-center transition-all duration-150 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            <action.icon className="text-primary size-5 transition-transform duration-150 group-hover:scale-110" />
-            <span className="text-sm font-medium">{action.label}</span>
-            <span className="text-muted-foreground text-[11px]">{action.hint}</span>
+            <action.icon className="text-foreground size-5 transition-transform duration-150 group-hover:scale-110" />
+            <span className="text-sm font-bold uppercase tracking-wider">{action.label}</span>
+            <span className="text-muted-foreground text-[11px] group-hover:text-background/70">{action.hint}</span>
           </Link>
         ))}
       </div>
@@ -227,29 +223,29 @@ export default async function DashboardPage() {
       {/* Today — recommended activity, upcoming exam, recent notebooks */}
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard tone="primary" className="p-5 lg:col-span-2">
-          <div className="text-muted-foreground flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
-            <Target className="text-primary size-4" /> Recommended activity
+          <div className="swiss-section-label flex items-center gap-2 mb-2">
+            <Target className="size-4" /> Recommended activity
           </div>
-          <h3 className="mt-2 font-semibold">{recommended.title}</h3>
+          <h3 className="mt-2 font-bold uppercase tracking-tight">{recommended.title}</h3>
           <p className="text-muted-foreground mt-1 text-sm">{recommended.body}</p>
           <Link
             href={recommended.href}
-            className="text-primary hover:underline mt-3 inline-flex items-center gap-1 text-sm font-medium"
+            className="text-foreground hover:text-swiss-red mt-3 inline-flex items-center gap-1 text-sm font-bold uppercase tracking-wider"
           >
             {recommended.cta} <ArrowRight className="size-3.5" />
           </Link>
         </GlassCard>
 
         <GlassCard tone="primary" className="p-5">
-          <div className="text-muted-foreground flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
-            <CalendarClock className="text-primary size-4" /> Upcoming
+          <div className="swiss-section-label flex items-center gap-2 mb-2">
+            <CalendarClock className="size-4" /> Upcoming
           </div>
           {upcomingExams.length > 0 ? (
             <ul className="mt-3 space-y-2.5">
               {upcomingExams.map((exam) => (
                 <li key={exam.id} className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{exam.title}</p>
+                    <p className="truncate text-sm font-bold">{exam.title}</p>
                     <p className="text-muted-foreground text-xs">
                       {exam.examDate.toLocaleDateString(undefined, {
                         month: "short",
@@ -257,7 +253,7 @@ export default async function DashboardPage() {
                       })}
                     </p>
                   </div>
-                  <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium tabular-nums">
+                  <span className="border-2 border-border bg-secondary px-2 py-0.5 text-xs font-bold uppercase tracking-wider tabular-nums">
                     {daysUntil(exam.examDate)}d
                   </span>
                 </li>
@@ -265,7 +261,7 @@ export default async function DashboardPage() {
             </ul>
           ) : (
             <div className="mt-3">
-              <p className="text-sm">No exams yet</p>
+              <p className="text-sm font-bold">No exams yet</p>
               <p className="text-muted-foreground mt-0.5 text-xs">
                 Add exams in Planner and we&apos;ll count down here.
               </p>
@@ -273,17 +269,17 @@ export default async function DashboardPage() {
           )}
           {notebooks.length > 0 && (
             <>
-              <div className="text-muted-foreground mt-5 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
-                <NotebookPen className="text-primary size-4" /> Recent notebooks
+              <div className="swiss-section-label mt-5 flex items-center gap-2">
+                <NotebookPen className="size-4" /> Recent notebooks
               </div>
               <ul className="mt-2 space-y-1.5">
                 {notebooks.map((nb) => (
                   <li key={nb.id}>
                     <Link
                       href={`/notebooks/${nb.id}`}
-                      className="hover:text-foreground text-muted-foreground hover:bg-[--glass-bg-subtle] flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors"
+                      className="text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center justify-between gap-2 px-2 py-1.5 text-sm transition-colors"
                     >
-                      <span className="truncate font-medium">{nb.title}</span>
+                      <span className="truncate font-bold">{nb.title}</span>
                       <ArrowRight className="size-3.5 shrink-0" />
                     </Link>
                   </li>
@@ -296,14 +292,14 @@ export default async function DashboardPage() {
 
       {/* Progress — real stats */}
       <div>
-        <h2 className="mb-3 text-lg font-medium">Your progress</h2>
+        <h2 className="mb-3 text-lg font-black uppercase tracking-tight">Your progress</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardContent className="gap-1">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Flame className="text-primary size-4" /> Study streak
+              <div className="swiss-section-label flex items-center gap-2">
+                <Flame className="size-4" /> Study streak
               </div>
-              <p className="text-2xl font-semibold">
+              <p className="text-2xl font-black tabular-nums">
                 {streakDays} day{streakDays === 1 ? "" : "s"}
               </p>
               <p className="text-muted-foreground text-xs">Keep a daily study habit</p>
@@ -311,10 +307,10 @@ export default async function DashboardPage() {
           </Card>
           <Card>
             <CardContent className="gap-1">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <ListChecks className="text-primary size-4" /> Quizzes completed
+              <div className="swiss-section-label flex items-center gap-2">
+                <ListChecks className="size-4" /> Quizzes completed
               </div>
-              <p className="text-2xl font-semibold">{quizzesCompleted}</p>
+              <p className="text-2xl font-black tabular-nums">{quizzesCompleted}</p>
               <p className="text-muted-foreground text-xs">
                 {quizzesCompleted === 0
                   ? "Take a quiz in any notebook"
@@ -324,10 +320,10 @@ export default async function DashboardPage() {
           </Card>
           <Card>
             <CardContent className="gap-1">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Target className="text-primary size-4" /> Average quiz score
+              <div className="swiss-section-label flex items-center gap-2">
+                <Target className="size-4" /> Average quiz score
               </div>
-              <p className="text-2xl font-semibold">
+              <p className="text-2xl font-black tabular-nums">
                 {avgScorePct === null ? "—" : `${avgScorePct}%`}
               </p>
               <p className="text-muted-foreground text-xs">
@@ -337,10 +333,10 @@ export default async function DashboardPage() {
           </Card>
           <Card>
             <CardContent className="gap-1">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <FileText className="text-primary size-4" /> Notes created
+              <div className="swiss-section-label flex items-center gap-2">
+                <FileText className="size-4" /> Notes created
               </div>
-              <p className="text-2xl font-semibold">{notesCount}</p>
+              <p className="text-2xl font-black tabular-nums">{notesCount}</p>
               <p className="text-muted-foreground text-xs">
                 {sourcesCount > 0
                   ? `+ ${sourcesCount} source${sourcesCount === 1 ? "" : "s"} indexed`
@@ -357,16 +353,16 @@ export default async function DashboardPage() {
       ) : (
         <Card>
           <CardContent className="gap-1">
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Sparkles className="text-primary size-4" /> AI usage
+            <div className="swiss-section-label flex items-center gap-2">
+              <Sparkles className="size-4" /> AI usage
             </div>
-            <p className="text-2xl font-semibold">—</p>
+            <p className="text-2xl font-black">—</p>
             <p className="text-muted-foreground text-xs">Appears once you start studying</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Founding-member offer — only while genuinely open */}
+      {/* Founding-member offer */}
       {((founding.available && !founding.full) || isFoundingMember) && (
         <FoundingCard
           claimed={founding.claimed}
@@ -380,9 +376,9 @@ export default async function DashboardPage() {
         />
       )}
 
-      {/* Premium features — discovery without spam */}
+      {/* Premium features */}
       <div>
-        <h2 className="mb-3 text-lg font-medium">Go further</h2>
+        <h2 className="mb-3 text-lg font-black uppercase tracking-tight">Go further</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <PremiumFeatureCard
             icon={GraduationCap}
@@ -425,11 +421,11 @@ function ProgressRing({ percent, label }: { percent: number; label: string }) {
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - filled / 100)}
-          className="stroke-primary transition-all duration-500"
+          className="stroke-foreground transition-all duration-500"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-sm font-semibold tabular-nums">{label}</span>
+        <span className="text-sm font-bold tabular-nums">{label}</span>
       </div>
     </div>
   );

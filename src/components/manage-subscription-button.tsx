@@ -5,7 +5,6 @@ import { ExternalLink, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-/** Opens Stripe's official billing portal for subscription management. */
 export function ManageSubscriptionButton() {
   const [state, setState] = useState<"idle" | "loading" | "unavailable">(
     "idle",

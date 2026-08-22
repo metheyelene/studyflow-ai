@@ -16,7 +16,7 @@ const SECTIONS = [
   {
     h: "1. Acceptance of these terms",
     body: [
-      "By creating an account or using StudyFlow AI (“the Service”), you agree to these Terms of Service. If you do not agree, please do not use the Service.",
+      "By creating an account or using StudyFlow AI (\u201cthe Service\u201d), you agree to these Terms of Service. If you do not agree, please do not use the Service.",
       "You must be at least 13 years old to use the Service. If you are under 18, you confirm you have the consent of a parent or guardian.",
     ],
   },
@@ -24,7 +24,7 @@ const SECTIONS = [
     h: "2. The Service",
     body: [
       "StudyFlow AI is an AI-powered study workspace: you upload or paste your own notes and material, and the Service generates summaries, flashcards, quizzes, study plans, and answers grounded in that material.",
-      "The Service is provided “as is” and may change over time — features may be added, changed, or removed, and we will make a reasonable effort to communicate material changes.",
+      "The Service is provided \u201cas is\u201d and may change over time \u2014 features may be added, changed, or removed, and we will make a reasonable effort to communicate material changes.",
     ],
   },
   {
@@ -37,8 +37,8 @@ const SECTIONS = [
   {
     h: "4. Your content",
     body: [
-      "You retain ownership of the notes, documents, and material you upload (“your content”). You grant us a limited license to store, process, and use your content solely to provide the Service to you.",
-      "You confirm that you own, or have the right to use, everything you upload — for example, your own lecture notes or documents you are permitted to use.",
+      "You retain ownership of the notes, documents, and material you upload (\u201cyour content\u201d). You grant us a limited license to store, process, and use your content solely to provide the Service to you.",
+      "You confirm that you own, or have the right to use, everything you upload \u2014 for example, your own lecture notes or documents you are permitted to use.",
       "The AI-generated outputs (summaries, flashcards, quizzes, answers) are generated from your content and may be incorrect. See Section 8.",
     ],
   },
@@ -46,7 +46,7 @@ const SECTIONS = [
     h: "5. Free and Premium plans",
     body: [
       "The Service offers a Free plan and a paid Premium plan. Features and usage limits for each plan are described on the pricing page and in the app; they may change as the product evolves, and we will describe any change to paid plans reasonably clearly before it takes effect.",
-      "There is a limited “Founding Member” offer: Premium at a founding-member price for the first 35 successful paying members, as described on the pricing page. This offer ends once 35 memberships have been claimed and is not available to new users after that point.",
+      "There is a limited \u201cFounding Member\u201d offer: Premium at a founding-member price for the first 35 successful paying members, as described on the pricing page. This offer ends once 35 memberships have been claimed and is not available to new users after that point.",
     ],
   },
   {
@@ -55,7 +55,7 @@ const SECTIONS = [
       "Premium is a recurring subscription billed in advance (monthly or yearly, depending on the option you choose). You will always see the amount and billing frequency before you confirm payment.",
       "You can cancel at any time from your account/subscription page. You keep Premium access until the end of the period you already paid for, then your account returns to the Free plan. There are no cancellation hoops or penalties.",
       "Payments are processed by our payment provider. We never see or store your card number. If a payment fails, we will attempt to notify you; continued non-payment may result in your account returning to the Free plan.",
-      "Refunds: if you are unhappy with Premium, contact us within 14 days of purchase and we will refund the amount you paid — we would rather make it right than keep your money. Refunds are issued to the original payment method and may take a few business days to appear.",
+      "Refunds: if you are unhappy with Premium, contact us within 14 days of purchase and we will refund the amount you paid \u2014 we would rather make it right than keep your money. Refunds are issued to the original payment method and may take a few business days to appear.",
       "If the founding-member price changes in the future, we will clearly disclose the change before it affects you, and you can cancel at any time.",
     ],
   },
@@ -69,21 +69,21 @@ const SECTIONS = [
   {
     h: "8. AI content and no guarantee of outcomes",
     body: [
-      "AI-generated content — summaries, flashcards, quizzes, and answers — is generated automatically and can be wrong, incomplete, or misleading. You are responsible for verifying important information (for example, before an exam) against your own material and trusted sources.",
+      "AI-generated content \u2014 summaries, flashcards, quizzes, and answers \u2014 is generated automatically and can be wrong, incomplete, or misleading. You are responsible for verifying important information (for example, before an exam) against your own material and trusted sources.",
       "The Service never promises specific grades, exam results, or academic outcomes. It is a study tool, not a guarantee of success.",
-      "Generated answers drawn from your material are intended to be grounded in your sources, but they are still AI output — treat them accordingly.",
+      "Generated answers drawn from your material are intended to be grounded in your sources, but they are still AI output \u2014 treat them accordingly.",
     ],
   },
   {
     h: "9. Intellectual property",
     body: [
-      "The Service itself — the StudyFlow software, design, and brand — is owned by StudyFlow AI and its creator. Except for your content and AI outputs generated for your use, nothing in these terms grants you rights to the Service's underlying software or branding.",
+      "The Service itself \u2014 the StudyFlow software, design, and brand \u2014 is owned by StudyFlow AI and its creator. Except for your content and AI outputs generated for your use, nothing in these terms grants you rights to the Service\u2019s underlying software or branding.",
     ],
   },
   {
     h: "10. Disclaimers and limitation of liability",
     body: [
-      "The Service is provided “as is” and “as available” without warranties of any kind, express or implied, to the maximum extent permitted by law.",
+      "The Service is provided \u201cas is\u201d and \u201cas available\u201d without warranties of any kind, express or implied, to the maximum extent permitted by law.",
       "To the maximum extent permitted by law, StudyFlow AI and its creator are not liable for indirect, incidental, special, or consequential damages, or for any loss of data or study material, arising from your use of the Service.",
       "Nothing in these terms limits liability that cannot be limited by law.",
     ],
@@ -104,7 +104,7 @@ const SECTIONS = [
   {
     h: "13. Governing law and contact",
     body: [
-      "These terms are governed by the laws of [JURISDICTION — decide and document here; suggested: your country/state of residence]. [Dispute resolution option — e.g., “We will first try to resolve any dispute informally — email us and we will respond within a reasonable time.”]",
+      "These terms are governed by the laws of [JURISDICTION \u2014 decide and document here; suggested: your country/state of residence]. [Dispute resolution option \u2014 e.g., \u201cWe will first try to resolve any dispute informally \u2014 email us and we will respond within a reasonable time.\u201d]",
       `Questions about these terms: ${CONTACT_EMAIL}.`,
     ],
   },
@@ -114,20 +114,20 @@ export default function TermsPage() {
   return (
     <div className="text-foreground min-h-dvh">
       <header className="sticky top-0 z-20 mx-auto mt-3 w-full max-w-3xl px-4">
-        <div className="glass-subtle flex h-14 items-center justify-between rounded-2xl px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-xl shadow-sm">
+        <div className="border-2 border-border bg-background flex h-14 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2 font-black uppercase tracking-tight text-sm">
+            <div className="bg-foreground text-background flex size-8 items-center justify-center">
               <BookOpen className="size-4" />
             </div>
             StudyFlow
           </Link>
           <nav className="flex items-center gap-3 text-sm">
-            <Link href="/login" className="text-muted-foreground hover:text-foreground">
+            <Link href="/login" className="text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider">
               Log in
             </Link>
             <Link
               href="/signup"
-              className="bg-primary text-primary-foreground rounded-full px-4 py-1.5 font-medium shadow-sm"
+              className="bg-foreground text-background px-4 py-1.5 font-bold uppercase tracking-wider text-xs"
             >
               Get started
             </Link>
@@ -137,35 +137,29 @@ export default function TermsPage() {
 
       <main className="mx-auto max-w-3xl px-4 pt-10 pb-24">
         <div className="relative">
-          <div
-            aria-hidden
-            className="bg-primary/10 absolute -top-16 left-1/2 size-72 -translate-x-1/2 rounded-full blur-3xl"
-          />
-          <div className="relative">
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Terms of Service
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Effective date:{" "}
-              <span className="text-foreground font-medium">August 18, 2026</span>
-              {" "}· Last updated: August 18, 2026
-            </p>
-            <div className="text-muted-foreground mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
-              <strong className="text-foreground">About these terms.</strong> These terms
-              describe the current StudyFlow service. We update them as the product
-              evolves; material changes are announced under “Changes to these terms”.
-            </div>
+          <h1 className="font-black text-3xl uppercase tracking-tight">
+            Terms of Service
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Effective date:{" "}
+            <span className="text-foreground font-bold">August 18, 2026</span>
+            {" "}&middot; Last updated: August 18, 2026
+          </p>
+          <div className="text-muted-foreground mt-4 border-2 border-border bg-secondary px-4 py-3 text-sm">
+            <strong className="text-foreground">About these terms.</strong> These terms
+            describe the current StudyFlow service. We update them as the product
+            evolves; material changes are announced under &ldquo;Changes to these terms&rdquo;.
           </div>
         </div>
 
         <div className="mt-8 space-y-4">
           {SECTIONS.map((s) => (
             <GlassCard key={s.h} tone="secondary" className="p-6">
-              <h2 className="font-semibold text-lg">{s.h}</h2>
+              <h2 className="font-black uppercase tracking-tight text-lg">{s.h}</h2>
               {s.body.map((p, i) => (
                 <p
                   key={i}
-                  className="text-muted-foreground mt-2 text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
+                  className="text-muted-foreground mt-2 text-sm leading-relaxed [&_a]:text-foreground [&_a]:underline"
                 >
                   {p}
                 </p>
@@ -175,7 +169,7 @@ export default function TermsPage() {
         </div>
 
         <p className="text-muted-foreground mt-10 text-center text-xs">
-          StudyFlow AI · Questions? Email {CONTACT_EMAIL} ·{" "}
+          StudyFlow AI &middot; Questions? Email {CONTACT_EMAIL} &middot;{" "}
           <Link href="/privacy" className="underline underline-offset-4">
             Privacy Policy
           </Link>

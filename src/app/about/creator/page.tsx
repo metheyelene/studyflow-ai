@@ -33,7 +33,7 @@ export default async function CreatorPage() {
       <div className="flex items-center gap-2">
         <Link
           href={session ? "/settings" : "/"}
-          className="text-muted-foreground hover:text-foreground -ml-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm transition-colors"
+          className="text-muted-foreground hover:text-foreground -ml-2 inline-flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
         >
           <ArrowLeft className="size-4" />
           {session ? "Settings" : "StudyFlow"}
@@ -41,38 +41,26 @@ export default async function CreatorPage() {
       </div>
 
       {/* Creator card */}
-      <GlassCard
-        tone="primary"
-        className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 ease-out-soft motion-reduce:animate-none p-6 text-center sm:p-8"
-      >
-        <div
-          className="bg-primary/15 text-primary animate-in fade-in-0 zoom-in-90 duration-500 ease-out-soft motion-reduce:animate-none mx-auto flex size-20 items-center justify-center rounded-full shadow-sm"
-          style={{ animationDelay: "80ms" }}
-        >
-          <span className="text-2xl font-semibold tracking-wide">MV</span>
+      <GlassCard tone="primary" className="p-6 text-center sm:p-8">
+        <div className="bg-foreground text-background mx-auto flex size-20 items-center justify-center">
+          <span className="text-2xl font-black tracking-tight">MV</span>
         </div>
 
-        <div
-          className="animate-in fade-in-0 duration-500 ease-out-soft motion-reduce:animate-none mt-5"
-          style={{ animationDelay: "140ms" }}
-        >
-          <h1 className="text-xl font-semibold tracking-tight">Mithil Viswas Kasi</h1>
+        <div className="mt-5">
+          <h1 className="font-black text-xl uppercase tracking-tight">Mithil Viswas Kasi</h1>
           <p className="text-muted-foreground mt-0.5 text-sm">
             Creator &amp; Developer of StudyFlow AI
           </p>
           <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm leading-relaxed">
-            “Built with the goal of making studying more organized, interactive, and
-            intelligent.”
+            &ldquo;Built with the goal of making studying more organized, interactive, and
+            intelligent.&rdquo;
           </p>
         </div>
 
-        <div
-          className="animate-in fade-in-0 duration-500 ease-out-soft motion-reduce:animate-none mt-5 space-y-3"
-          style={{ animationDelay: "200ms" }}
-        >
+        <div className="mt-5 space-y-3">
           <a
             href={MAILTO}
-            className="text-primary hover:underline inline-flex items-center gap-1.5 text-sm font-medium"
+            className="text-foreground hover:text-swiss-red inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider"
           >
             <Mail className="size-4" />
             {CREATOR_EMAIL}
@@ -80,7 +68,7 @@ export default async function CreatorPage() {
           <div>
             <a
               href={MAILTO_FEEDBACK}
-              className="bg-primary text-primary-foreground inline-flex h-10 items-center gap-2 rounded-xl px-5 text-sm font-medium shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
+              className="bg-foreground text-background inline-flex h-10 items-center gap-2 px-5 text-sm font-bold uppercase tracking-wider transition-all duration-150 hover:bg-swiss-red active:translate-x-[2px] active:translate-y-[2px]"
             >
               <Sparkles className="size-4" />
               Contact Creator
@@ -90,12 +78,8 @@ export default async function CreatorPage() {
       </GlassCard>
 
       {/* About StudyFlow */}
-      <GlassCard
-        tone="primary"
-        className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 ease-out-soft motion-reduce:animate-none p-6"
-        style={{ animationDelay: "260ms" }}
-      >
-        <h2 className="font-semibold text-lg">About StudyFlow</h2>
+      <GlassCard tone="primary" className="p-6">
+        <h2 className="font-black uppercase tracking-tight text-lg">About StudyFlow</h2>
         <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
           StudyFlow AI is an AI-powered study workspace designed to help students turn their
           learning material into a more organized and interactive study experience.
@@ -103,7 +87,7 @@ export default async function CreatorPage() {
         <ul className="mt-4 space-y-1.5">
           {ABOUT_FEATURES.map((feature) => (
             <li key={feature} className="flex items-center gap-2 text-sm">
-              <Check className="text-primary size-4 shrink-0" />
+              <span className="text-swiss-red font-bold">✓</span>
               {feature}
             </li>
           ))}
@@ -111,13 +95,9 @@ export default async function CreatorPage() {
       </GlassCard>
 
       {/* Feedback */}
-      <GlassCard
-        tone="secondary"
-        className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 ease-out-soft motion-reduce:animate-none flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between"
-        style={{ animationDelay: "320ms" }}
-      >
+      <GlassCard tone="secondary" className="flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-medium">Help improve StudyFlow</h3>
+          <h3 className="font-bold uppercase tracking-tight">Help improve StudyFlow</h3>
           <p className="text-muted-foreground mt-0.5 text-sm">
             Have an idea, found something that could be better, or discovered a bug? I&apos;d
             love to hear from you.
@@ -125,7 +105,7 @@ export default async function CreatorPage() {
         </div>
         <a
           href={MAILTO_FEEDBACK}
-          className="glass-float text-foreground hover:bg-[--glass-bg-strong] inline-flex h-9 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-medium transition-all active:scale-[0.97]"
+          className="border-2 border-border bg-card text-foreground hover:bg-foreground hover:text-background inline-flex h-9 shrink-0 items-center gap-2 px-4 text-sm font-bold uppercase tracking-wider transition-all duration-150"
         >
           <Mail className="size-4" />
           Send Feedback
@@ -133,15 +113,12 @@ export default async function CreatorPage() {
       </GlassCard>
 
       {/* Version + credits */}
-      <div
-        className="animate-in fade-in-0 duration-500 ease-out-soft motion-reduce:animate-none text-muted-foreground flex flex-col items-center gap-1 text-center text-xs"
-        style={{ animationDelay: "380ms" }}
-      >
+      <div className="text-muted-foreground flex flex-col items-center gap-1 text-center text-xs">
         <p>
           StudyFlow AI · Version {version}
         </p>
         <p>
-          Created by <span className="text-foreground font-medium">Mithil Viswas Kasi</span> ·{" "}
+          Created by <span className="text-foreground font-bold uppercase tracking-wider">Mithil Viswas Kasi</span> ·{" "}
           Creator &amp; Developer
         </p>
       </div>

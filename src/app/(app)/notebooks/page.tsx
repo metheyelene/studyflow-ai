@@ -21,7 +21,7 @@ export default async function NotebooksPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Notebooks</h1>
+          <h1 className="font-black text-2xl uppercase tracking-tight">Notebooks</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Your private knowledge spaces. Add sources, ask questions, and turn them into study
             material — answers are grounded in your own notes.
@@ -31,12 +31,12 @@ export default async function NotebooksPage() {
       </div>
 
       {notebooks.length === 0 ? (
-        <div className="glass flex flex-col items-center gap-4 rounded-3xl px-6 py-16 text-center">
-          <div className="bg-primary/10 text-primary flex size-14 items-center justify-center rounded-2xl">
+        <div className="border-2 border-border bg-secondary flex flex-col items-center gap-4 px-6 py-16 text-center">
+          <div className="bg-foreground text-background flex size-14 items-center justify-center">
             <Library className="size-7" />
           </div>
           <div className="space-y-1">
-            <h2 className="font-semibold text-lg">Create your first notebook</h2>
+            <h2 className="font-bold uppercase tracking-tight text-lg">Create your first notebook</h2>
             <p className="text-muted-foreground mx-auto max-w-md text-sm">
               Paste your class notes or upload a PDF, then ask StudyFlow AI anything about them —
               with citations back to the source.

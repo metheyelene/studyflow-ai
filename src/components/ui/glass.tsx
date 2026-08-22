@@ -3,25 +3,23 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Glass material system.
+ * Swiss Card system.
  *
- * Tones map to the four materials defined in docs/glass-ui-overhaul.md:
- * - primary  → content cards (glass)
- * - secondary→ widgets, more transparent (glass-subtle)
- * - floating → quick actions, elevated above the page (glass-float)
- * - modal    → dialogs / premium panels, strongest blur (glass-strong)
- *
- * Rule: never wrap text-heavy surfaces in glass where readability wins.
+ * Tones map to visual hierarchy:
+ * - primary  → content cards (border + white bg)
+ * - secondary→ widgets (border + muted bg)
+ * - floating → elevated cards (border + white bg)
+ * - modal    → dialogs / panels (border + white bg, strongest)
  */
 
-const glassTones = {
-  primary: "glass",
-  secondary: "glass-subtle",
-  floating: "glass-float",
-  modal: "glass-strong",
+const swissTones = {
+  primary: "border-2 border-border bg-card",
+  secondary: "border-2 border-border bg-secondary",
+  floating: "border-2 border-border bg-card",
+  modal: "border-2 border-border bg-card",
 } as const;
 
-export type GlassTone = keyof typeof glassTones;
+export type GlassTone = keyof typeof swissTones;
 
 export function GlassCard({
   tone = "primary",
@@ -31,7 +29,7 @@ export function GlassCard({
   return (
     <div
       data-slot="glass-card"
-      className={cn("rounded-2xl", glassTones[tone], className)}
+      className={cn("transition-colors duration-150", swissTones[tone], className)}
       {...props}
     />
   );
@@ -48,11 +46,11 @@ export function GlassPill({
       data-slot="glass-pill"
       aria-pressed={selected}
       className={cn(
-        "glass-subtle text-foreground inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 ease-out-soft select-none",
-        "hover:bg-[--glass-bg-strong] active:scale-[0.97]",
+        "inline-flex items-center gap-1.5 border-2 border-border bg-secondary px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 select-none",
+        "hover:border-foreground hover:bg-foreground hover:text-background",
         "focus-visible:ring-ring focus-visible:ring-[3px] focus-visible:outline-none",
         selected &&
-          "bg-primary text-primary-foreground border-transparent shadow-sm hover:bg-primary/90",
+          "bg-foreground text-background border-foreground",
         className,
       )}
       {...props}

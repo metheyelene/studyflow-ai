@@ -39,18 +39,18 @@ export function SidebarNav({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-150",
+              "flex items-center gap-2.5 px-3 py-2 text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150",
               "focus-visible:ring-ring focus-visible:ring-[3px] focus-visible:outline-none",
               active
-                ? "glass-subtle text-foreground bg-primary/10 shadow-xs"
-                : "text-muted-foreground hover:bg-[--glass-bg-subtle] hover:text-foreground",
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
             )}
           >
             {Icon && (
               <Icon
                 className={cn(
                   "size-4 shrink-0 transition-colors",
-                  active ? "text-primary" : "text-muted-foreground",
+                  active ? "text-background" : "text-muted-foreground",
                 )}
               />
             )}

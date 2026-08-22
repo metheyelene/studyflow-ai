@@ -34,7 +34,7 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="font-black text-2xl uppercase tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">
           Your profile, study preferences, and account actions.
         </p>
@@ -45,10 +45,10 @@ export default async function SettingsPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div
-              className={`flex size-10 items-center justify-center rounded-xl ${
+              className={`flex size-10 items-center justify-center ${
                 isFounding && isActive
-                  ? "bg-primary/15 text-primary"
-                  : "bg-muted text-muted-foreground"
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground"
               }`}
             >
               {isFounding && isActive ? (
@@ -58,7 +58,7 @@ export default async function SettingsPage() {
               )}
             </div>
             <div>
-              <p className="text-sm font-medium">
+              <p className="text-sm font-bold uppercase tracking-wider">
                 {isFounding && isActive
                   ? `${FOUNDING_TERMS.planLabel} · $${FOUNDING_TERMS.priceUsd}/month`
                   : isActive
@@ -81,7 +81,7 @@ export default async function SettingsPage() {
           ) : (
             <Link
               href="/pricing"
-              className="bg-primary text-primary-foreground inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
+              className="bg-foreground text-background inline-flex h-9 items-center gap-2 px-4 text-sm font-bold uppercase tracking-wider transition-all duration-150 hover:bg-swiss-red active:translate-x-[2px] active:translate-y-[2px]"
             >
               See plans
             </Link>
@@ -99,13 +99,13 @@ export default async function SettingsPage() {
       <GlassCard tone="secondary" className="p-6">
         <Link
           href="/about/creator"
-          className="group flex items-center gap-3 rounded-xl transition-colors"
+          className="group flex items-center gap-3 transition-colors"
         >
-          <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <div className="bg-secondary text-foreground flex size-10 shrink-0 items-center justify-center border-2 border-border">
             <Info className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-medium">About StudyFlow</p>
+            <p className="font-bold uppercase tracking-tight">About StudyFlow</p>
             <p className="text-muted-foreground text-sm">
               About the app and its creator
             </p>

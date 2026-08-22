@@ -16,14 +16,10 @@ export function ComingSoon({
 }) {
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      <GlassCard className="relative mt-6 items-center justify-center gap-4 overflow-hidden px-6 py-16 text-center">
-        <div
-          aria-hidden
-          className="bg-primary/10 absolute -top-20 left-1/2 size-64 -translate-x-1/2 rounded-full blur-3xl"
-        />
+      <h1 className="font-black text-2xl uppercase tracking-tight">{title}</h1>
+      <GlassCard className="relative mt-6 items-center justify-center gap-4 overflow-hidden border-2 border-border px-6 py-16 text-center">
         <div className="relative">
-          <div className="bg-primary/10 text-primary mx-auto flex size-12 items-center justify-center rounded-2xl">
+          <div className="bg-foreground text-background mx-auto flex size-12 items-center justify-center">
             <Sparkles className="size-5" />
           </div>
           <p className="mx-auto mt-4 max-w-md text-pretty">{description}</p>

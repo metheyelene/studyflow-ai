@@ -105,7 +105,46 @@
 }
 
 @layer components {
-  /* ---- Swiss Section Label ---- */
+  /* ================================================================
+     SWISS GLASS COMPATIBILITY LAYER
+     Maps old glass-* class names to Swiss flat equivalents.
+     Existing code using glass/glass-subtle/glass-float/glass-strong
+     will render as Swiss-styled flat surfaces.
+     ================================================================ */
+  .glass {
+    background: var(--card);
+    border: 2px solid var(--border);
+    transition: all 150ms ease-out;
+  }
+  .glass-subtle {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    transition: all 150ms ease-out;
+  }
+  .glass-float {
+    background: var(--card);
+    border: 2px solid var(--border);
+    transition: all 150ms ease-out;
+  }
+  .glass-float:hover {
+    border-color: var(--swiss-red);
+  }
+  .glass-strong {
+    background: var(--card);
+    border: 2px solid var(--border);
+    transition: all 150ms ease-out;
+  }
+  /* glass-subtle hover variant */
+  .hover\:bg-\[--glass-bg-subtle\]:hover {
+    background: var(--muted);
+  }
+  .hover\:bg-\[--glass-bg-strong\]:hover {
+    background: var(--secondary);
+  }
+
+  /* ================================================================
+     SWISS SECTION LABEL
+     ================================================================ */
   .swiss-section-label {
     font-size: 11px;
     font-weight: 700;
@@ -114,7 +153,9 @@
     color: var(--swiss-red);
   }
 
-  /* ---- Swiss Button ---- */
+  /* ================================================================
+     SWISS BUTTON
+     ================================================================ */
   .swiss-btn {
     display: inline-flex;
     align-items: center;
@@ -163,7 +204,9 @@
     color: #FFF;
   }
 
-  /* ---- Swiss Card ---- */
+  /* ================================================================
+     SWISS CARD
+     ================================================================ */
   .swiss-card {
     border: 2px solid #000;
     background: #FFF;
@@ -189,7 +232,9 @@
     color: #FFF;
   }
 
-  /* ---- Swiss Grid Pattern ---- */
+  /* ================================================================
+     SWISS GRID PATTERN
+     ================================================================ */
   .swiss-grid-pattern {
     background-image:
       linear-gradient(rgba(0,0,0,var(--pattern-opacity)) 1px, transparent 1px),
@@ -202,13 +247,17 @@
       linear-gradient(90deg, rgba(255,255,255,var(--pattern-opacity)) 1px, transparent 1px);
   }
 
-  /* ---- Swiss Dot Matrix ---- */
+  /* ================================================================
+     SWISS DOT MATRIX
+     ================================================================ */
   .swiss-dots {
     background-image: radial-gradient(circle, rgba(0,0,0,var(--pattern-opacity)) 1px, transparent 1px);
     background-size: 16px 16px;
   }
 
-  /* ---- Swiss Diagonal Lines ---- */
+  /* ================================================================
+     SWISS DIAGONAL LINES
+     ================================================================ */
   .swiss-diagonal {
     background-image: repeating-linear-gradient(
       45deg,
@@ -217,5 +266,17 @@
       rgba(0,0,0,var(--pattern-opacity)) 10px,
       rgba(0,0,0,var(--pattern-opacity)) 11px
     );
+  }
+
+  /* ================================================================
+     SWISS NOISE TEXTURE (via SVG filter)
+     ================================================================ */
+  .swiss-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.015;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   }
 }

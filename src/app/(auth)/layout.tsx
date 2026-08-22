@@ -5,7 +5,7 @@ export default function AuthLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="relative flex min-h-dvh flex-col">
-      <div className="glass-subtle absolute top-3 right-3 z-10 rounded-full p-1.5">
+      <div className="absolute top-3 right-3 z-10 p-1.5">
         <ThemeToggle />
       </div>
       <main className="flex flex-1 items-center justify-center px-4 py-12">

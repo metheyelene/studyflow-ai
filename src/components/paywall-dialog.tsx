@@ -28,12 +28,6 @@ const PREMIUM_FEATURES = [
 
 const MONTHLY_EQUIVALENT = PRICING.yearlyUsd / 12;
 
-/**
- * The paywall (docs/premium-conversion.md §4). Honest by construction:
- * benefits first, real prices, yearly savings shown as arithmetic,
- * cancellation rules stated, and a visible free escape hatch on every
- * screen. Never shown as a random popup — open it contextually.
- */
 export function PaywallDialog({
   open,
   onOpenChange,
@@ -54,7 +48,7 @@ export function PaywallDialog({
       <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="size-5 text-amber-500" />
+            <Sparkles className="text-swiss-red size-5" />
             Study smarter with deeper AI tools
           </DialogTitle>
           <DialogDescription>
@@ -66,31 +60,31 @@ export function PaywallDialog({
         <ul className="grid gap-2">
           {PREMIUM_FEATURES.map((f) => (
             <li key={f} className="text-sm flex items-start gap-2">
-              <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+              <span className="text-swiss-red font-bold mt-0.5">✓</span>
               {f}
             </li>
           ))}
         </ul>
 
-        <div className="bg-muted/50 grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
+        <div className="bg-secondary grid gap-3 border-2 border-border p-4 sm:grid-cols-2">
           <div>
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">
               Monthly
             </p>
-            <p className="mt-1 text-2xl font-semibold">
+            <p className="mt-1 text-2xl font-black">
               ${PRICING.monthlyUsd.toFixed(2)}
               <span className="text-muted-foreground text-sm font-normal"> / month</span>
             </p>
           </div>
-          <div className="rounded-md border border-emerald-500/30 bg-emerald-500/[0.06] p-3">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+          <div className="border-2 border-swiss-red bg-swiss-red/10 p-3">
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">
               Yearly — save ~33%
             </p>
-            <p className="mt-1 text-2xl font-semibold">
+            <p className="mt-1 text-2xl font-black">
               ${PRICING.yearlyUsd.toFixed(2)}
               <span className="text-muted-foreground text-sm font-normal"> / year</span>
             </p>
-            <p className="text-emerald-600 text-xs dark:text-emerald-400">
+            <p className="text-swiss-red text-xs font-bold">
               ${MONTHLY_EQUIVALENT.toFixed(2)}/mo — {PLAN_COPY.premium.name} for the price of{" "}
               {PLAN_COPY.free.name} + a coffee.
             </p>

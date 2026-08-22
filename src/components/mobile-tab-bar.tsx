@@ -20,7 +20,7 @@ export function MobileTabBar() {
 
   return (
     <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-20 md:hidden">
-      <div className="glass-strong mx-3 mb-[calc(env(safe-area-inset-bottom)+0.75rem)] flex items-center justify-around rounded-2xl px-2 py-1.5">
+      <div className="border-2 border-border bg-background mx-3 mb-[calc(env(safe-area-inset-bottom)+0.75rem)] flex items-center justify-around px-2 py-1.5">
         {TAB_ITEMS.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -31,14 +31,14 @@ export function MobileTabBar() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-w-16 flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 transition-all duration-150",
+                "flex min-w-16 flex-col items-center gap-0.5 px-3 py-1.5 transition-all duration-150",
                 active
-                  ? "bg-primary/15 text-primary"
+                  ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
             </Link>
           );
         })}
