@@ -136,7 +136,7 @@ class _SettingsItem extends StatelessWidget {
         ? SwissColors.darkForeground.withValues(alpha: 0.4)
         : SwissColors.black.withValues(alpha: 0.4);
 
-    return InkWell(
+    return GestureDetector(
       onTap: () {},
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
@@ -201,7 +201,7 @@ class _ThemeOption extends StatelessWidget {
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(SwissSpacing.md),
