@@ -26,6 +26,7 @@ import '../../features/progress/progress_screen.dart';
 import '../../features/study/study_plan_screen.dart';
 import '../../features/study/study_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/settings/update_screen.dart';
 import '../../features/shell/home_shell.dart';
 
 /// Canonical route paths — the single source of truth for navigation and
@@ -55,6 +56,7 @@ abstract final class AppRoutes {
   static const premium = '/premium';
   static const settings = '/settings';
   static const aboutCreator = '/about/creator';
+  static const softwareUpdate = '/settings/update';
 }
 
 /// Pops the current pushed route when there is one; otherwise falls back to
@@ -204,6 +206,10 @@ GoRouter buildAppRouter({String initialLocation = AppRoutes.home}) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.softwareUpdate,
+        builder: (context, state) => const UpdateScreen(),
       ),
       GoRoute(
         path: AppRoutes.aboutCreator,

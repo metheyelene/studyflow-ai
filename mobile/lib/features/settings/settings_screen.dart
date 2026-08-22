@@ -117,6 +117,11 @@ class SettingsScreen extends ConsumerWidget {
             const SwissSectionLabel(number: '08', title: 'About'),
             const SizedBox(height: SwissSpacing.md),
             _SettingsItem(
+              icon: Icons.system_update,
+              label: 'Software Update',
+              onTap: () => context.push(AppRoutes.softwareUpdate),
+            ),
+            _SettingsItem(
               icon: Icons.info,
               label: 'About StudyFlow',
               onTap: () => context.push(AppRoutes.aboutCreator),
