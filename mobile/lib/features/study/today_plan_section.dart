@@ -178,7 +178,9 @@ class TodayPlanSection extends ConsumerWidget {
                   const SizedBox(height: SwissSpacing.xs),
                 ],
               const SizedBox(height: SwissSpacing.sm),
-              Row(
+              Wrap(
+                spacing: SwissSpacing.sm,
+                runSpacing: SwissSpacing.sm,
                 children: [
                   SwissButton(
                     label: 'Full plan',
@@ -188,7 +190,6 @@ class TodayPlanSection extends ConsumerWidget {
                       '${AppRoutes.studyPlans}/${plan.examId}',
                     ),
                   ),
-                  const SizedBox(width: SwissSpacing.sm),
                   SwissButton(
                     label: 'Regenerate',
                     variant: SwissButtonVariant.ghost,

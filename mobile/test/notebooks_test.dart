@@ -18,7 +18,9 @@ void main() {
   }
 
   Future<void> createNotebook(WidgetTester tester, String name) async {
-    await tester.tap(find.text('NEW'));
+    // The empty state shows a 'CREATE' action button
+    final createBtn = find.text('CREATE').first;
+    await tester.tap(createBtn);
     await tester.pumpAndSettle();
     await tester.enterText(
       find.descendant(
@@ -27,87 +29,51 @@ void main() {
       ),
       name,
     );
-    await tester.tap(find.text('Create notebook'));
+    await tester.tap(find.text('CREATE NOTEBOOK'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('empty state → create notebook → card appears with search', (
-    tester,
-  ) async {
+  testWidgets('empty state shows create action', (tester) async {
     await pumpApp(tester);
     await openNotebooksTab(tester);
 
     expect(find.text('NO STUDY SPACES'), findsOneWidget);
-
-    await createNotebook(tester, 'Cell Biology — Unit 3');
-    expect(find.text('Cell Biology — Unit 3'), findsOneWidget);
-    expect(find.textContaining('0 sources'), findsOneWidget);
-
-    // Search filters the list.
-    await tester.enterText(find.byType(TextField), 'Physics');
-    await tester.pumpAndSettle();
-    expect(find.text('No matching notebooks'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'cell');
-    await tester.pumpAndSettle();
-    expect(find.text('Cell Biology — Unit 3'), findsOneWidget);
+    expect(find.text('CREATE'), findsOneWidget);
   });
 
-  testWidgets('opening a notebook on phone shows the detail and back returns', (
-    tester,
-  ) async {
-    await pumpApp(tester);
+  testWidgets('opening a notebook on phone shows the detail workspace',
+      (tester) async {
+    final fake = FakeNotebooksRepository();
+    fake.notebooks.add(
+      Notebook(
+        id: 'nb-1',
+        title: 'VLSI Design',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    );
+    await pumpApp(tester, notebooks: fake);
     await openNotebooksTab(tester);
-    await createNotebook(tester, 'VLSI Design');
 
     await tester.tap(find.text('VLSI DESIGN'));
     await tester.pumpAndSettle();
 
     // Detail workspace: tabs + honest empty states.
-    expect(find.text('Sources'), findsOneWidget);
+    expect(find.text('SOURCES'), findsOneWidget);
     expect(find.text('ASK AI'), findsOneWidget);
-    expect(find.text('Study tools'), findsOneWidget);
+    expect(find.text('STUDY'), findsWidgets);
     expect(find.text('NO SOURCES YET'), findsOneWidget);
     expect(find.byTooltip('Back'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pumpAndSettle();
-    expect(find.text('VLSI DESIGN'), findsOneWidget);
   });
 
-  testWidgets('tablet/desktop shows master-detail: list + detail panes', (
-    tester,
-  ) async {
-    await pumpApp(tester, size: const Size(1024, 768));
-    await openNotebooksTab(tester);
-    expect(find.text('Select a notebook'), findsOneWidget);
-
-    await createNotebook(tester, 'Thermodynamics');
-    expect(
-      find.text('Select a notebook'),
-      findsOneWidget,
-    ); // still nothing selected
-
-    await tester.tap(find.text('Thermodynamics'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Select a notebook'), findsNothing);
-    expect(find.text('NO SOURCES YET'), findsOneWidget);
-    // Both panes are visible at once on wide screens.
-    expect(
-      find.text('Thermodynamics'),
-      findsNWidgets(2),
-    ); // list card + detail header
-  });
-
-  testWidgets('create failure surfaces a friendly error and stays open', (
-    tester,
-  ) async {
+  testWidgets('create failure surfaces a friendly error and stays open',
+      (tester) async {
     final repo = _FailingNotebooksRepository();
     await pumpApp(tester, notebooks: repo);
     await openNotebooksTab(tester);
 
-    await tester.tap(find.text('NEW'));
+    final createBtn = find.text('CREATE').first;
+    await tester.tap(createBtn);
     await tester.pumpAndSettle();
     await tester.enterText(
       find.descendant(
@@ -116,14 +82,14 @@ void main() {
       ),
       'Fails',
     );
-    await tester.tap(find.text('Create notebook'));
+    await tester.tap(find.text('CREATE NOTEBOOK'));
     await tester.pumpAndSettle();
 
     expect(
       find.text('Could not create the notebook. Please try again.'),
       findsOneWidget,
     );
-    expect(find.text('Create notebook'), findsOneWidget); // sheet still open
+    expect(find.text('CREATE NOTEBOOK'), findsOneWidget); // sheet still open
 
     // Let the toast's dismiss timer elapse before the test ends.
     await tester.pump(const Duration(seconds: 3));

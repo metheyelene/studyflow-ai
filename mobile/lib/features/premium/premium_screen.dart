@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
+import 'play_billing_repository.dart';
 
 /// Premium screen — Swiss poster design.
 /// "STUDY WITHOUT LIMITS."
@@ -106,8 +107,10 @@ class PremiumScreen extends ConsumerWidget {
                 label: 'Upgrade now',
                 variant: SwissButtonVariant.primary,
                 fullWidth: true,
-                onPressed: () {
-                  // TODO: Start checkout
+                onPressed: () async {
+                  final billing = ref.read(playBillingRepositoryProvider);
+                  if (!billing.playBillingSupported) return;
+                  await billing.purchaseFounding();
                 },
               ),
 
@@ -118,8 +121,9 @@ class PremiumScreen extends ConsumerWidget {
                 label: 'Restore purchase',
                 variant: SwissButtonVariant.ghost,
                 fullWidth: true,
-                onPressed: () {
-                  // TODO: Restore purchase
+                onPressed: () async {
+                  final billing = ref.read(playBillingRepositoryProvider);
+                  await billing.restorePurchases();
                 },
               ),
 
@@ -153,6 +157,7 @@ class _BenefitItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: SwissSpacing.sm),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 8,
@@ -160,9 +165,11 @@ class _BenefitItem extends StatelessWidget {
             color: fg,
           ),
           const SizedBox(width: SwissSpacing.sm),
-          Text(
-            text.toUpperCase(),
-            style: SwissTypography.body.copyWith(color: fg),
+          Expanded(
+            child: Text(
+              text.toUpperCase(),
+              style: SwissTypography.body.copyWith(color: fg),
+            ),
           ),
         ],
       ),

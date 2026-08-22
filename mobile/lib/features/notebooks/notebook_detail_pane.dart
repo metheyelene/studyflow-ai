@@ -436,6 +436,7 @@ class _WorkspaceHero extends StatelessWidget {
 
     return SwissCard(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FutureBuilder<List<NotebookSource>>(

@@ -303,8 +303,9 @@ class SwissEmptyState extends StatelessWidget {
         : SwissColors.black.withValues(alpha: 0.5);
 
     return Padding(
-      padding: const EdgeInsets.all(SwissSpacing.xxxl),
+      padding: const EdgeInsets.all(SwissSpacing.xl),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(

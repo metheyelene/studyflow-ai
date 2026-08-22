@@ -44,7 +44,7 @@ void main() {
     expect(find.text('UPCOMING EXAMS'), findsOneWidget);
 
     // The material CTA navigates to a real screen — the notebooks tab.
-    await tester.tap(find.text('Open notebooks'));
+    await tester.tap(find.text('OPEN NOTEBOOKS'));
     await tester.pumpAndSettle();
     expect(find.text('NOTEBOOKS'), findsWidgets);
   });
