@@ -141,7 +141,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
       children: [
         Row(children: [
           Expanded(child: Text('Question ${_index + 1} of $_total', style: SwissTypography.label.copyWith(color: fg))),
-          Text('${_index} correct so far', style: SwissTypography.label.copyWith(color: SwissColors.red)),
+          Text('$_index correct so far', style: SwissTypography.label.copyWith(color: SwissColors.red)),
         ]),
         const SizedBox(height: 10),
         SwissProgressBar(value: (_index + (answered ? 1 : 0)) / _total),
@@ -252,7 +252,7 @@ class _ReviewItem extends StatelessWidget {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(item.correct ? Icons.check : Icons.close, size: 18, color: item.correct ? fg : SwissColors.red),
           const SizedBox(width: 8),
-          Expanded(child: Text('${item.question}', style: SwissTypography.bodyBold.copyWith(color: fg))),
+          Expanded(child: Text(item.question, style: SwissTypography.bodyBold.copyWith(color: fg))),
         ]),
         if (item.selectedIndex < item.options.length)
           Padding(padding: const EdgeInsets.only(left: 26, top: 4),

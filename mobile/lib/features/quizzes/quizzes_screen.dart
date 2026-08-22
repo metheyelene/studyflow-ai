@@ -67,7 +67,7 @@ class QuizzesScreen extends ConsumerWidget {
                             title: quiz.title,
                             subtitle:
                                 '${quiz.questionCount} questions · ${quiz.difficulty.toUpperCase()}',
-                            onTap: () => context.push('${AppRoutes.quizDetail.replaceFirst(':quizId', quiz.id)}'),
+                            onTap: () => context.push(AppRoutes.quizDetail.replaceFirst(':quizId', quiz.id)),
                           ),
                           const SwissHairline(),
                         ],

@@ -234,11 +234,7 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
   Widget build(BuildContext context) {
     final notebook = widget.notebook;
     final offline = ref.watch(isOfflineProvider).value ?? false;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
-    final mutedFg = isDark
-        ? SwissColors.darkForeground.withValues(alpha: 0.5)
-        : SwissColors.black.withValues(alpha: 0.5);
+    final isDark = Theme.of(context).brightness == Brightness.dark;    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
 
     return SafeArea(
       child: Column(
@@ -864,7 +860,6 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
     final chat = ref.watch(notebookChatControllerProvider(widget.notebookId));
     final messages = chat.messages.reversed.toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final mutedFg = isDark
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
@@ -1098,7 +1093,6 @@ class _AiMessageState extends ConsumerState<_AiMessage> {
   Widget build(BuildContext context) {
     final message = widget.message;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final mutedFg = isDark
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
@@ -1406,7 +1400,6 @@ class _PasteSourceSheet extends StatefulWidget {
 class _PasteSourceSheetState extends State<_PasteSourceSheet> {
   final _title = TextEditingController();
   final _text = TextEditingController();
-  late final TtsService _tts = widget.tts ?? SystemTtsService();
   bool _busy = false;
   String? _error;
 

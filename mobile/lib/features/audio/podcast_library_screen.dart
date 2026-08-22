@@ -50,7 +50,7 @@ class PodcastLibraryScreen extends ConsumerWidget {
                       return Column(children: [
                         SwissNumberedItem(
                           index: index + 1, title: ep.title,
-                          subtitle: '${ep.style?.toUpperCase() ?? "STANDARD"}${ep.durationSec != null ? " · ${(ep.durationSec! / 60).round()} MIN" : ""}',
+                          subtitle: '${ep.style.toUpperCase()}${ep.durationSec != null ? " · ${(ep.durationSec! / 60).round()} MIN" : ""}',
                           onTap: () => context.push('${AppRoutes.audio}/${ep.id}'),
                         ),
                         const SwissHairline(),

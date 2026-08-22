@@ -35,7 +35,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _error;
 
   @override
-  void dispose() { _course.dispose(); _subjects.dispose(); for (final r in _exams) r.name.dispose(); super.dispose(); }
+  void dispose() { _course.dispose(); _subjects.dispose(); for (final r in _exams) { r.name.dispose(); } super.dispose(); }
 
   bool get _canContinue => switch (_step) {
     0 => _course.text.trim().length >= 2, 1 => _subjects.text.trim().isNotEmpty, 2 => true, 3 => true, _ => _goals.isNotEmpty,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
-import 'package:studyflow_mobile/core/theme/app_theme.dart';
 
 import 'helpers.dart';
 

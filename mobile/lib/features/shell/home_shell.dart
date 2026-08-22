@@ -39,9 +39,7 @@ class HomeShell extends ConsumerWidget {
     final nowPlaying = ref.watch(nowPlayingProvider);
     final isWide = MediaQuery.sizeOf(context).width > 800;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
-    final mutedBg = isDark ? SwissColors.darkMuted : SwissColors.muted;
 
     return Scaffold(
       backgroundColor: bg,
@@ -127,7 +125,6 @@ class _SwissBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
 
     return Container(
@@ -243,9 +240,6 @@ class _SwissNavRail extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
-    final mutedFg = isDark
-        ? SwissColors.darkForeground.withValues(alpha: 0.4)
-        : SwissColors.black.withValues(alpha: 0.4);
 
     return Container(
       width: extended ? 200 : 72,

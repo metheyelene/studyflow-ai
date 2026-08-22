@@ -456,7 +456,7 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
               Row(
                 children: [
                   Text(
-                    '${(i + 1).toString().padLeft(2, '0')}',
+                    (i + 1).toString().padLeft(2, '0'),
                     style: SwissTypography.label.copyWith(
                       color: widget.steps[i].done
                           ? fg
@@ -483,7 +483,7 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
                   else if (i == widget.steps.indexWhere((s) => !s.done))
                     AnimatedBuilder(
                       animation: _animation,
-                      builder: (_, __) => Container(
+                      builder: (_, _) => Container(
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
@@ -512,7 +512,7 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
             // Animated vertical line with red indicator
             AnimatedBuilder(
               animation: _animation,
-              builder: (_, __) => Container(
+              builder: (_, _) => Container(
                 height: 4,
                 width: double.infinity,
                 color: isDark ? SwissColors.darkMuted : SwissColors.muted,
@@ -611,6 +611,7 @@ class SwissNumberedItem extends StatelessWidget {
                 ],
               ),
             ),
+            // ignore: use_null_aware_elements
             if (trailing != null) trailing!,
           ],
         ),

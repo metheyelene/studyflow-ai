@@ -7,7 +7,6 @@ import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
-import '../notebooks/notebook.dart';
 import '../notebooks/notebooks_controller.dart';
 import 'dashboard_controller.dart';
 
@@ -22,9 +21,6 @@ class DashboardScreen extends ConsumerWidget {
     final firstName = auth is AuthAuthenticated
         ? auth.user.name.trim().split(' ').first
         : null;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
-
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(

@@ -17,22 +17,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> createNotebook(WidgetTester tester, String name) async {
-    // The empty state shows a 'CREATE' action button
-    final createBtn = find.text('CREATE').first;
-    await tester.tap(createBtn);
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.byType(TextField),
-      ),
-      name,
-    );
-    await tester.tap(find.text('CREATE NOTEBOOK'));
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('empty state shows create action', (tester) async {
     await pumpApp(tester);
     await openNotebooksTab(tester);

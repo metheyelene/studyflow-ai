@@ -6,7 +6,6 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import '../dashboard/dashboard_controller.dart';
-import '../flashcards/flashcard_models.dart';
 import '../notebooks/notebooks_controller.dart';
 import 'flashcard_progress.dart';
 

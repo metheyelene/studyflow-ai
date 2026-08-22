@@ -575,7 +575,6 @@ class _ChaptersTranscript extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final mutedFg = isDark
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
