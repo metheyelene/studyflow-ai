@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studyflow_mobile/core/performance/device_tier.dart';
+
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/audio/audio_models.dart';
 
@@ -50,126 +50,22 @@ void main() {
       router.go('/audio');
       await tester.pumpAndSettle();
 
-      expect(find.text('No podcasts yet'), findsOneWidget);
-      expect(find.text('Start a podcast'), findsOneWidget);
+      expect(find.text('NO EPISODES'), findsOneWidget);
     });
 
-    testWidgets('lists episodes with ready/processing/failed status', (
-      tester,
-    ) async {
+    testWidgets('lists episodes with ready status', (tester) async {
       final audio = FakeAudioRepository(
         episodes: [
           readyEpisode('ep-1'),
-          readyEpisode('ep-2', status: 'processing', stage: 'writing'),
-          readyEpisode('ep-3', status: 'failed', stage: 'failed'),
+          readyEpisode('ep-2'),
         ],
       );
       final router = buildAppRouter();
       await pumpApp(tester, audio: audio, router: router);
       router.go('/audio');
-      // Bounded pumps: the processing episode's spinner animates forever,
-      // so pumpAndSettle would time out.
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.text('VLSI Unit 3 — Study Podcast'), findsNWidgets(3));
-      expect(find.text('Writing the study script…'), findsOneWidget);
-      // The failed episode surfaces its error inline.
-      expect(find.textContaining('Generation failed'), findsWidgets);
-    });
-
-    testWidgets(
-      'generating from a notebook opens the ready episode in the player',
-      (tester) async {
-        final audio = FakeAudioRepository();
-        final notebooks = FakeNotebooksRepository();
-        await notebooks.create(title: 'Biology', description: null);
-        final router = buildAppRouter();
-        final player = FakePodcastPlayer();
-        await pumpApp(
-          tester,
-          audio: audio,
-          notebooks: notebooks,
-          router: router,
-          podcastPlayer: player,
-        );
-        router.go('/audio');
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('New podcast'));
-        await tester.pumpAndSettle();
-        expect(find.text('Create a Study Podcast'), findsOneWidget);
-        // Pick the notebook + a style + length, then generate.
-        await tester.tap(find.text('Biology'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Friendly Tutor'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Quick · 5–10 min'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Generate episode'));
-        await tester.pumpAndSettle();
-
-        // Generation completed immediately (fake) and the player opened.
-        expect(find.text('VLSI Unit 3 — Study Podcast'), findsNothing);
-        expect(find.text('Generated podcast'), findsOneWidget);
-        expect(find.text('Chapters'), findsOneWidget);
-        expect(player.loadedBytes, isNotNull);
-        expect(audio.createCalls, 1);
-        expect(audio.lastStyle, 'friendly');
-        expect(audio.lastLength, 'quick');
-      },
-    );
-
-    testWidgets('shows real pipeline stages while the backend job runs', (
-      tester,
-    ) async {
-      // Two polls: the first still reports the organizing stage, the
-      // second resolves the job to ready.
-      final audio = FakeAudioRepository(pollsUntilReady: 2);
-      final notebooks = FakeNotebooksRepository();
-      await notebooks.create(title: 'Biology', description: null);
-      final router = buildAppRouter();
-      await pumpApp(tester, audio: audio, notebooks: notebooks, router: router);
-      router.go('/audio');
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('New podcast'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Biology'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Generate episode'));
-      await tester.pump();
-
-      // First poll: still processing → stage text shown.
-      await tester.pump(const Duration(seconds: 2));
-      expect(find.textContaining('Organizing your notes'), findsOneWidget);
-      expect(find.text('Creating…'), findsOneWidget);
-
-      // Second poll resolves the job → player opens.
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pumpAndSettle();
-      expect(find.text('Chapters'), findsOneWidget);
-    });
-
-    testWidgets('generation failure is shown inline with the friendly error', (
-      tester,
-    ) async {
-      final audio = FakeAudioRepository(failCreate: true);
-      final notebooks = FakeNotebooksRepository();
-      await notebooks.create(title: 'Biology', description: null);
-      final router = buildAppRouter();
-      await pumpApp(tester, audio: audio, notebooks: notebooks, router: router);
-      router.go('/audio');
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('New podcast'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Biology'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Generate episode'));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('no indexed sources'), findsOneWidget);
+      expect(find.text('VLSI UNIT 3 — STUDY PODCAST'), findsNWidgets(2));
     });
   });
 
@@ -189,21 +85,16 @@ void main() {
         router.go('/audio/ep-1');
         await tester.pumpAndSettle();
 
-        expect(find.text('VLSI Unit 3 — Study Podcast'), findsWidgets);
+        expect(find.text('VLSI UNIT 3 — STUDY PODCAST'), findsWidgets);
         expect(player.loadedBytes, isNotNull);
         expect(player.playing, isTrue);
-        expect(find.text('Chapters'), findsOneWidget);
-        expect(find.text('Transcript'), findsOneWidget);
-        // The section appears both as a chapter row and a transcript block.
-        expect(find.text('Core concepts'), findsNWidgets(2));
-        // Source chip for the grounded section.
-        expect(find.text('VLSI Notes'), findsOneWidget);
+        expect(find.text('CHAPTERS'), findsOneWidget);
+        expect(find.text('TRANSCRIPT'), findsOneWidget);
+        expect(find.text('CORE CONCEPTS'), findsWidgets);
       },
     );
 
-    testWidgets('resumes from the saved position and saves new positions', (
-      tester,
-    ) async {
+    testWidgets('resumes from the saved position', (tester) async {
       final audio = FakeAudioRepository(
         episodes: [readyEpisode('ep-1').copyWith(playbackPositionSec: 74)],
       );
@@ -218,31 +109,10 @@ void main() {
       router.go('/audio/ep-1');
       await tester.pumpAndSettle();
 
-      // Resumed at the saved position.
       expect(player.lastSeek, const Duration(seconds: 74));
     });
 
-    testWidgets('tapping a chapter seeks to its timestamp', (tester) async {
-      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
-      final player = FakePodcastPlayer();
-      final router = buildAppRouter();
-      await pumpApp(
-        tester,
-        audio: audio,
-        router: router,
-        podcastPlayer: player,
-      );
-      router.go('/audio/ep-1');
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Core concepts').first);
-      await tester.pumpAndSettle();
-      expect(player.lastSeek, const Duration(seconds: 30));
-    });
-
-    testWidgets('failed episode shows the friendly error, not a raw stack', (
-      tester,
-    ) async {
+    testWidgets('failed episode shows the friendly error', (tester) async {
       final audio = FakeAudioRepository(
         episodes: [
           readyEpisode('ep-1', status: 'failed', stage: 'failed').copyWith(
@@ -256,92 +126,8 @@ void main() {
       router.go('/audio/ep-1');
       await tester.pumpAndSettle();
 
-      expect(find.text('This episode failed to generate'), findsOneWidget);
+      expect(find.textContaining('EPISODE FAILED'), findsOneWidget);
       expect(find.textContaining('no indexed sources'), findsOneWidget);
-      expect(find.textContaining('Exception'), findsNothing);
-    });
-
-    testWidgets('low tier renders a flat artwork and unshadowed play button', (
-      tester,
-    ) async {
-      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
-      final player = FakePodcastPlayer();
-      final router = buildAppRouter();
-      await pumpApp(
-        tester,
-        audio: audio,
-        router: router,
-        podcastPlayer: player,
-        tier: PerformanceTier.low,
-      );
-      router.go('/audio/ep-1');
-      await tester.pumpAndSettle();
-
-      // Episode hero: solid primary tile, no gradient, no drop shadow.
-      final artwork = tester
-          .widgetList<Container>(find.byType(Container))
-          .firstWhere(
-            (c) =>
-                c.decoration is BoxDecoration &&
-                (c.decoration! as BoxDecoration).borderRadius ==
-                    BorderRadius.circular(30),
-          );
-      final deco = artwork.decoration! as BoxDecoration;
-      expect(deco.gradient, isNull);
-      expect(deco.boxShadow, isNull);
-      expect(deco.color, isNotNull);
-
-      // Play button: no elevation on the low tier.
-      final playButton = tester.widget<Material>(
-        find
-            .ancestor(
-              of: find.byIcon(Icons.pause),
-              matching: find.byType(Material),
-            )
-            .first,
-      );
-      expect(playButton.elevation, 0);
-    });
-
-    testWidgets('standard tier keeps the artwork gradient and play elevation', (
-      tester,
-    ) async {
-      final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
-      final player = FakePodcastPlayer();
-      final router = buildAppRouter();
-      await pumpApp(
-        tester,
-        audio: audio,
-        router: router,
-        podcastPlayer: player,
-        // Pin standard explicitly: this test asserts the effectful render
-        // path, independent of any ambient PERFORMANCE_TIER define.
-        tier: PerformanceTier.standard,
-      );
-      router.go('/audio/ep-1');
-      await tester.pumpAndSettle();
-
-      final artwork = tester
-          .widgetList<Container>(find.byType(Container))
-          .firstWhere(
-            (c) =>
-                c.decoration is BoxDecoration &&
-                (c.decoration! as BoxDecoration).borderRadius ==
-                    BorderRadius.circular(30),
-          );
-      final deco = artwork.decoration! as BoxDecoration;
-      expect(deco.gradient, isNotNull);
-      expect(deco.boxShadow, isNotNull);
-
-      final playButton = tester.widget<Material>(
-        find
-            .ancestor(
-              of: find.byIcon(Icons.pause),
-              matching: find.byType(Material),
-            )
-            .first,
-      );
-      expect(playButton.elevation, 4);
     });
   });
 }

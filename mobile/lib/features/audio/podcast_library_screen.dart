@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import 'audio_controller.dart';
@@ -41,7 +43,7 @@ class PodcastLibraryScreen extends ConsumerWidget {
                         SwissNumberedItem(
                           index: index + 1, title: ep.title,
                           subtitle: '${ep.style?.toUpperCase() ?? "STANDARD"}${ep.durationSec != null ? " · ${(ep.durationSec! / 60).round()} MIN" : ""}',
-                          onTap: () {},
+                          onTap: () => context.push('${AppRoutes.audio}/${ep.id}'),
                         ),
                         const SwissHairline(),
                       ]);

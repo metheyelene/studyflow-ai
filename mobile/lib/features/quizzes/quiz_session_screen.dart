@@ -182,7 +182,7 @@ class _OptionTile extends StatelessWidget {
     final borderColor = state == _Opt.correct ? SwissColors.red : state == _Opt.wrong ? SwissColors.red : fg;
     final bg = state == _Opt.correct ? SwissColors.red.withValues(alpha: 0.1) : state == _Opt.wrong ? SwissColors.red.withValues(alpha: 0.05) : Colors.transparent;
 
-    return InkWell(
+    return GestureDetector(
       onTap: state == _Opt.neutral ? onTap : null,
       child: Container(
         padding: const EdgeInsets.all(15),

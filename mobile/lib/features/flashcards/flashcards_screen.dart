@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import 'flashcards_controller.dart';
@@ -56,7 +58,7 @@ class FlashcardsScreen extends ConsumerWidget {
                             index: index + 1,
                             title: deck.title,
                             subtitle: '${deck.cardCount} cards',
-                            onTap: () {},
+                            onTap: () => context.push('${AppRoutes.flashcards}/${deck.id}'),
                           ),
                           const SwissHairline(),
                         ],

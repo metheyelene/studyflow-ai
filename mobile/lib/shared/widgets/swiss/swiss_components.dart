@@ -65,18 +65,21 @@ class _SwissButtonState extends State<SwissButton>
           ),
         ),
         child: Row(
-          mainAxisSize: widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (widget.icon != null) ...[
               Icon(widget.icon, size: 16, color: colors.$4),
               const SizedBox(width: SwissSpacing.xs),
             ],
-            Text(
-              widget.label.toUpperCase(),
-              style: SwissTypography.label.copyWith(
-                color: colors.$4,
-                letterSpacing: 1.5,
+            Flexible(
+              child: Text(
+                widget.label.toUpperCase(),
+                style: SwissTypography.label.copyWith(
+                  color: colors.$4,
+                  letterSpacing: 1.5,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

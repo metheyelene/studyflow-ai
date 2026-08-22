@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import 'quizzes_controller.dart';
@@ -57,7 +59,7 @@ class QuizzesScreen extends ConsumerWidget {
                             title: quiz.title,
                             subtitle:
                                 '${quiz.questionCount} questions · ${quiz.difficulty.toUpperCase()}',
-                            onTap: () {},
+                            onTap: () => context.push('${AppRoutes.quizDetail.replaceFirst(':quizId', quiz.id)}'),
                           ),
                           const SwissHairline(),
                         ],
