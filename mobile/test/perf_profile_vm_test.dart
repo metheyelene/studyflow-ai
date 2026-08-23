@@ -190,6 +190,8 @@ void main() {
 
     // 4. Paste sheet: a BackdropFilter modal over the glass detail.
     await segment('4_paste_sheet', () async {
+      await tester.tap(find.text('ADD'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('PASTE TEXT'));
       await tester.pump(const Duration(milliseconds: 400));
       await storm(const Duration(seconds: 2));

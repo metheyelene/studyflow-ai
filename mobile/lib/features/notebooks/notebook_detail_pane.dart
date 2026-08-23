@@ -1130,7 +1130,36 @@ class _AiMessageState extends ConsumerState<_AiMessage> {
             for (final c in message.citations)
               Padding(
                 padding: const EdgeInsets.only(bottom: SwissSpacing.xs),
-                child: SwissCitation(sourceTitle: c.label),
+                child: SwissCitation(
+                  sourceTitle: c.label,
+                  excerpt: c.excerpt,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (_) => Container(
+                        padding: const EdgeInsets.all(SwissSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              c.sourceTitle,
+                              style: SwissTypography.label.copyWith(
+                                color: SwissColors.red,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: SwissSpacing.sm),
+                            Text(
+                              c.excerpt,
+                              style: SwissTypography.body.copyWith(height: 1.6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
           ],
           const SizedBox(height: SwissSpacing.md),

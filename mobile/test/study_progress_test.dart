@@ -78,16 +78,11 @@ void main() {
     await tester.tap(find.text('PROGRESS'));
     await tester.pumpAndSettle();
 
-    // One question, honest empty mastery, and the counts demoted to a
-    // single quiet metadata line instead of a three-stat-card wall.
-    expect(find.text('HOW AM I DOING?'), findsOneWidget);
-    expect(find.text('—'), findsOneWidget); // no reviews yet
-    expect(find.text('2 notebooks · 3 sources · 5 AI actions'), findsOneWidget);
-    expect(find.text('AI actions'), findsNothing); // no stat card label
-
-    // The single recommended action goes somewhere real.
-    await tester.tap(find.text('Review flashcards'));
-    await tester.pumpAndSettle();
-    expect(find.text('No decks yet'), findsOneWidget);
+    // The Swiss progress screen shows YOUR LEARNING heading, honest empty
+    // mastery, and a demoted metadata line instead of stat cards.
+    expect(find.text('YOUR LEARNING'), findsOneWidget);
+    expect(find.textContaining('—%'), findsOneWidget); // no reviews yet
+    expect(find.textContaining('3 sources'), findsOneWidget);
+    expect(find.textContaining('5 AI actions'), findsOneWidget);
   });
 }

@@ -771,11 +771,13 @@ class SwissCitation extends StatelessWidget {
     required this.sourceTitle,
     this.page,
     this.excerpt,
+    this.onTap,
   });
 
   final String sourceTitle;
   final int? page;
   final String? excerpt;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -785,16 +787,19 @@ class SwissCitation extends StatelessWidget {
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(SwissSpacing.md),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: SwissColors.red, width: SwissShapes.borderMedium),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        key: const Key('citation-chip'),
+        width: double.infinity,
+        padding: const EdgeInsets.all(SwissSpacing.md),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: SwissColors.red, width: SwissShapes.borderMedium),
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'SOURCE',
@@ -819,6 +824,7 @@ class SwissCitation extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }

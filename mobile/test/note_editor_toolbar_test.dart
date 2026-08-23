@@ -155,6 +155,7 @@ void main() {
     expect(fake.lastAssistMode, NoteAssistMode.simplify);
 
     await _selectText(tester);
+    await tester.ensureVisible(_toolbarText('Quiz'));
     await tester.tap(_toolbarText('Quiz'));
     await tester.pumpAndSettle();
     expect(fake.lastAssistMode, NoteAssistMode.quiz);
@@ -185,11 +186,13 @@ void main() {
     await _openEditor(tester, tts: tts);
     await _selectText(tester);
 
+    await tester.ensureVisible(_toolbarText('Listen'));
     await tester.tap(_toolbarText('Listen'));
     await tester.pumpAndSettle();
     expect(tts.spoken, ['Mitochondria']);
     expect(_toolbarText('Stop'), findsOneWidget);
 
+    await tester.ensureVisible(_toolbarText('Stop'));
     await tester.tap(_toolbarText('Stop'));
     await tester.pumpAndSettle();
     expect(tts.stopCalls, 1);
