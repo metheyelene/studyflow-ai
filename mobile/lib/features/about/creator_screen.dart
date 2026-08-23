@@ -17,7 +17,9 @@ class CreatorScreen extends StatelessWidget {
         : SwissColors.black.withValues(alpha: 0.5);
 
     return Scaffold(
-      backgroundColor: isDark ? SwissColors.darkBackground : SwissColors.background,
+      backgroundColor: isDark
+          ? SwissColors.darkBackground
+          : SwissColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(SwissSpacing.xl),
@@ -41,7 +43,9 @@ class CreatorScreen extends StatelessWidget {
                 child: Icon(
                   Icons.school,
                   size: 40,
-                  color: isDark ? SwissColors.darkBackground : SwissColors.white,
+                  color: isDark
+                      ? SwissColors.darkBackground
+                      : SwissColors.white,
                 ),
               ),
 

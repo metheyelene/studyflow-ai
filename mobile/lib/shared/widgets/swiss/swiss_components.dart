@@ -45,9 +45,15 @@ class _SwissButtonState extends State<SwissButton>
 
     return GestureDetector(
       onTap: widget.onPressed,
-      onTapDown: widget.onPressed != null ? (_) => setState(() => _pressed = true) : null,
-      onTapUp: widget.onPressed != null ? (_) => setState(() => _pressed = false) : null,
-      onTapCancel: widget.onPressed != null ? () => setState(() => _pressed = false) : null,
+      onTapDown: widget.onPressed != null
+          ? (_) => setState(() => _pressed = true)
+          : null,
+      onTapUp: widget.onPressed != null
+          ? (_) => setState(() => _pressed = false)
+          : null,
+      onTapCancel: widget.onPressed != null
+          ? () => setState(() => _pressed = false)
+          : null,
       child: AnimatedContainer(
         duration: SwissMotion.fast,
         height: height,
@@ -57,10 +63,7 @@ class _SwissButtonState extends State<SwissButton>
         ),
         decoration: BoxDecoration(
           color: _pressed ? colors.$2 : colors.$1,
-          border: Border.all(
-            color: colors.$3,
-            width: SwissShapes.borderThin,
-          ),
+          border: Border.all(color: colors.$3, width: SwissShapes.borderThin),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -140,8 +143,11 @@ class SwissCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = backgroundColor ?? (isDark ? SwissColors.darkSurface : SwissColors.white);
-    final border = borderSide ??
+    final bg =
+        backgroundColor ??
+        (isDark ? SwissColors.darkSurface : SwissColors.white);
+    final border =
+        borderSide ??
         BorderSide(
           color: isDark ? SwissColors.darkBorder : SwissColors.black,
           width: SwissShapes.borderThin,
@@ -191,18 +197,11 @@ class SwissSectionLabel extends StatelessWidget {
           ),
         ),
         const SizedBox(width: SwissSpacing.xs),
-        Container(
-          width: 16,
-          height: 1,
-          color: SwissColors.red,
-        ),
+        Container(width: 16, height: 1, color: SwissColors.red),
         const SizedBox(width: SwissSpacing.xs),
         Text(
           title.toUpperCase(),
-          style: SwissTypography.label.copyWith(
-            color: fg,
-            letterSpacing: 1.5,
-          ),
+          style: SwissTypography.label.copyWith(color: fg, letterSpacing: 1.5),
         ),
       ],
     );
@@ -421,9 +420,10 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -459,8 +459,10 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
                       color: widget.steps[i].done
                           ? fg
                           : (isDark
-                              ? SwissColors.darkForeground.withValues(alpha: 0.3)
-                              : SwissColors.black.withValues(alpha: 0.3)),
+                                ? SwissColors.darkForeground.withValues(
+                                    alpha: 0.3,
+                                  )
+                                : SwissColors.black.withValues(alpha: 0.3)),
                     ),
                   ),
                   const SizedBox(width: SwissSpacing.md),
@@ -471,8 +473,10 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
                         color: widget.steps[i].done
                             ? fg
                             : (isDark
-                                ? SwissColors.darkForeground.withValues(alpha: 0.3)
-                                : SwissColors.black.withValues(alpha: 0.3)),
+                                  ? SwissColors.darkForeground.withValues(
+                                      alpha: 0.3,
+                                    )
+                                  : SwissColors.black.withValues(alpha: 0.3)),
                       ),
                     ),
                   ),
@@ -501,7 +505,9 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
               ),
               if (i < widget.steps.length - 1)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: SwissSpacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SwissSpacing.xs,
+                  ),
                   child: SwissHairline(),
                 ),
             ],
@@ -738,10 +744,7 @@ class SwissProgressBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!,
-            style: SwissTypography.caption.copyWith(color: fg),
-          ),
+          Text(label!, style: SwissTypography.caption.copyWith(color: fg)),
           const SizedBox(height: SwissSpacing.xxs),
         ],
         Container(
@@ -751,9 +754,7 @@ class SwissProgressBar extends StatelessWidget {
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
             widthFactor: value.clamp(0.0, 1.0),
-            child: Container(
-              color: fg,
-            ),
+            child: Container(color: fg),
           ),
         ),
       ],
@@ -795,36 +796,39 @@ class SwissCitation extends StatelessWidget {
         padding: const EdgeInsets.all(SwissSpacing.md),
         decoration: BoxDecoration(
           border: Border(
-            left: BorderSide(color: SwissColors.red, width: SwissShapes.borderMedium),
+            left: BorderSide(
+              color: SwissColors.red,
+              width: SwissShapes.borderMedium,
+            ),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'SOURCE',
-            style: SwissTypography.label.copyWith(
-              color: SwissColors.red,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: SwissSpacing.xxs),
-          Text(
-            '$sourceTitle${page != null ? ' · P.$page' : ''}',
-            style: SwissTypography.caption.copyWith(color: fg),
-          ),
-          if (excerpt != null) ...[
-            const SizedBox(height: SwissSpacing.xs),
+          children: [
             Text(
-              excerpt!,
-              style: SwissTypography.body.copyWith(
-                color: mutedFg,
-                fontStyle: FontStyle.italic,
+              'SOURCE',
+              style: SwissTypography.label.copyWith(
+                color: SwissColors.red,
+                letterSpacing: 1.5,
               ),
             ),
+            const SizedBox(height: SwissSpacing.xxs),
+            Text(
+              '$sourceTitle${page != null ? ' · P.$page' : ''}',
+              style: SwissTypography.caption.copyWith(color: fg),
+            ),
+            if (excerpt != null) ...[
+              const SizedBox(height: SwissSpacing.xs),
+              Text(
+                excerpt!,
+                style: SwissTypography.body.copyWith(
+                  color: mutedFg,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }

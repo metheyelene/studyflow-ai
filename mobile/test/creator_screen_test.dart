@@ -24,7 +24,10 @@ void main() {
     expect(find.text('STUDYFLOW AI'), findsOneWidget);
     expect(find.text('MITHIL VISWAS KASI'), findsOneWidget);
     expect(find.text('CREATED BY'), findsOneWidget);
-    expect(find.textContaining('study tool built for students'), findsOneWidget);
+    expect(
+      find.textContaining('study tool built for students'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders the footer', (tester) async {

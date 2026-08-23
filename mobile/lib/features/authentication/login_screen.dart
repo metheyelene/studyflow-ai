@@ -75,7 +75,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Icon(
                       Icons.auto_stories,
                       size: 26,
-                      color: isDark ? SwissColors.darkBackground : SwissColors.white,
+                      color: isDark
+                          ? SwissColors.darkBackground
+                          : SwissColors.white,
                     ),
                   ),
                   const SizedBox(height: SwissSpacing.xl),
@@ -156,9 +158,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : () => context.go(AppRoutes.signup),
                         child: Text(
                           'Create an account',
-                          style: SwissTypography.bodyBold.copyWith(
-                            color: fg,
-                          ),
+                          style: SwissTypography.bodyBold.copyWith(color: fg),
                         ),
                       ),
                     ],

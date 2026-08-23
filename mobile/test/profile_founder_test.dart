@@ -41,9 +41,7 @@ void main() {
     UrlLauncherPlatform.instance = original;
   });
 
-  testWidgets('profile shows all standard items for any user', (
-    tester,
-  ) async {
+  testWidgets('profile shows all standard items for any user', (tester) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),
@@ -68,9 +66,7 @@ void main() {
     expect(find.text('SIGN OUT'), findsOneWidget);
   });
 
-  testWidgets('profile has a working back button', (
-    tester,
-  ) async {
+  testWidgets('profile has a working back button', (tester) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),

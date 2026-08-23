@@ -81,7 +81,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     child: Icon(
                       Icons.auto_stories,
                       size: 26,
-                      color: isDark ? SwissColors.darkBackground : SwissColors.white,
+                      color: isDark
+                          ? SwissColors.darkBackground
+                          : SwissColors.white,
                     ),
                   ),
                   const SizedBox(height: SwissSpacing.xl),
@@ -160,9 +162,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             : () => context.go(AppRoutes.login),
                         child: Text(
                           'Log in',
-                          style: SwissTypography.bodyBold.copyWith(
-                            color: fg,
-                          ),
+                          style: SwissTypography.bodyBold.copyWith(color: fg),
                         ),
                       ),
                     ],

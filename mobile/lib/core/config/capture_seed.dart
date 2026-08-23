@@ -424,12 +424,7 @@ class _CaptureQuizzesRepository implements QuizzesRepository {
       QuizQuestion(
         id: 'q3',
         question: 'Which pigment absorbs most red and blue light?',
-        options: [
-          'Chlorophyll a',
-          'Carotene',
-          'Xanthophyll',
-          'Phycoerythrin',
-        ],
+        options: ['Chlorophyll a', 'Carotene', 'Xanthophyll', 'Phycoerythrin'],
         correctIndex: 0,
         explanation: 'Chlorophyll a is the primary photosynthetic pigment.',
       ),
@@ -443,12 +438,8 @@ class _CaptureQuizzesRepository implements QuizzesRepository {
   Future<QuizResult> submit(
     String quizId, {
     required List<int> answers,
-  }) async => const QuizResult(
-    score: 3,
-    total: 3,
-    percent: 100,
-    perQuestion: [],
-  );
+  }) async =>
+      const QuizResult(score: 3, total: 3, percent: 100, perQuestion: []);
 }
 
 class _CaptureAudioRepository implements AudioRepository {
@@ -511,11 +502,10 @@ class _CaptureAudioRepository implements AudioRepository {
   }) async => _episodes.first;
 
   @override
-  Future<AudioEpisode> episode(String episodeId) async =>
-      _episodes.firstWhere(
-        (e) => e.id == episodeId,
-        orElse: () => _episodes.first,
-      );
+  Future<AudioEpisode> episode(String episodeId) async => _episodes.firstWhere(
+    (e) => e.id == episodeId,
+    orElse: () => _episodes.first,
+  );
 
   @override
   Future<void> savePosition(String episodeId, int positionSec) async {}
@@ -552,11 +542,8 @@ class _CapturePlayBillingRepository implements PlayBillingRepository {
   Future<String?> foundingPriceLabel() async => null;
 
   @override
-  Future<PurchaseResult> purchaseFounding() async => const PurchaseResult(
-    ok: false,
-    plan: null,
-    message: null,
-  );
+  Future<PurchaseResult> purchaseFounding() async =>
+      const PurchaseResult(ok: false, plan: null, message: null);
 
   @override
   Future<List<String>> restorePurchases() async => const [];

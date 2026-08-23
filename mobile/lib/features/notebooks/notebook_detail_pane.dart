@@ -234,7 +234,8 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
   Widget build(BuildContext context) {
     final notebook = widget.notebook;
     final offline = ref.watch(isOfflineProvider).value ?? false;
-    final isDark = Theme.of(context).brightness == Brightness.dark;    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
 
     return SafeArea(
       child: Column(
@@ -242,12 +243,7 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
         children: [
           // Header
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              context.isPhone ? 12 : 16,
-              20,
-              0,
-            ),
+            padding: EdgeInsets.fromLTRB(20, context.isPhone ? 12 : 16, 20, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -263,10 +259,7 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SwissEyebrow(
-                        text: 'Study Space',
-                        color: null,
-                      ),
+                      const SwissEyebrow(text: 'Study Space', color: null),
                       const SizedBox(height: 2),
                       Text(
                         notebook.title.toUpperCase(),
@@ -300,7 +293,9 @@ class _NotebookDetailPaneState extends ConsumerState<NotebookDetailPane> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _StudyActions(
               flashcardBusy: _flashcardBusy,
-              onFlashcards: offline || _flashcardBusy ? null : _generateFlashcards,
+              onFlashcards: offline || _flashcardBusy
+                  ? null
+                  : _generateFlashcards,
               quizBusy: _quizBusy,
               onQuiz: offline || _quizBusy ? null : _generateQuiz,
               podcastBusy: _podcastBusy,
@@ -466,10 +461,12 @@ class _WorkspaceHero extends StatelessWidget {
               }
               final sources = snapshot.data ?? const [];
               final total = sources.length;
-              final ready =
-                  sources.where((s) => s.status == SourceStatus.ready).length;
-              final failed =
-                  sources.where((s) => s.status == SourceStatus.failed).length;
+              final ready = sources
+                  .where((s) => s.status == SourceStatus.ready)
+                  .length;
+              final failed = sources
+                  .where((s) => s.status == SourceStatus.failed)
+                  .length;
               final pending = total - ready - failed;
 
               final caption = total == 0
@@ -516,8 +513,9 @@ class _WorkspaceHero extends StatelessWidget {
             label: aiEnabled ? 'Ask StudyFlow' : 'AI paused — offline',
             icon: aiEnabled ? Icons.auto_awesome : Icons.cloud_off,
             fullWidth: true,
-            variant:
-                aiEnabled ? SwissButtonVariant.primary : SwissButtonVariant.ghost,
+            variant: aiEnabled
+                ? SwissButtonVariant.primary
+                : SwissButtonVariant.ghost,
             onPressed: aiEnabled ? onAskAi : null,
           ),
         ],
@@ -888,8 +886,9 @@ class _AskAiTabState extends ConsumerState<_AskAiTab> {
                             const SizedBox(width: SwissSpacing.sm),
                             Text(
                               'READING YOUR SOURCES…',
-                              style: SwissTypography.caption
-                                  .copyWith(color: mutedFg),
+                              style: SwissTypography.caption.copyWith(
+                                color: mutedFg,
+                              ),
                             ),
                           ],
                         ),
@@ -1197,11 +1196,7 @@ class _AiMessageState extends ConsumerState<_AiMessage> {
 }
 
 class _ActionLabel extends StatelessWidget {
-  const _ActionLabel({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _ActionLabel({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;
@@ -1430,7 +1425,9 @@ class _PasteSourceSheet extends StatefulWidget {
 class _PasteSourceSheetState extends State<_PasteSourceSheet> {
   final _title = TextEditingController();
   final _text = TextEditingController();
-  final _textSelection = ValueNotifier<TextSelection>(const TextSelection.collapsed(offset: 0));
+  final _textSelection = ValueNotifier<TextSelection>(
+    const TextSelection.collapsed(offset: 0),
+  );
   bool _busy = false;
   String? _error;
   String? _assistError;
@@ -1479,7 +1476,9 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
       } catch (e) {
         if (!mounted) return;
         setState(() {
-          _assistError = e is NotebooksException ? e.message : 'Something went wrong.';
+          _assistError = e is NotebooksException
+              ? e.message
+              : 'Something went wrong.';
         });
       } finally {
         if (mounted) setState(() => _assistBusy = false);
@@ -1518,9 +1517,7 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = e is NotebooksException
-            ? e.message
-            : 'SOMETHING WENT WRONG.';
+        _error = e is NotebooksException ? e.message : 'SOMETHING WENT WRONG.';
       });
     }
   }
@@ -1551,101 +1548,112 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
               'PASTE TEXT',
               style: SwissTypography.section.copyWith(color: fg),
             ),
-          const SizedBox(height: SwissSpacing.xs),
-          Text(
-            'StudyFlow AI indexes it and answers come from this material.',
-            style: SwissTypography.body.copyWith(color: mutedFg),
-          ),
-          const SizedBox(height: SwissSpacing.xl),
-          SwissInput(
-            controller: _title,
-            label: 'Title',
-            hintText: 'e.g. Lecture 4 — Photosynthesis',
-          ),
-          const SizedBox(height: SwissSpacing.md),
-          TextField(
-            controller: _text,
-            maxLines: 8,
-            style: SwissTypography.body.copyWith(color: fg),
-            decoration: InputDecoration(
-              labelText: 'Text',
-              hintText: 'Paste your notes here…',
-              labelStyle: SwissTypography.label.copyWith(color: mutedFg),
-              hintStyle: SwissTypography.body.copyWith(color: mutedFg),
-              filled: true,
-              fillColor: isDark ? SwissColors.darkMuted : SwissColors.muted,
-              contentPadding: const EdgeInsets.all(SwissSpacing.md),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-                borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
-              ),
+            const SizedBox(height: SwissSpacing.xs),
+            Text(
+              'StudyFlow AI indexes it and answers come from this material.',
+              style: SwissTypography.body.copyWith(color: mutedFg),
             ),
-          ),
-          // Selection AI toolbar
-          ValueListenableBuilder<TextSelection>(
-            valueListenable: _textSelection,
-            builder: (context, sel, _) {
-              final hasSelection = !sel.isCollapsed && _text.text.isNotEmpty;
-              if (!hasSelection) return const SizedBox.shrink();
-              return KeyedSubtree(
-                key: const ValueKey('selection-ai-toolbar'),
-                child: Container(
-                  margin: const EdgeInsets.only(top: SwissSpacing.sm),
-                  padding: const EdgeInsets.symmetric(horizontal: SwissSpacing.xs, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? SwissColors.darkSurface : SwissColors.surface,
-                    border: Border.all(color: fg, width: SwissShapes.borderThin),
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final mode in NoteAssistMode.values) ...[
-                        if (mode.index > 0) const SizedBox(width: 6),
-                        _ToolbarChip(
-                          label: mode.label,
-                          onTap: _assistBusy ? null : () => _assist(mode),
-                        ),
-                      ],
-                      if (widget.tts != null) ...[
-                        const SizedBox(width: 6),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: widget.tts!.speaking,
-                          builder: (_, speaking, _) => _ToolbarChip(
-                            label: speaking ? 'Stop' : 'Listen',
-                            onTap: speaking ? _stopListening : _listen,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+            const SizedBox(height: SwissSpacing.xl),
+            SwissInput(
+              controller: _title,
+              label: 'Title',
+              hintText: 'e.g. Lecture 4 — Photosynthesis',
+            ),
+            const SizedBox(height: SwissSpacing.md),
+            TextField(
+              controller: _text,
+              maxLines: 8,
+              style: SwissTypography.body.copyWith(color: fg),
+              decoration: InputDecoration(
+                labelText: 'Text',
+                hintText: 'Paste your notes here…',
+                labelStyle: SwissTypography.label.copyWith(color: mutedFg),
+                hintStyle: SwissTypography.body.copyWith(color: mutedFg),
+                filled: true,
+                fillColor: isDark ? SwissColors.darkMuted : SwissColors.muted,
+                contentPadding: const EdgeInsets.all(SwissSpacing.md),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.zero,
+                  borderSide: BorderSide(
+                    color: SwissColors.black,
+                    width: SwissShapes.borderThin,
                   ),
                 ),
-              );
-            },
-          ),
-          if (_assistError != null) ...[
-            const SizedBox(height: SwissSpacing.sm),
-            Text(
-              _assistError!,
-              style: SwissTypography.caption.copyWith(color: SwissColors.red),
+              ),
             ),
-          ],
-          if (_error != null) ...[
-            const SizedBox(height: SwissSpacing.sm),
-            Text(
-              _error!,
-              style: SwissTypography.caption.copyWith(color: SwissColors.red),
+            // Selection AI toolbar
+            ValueListenableBuilder<TextSelection>(
+              valueListenable: _textSelection,
+              builder: (context, sel, _) {
+                final hasSelection = !sel.isCollapsed && _text.text.isNotEmpty;
+                if (!hasSelection) return const SizedBox.shrink();
+                return KeyedSubtree(
+                  key: const ValueKey('selection-ai-toolbar'),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: SwissSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SwissSpacing.xs,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? SwissColors.darkSurface
+                          : SwissColors.surface,
+                      border: Border.all(
+                        color: fg,
+                        width: SwissShapes.borderThin,
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final mode in NoteAssistMode.values) ...[
+                            if (mode.index > 0) const SizedBox(width: 6),
+                            _ToolbarChip(
+                              label: mode.label,
+                              onTap: _assistBusy ? null : () => _assist(mode),
+                            ),
+                          ],
+                          if (widget.tts != null) ...[
+                            const SizedBox(width: 6),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: widget.tts!.speaking,
+                              builder: (_, speaking, _) => _ToolbarChip(
+                                label: speaking ? 'Stop' : 'Listen',
+                                onTap: speaking ? _stopListening : _listen,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-          const SizedBox(height: SwissSpacing.xl),
-          SwissButton(
-            label: _busy ? 'Adding…' : 'Add source',
-            icon: Icons.add,
-            fullWidth: true,
-            onPressed: _busy ? null : _add,
-          ),
+            if (_assistError != null) ...[
+              const SizedBox(height: SwissSpacing.sm),
+              Text(
+                _assistError!,
+                style: SwissTypography.caption.copyWith(color: SwissColors.red),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: SwissSpacing.sm),
+              Text(
+                _error!,
+                style: SwissTypography.caption.copyWith(color: SwissColors.red),
+              ),
+            ],
+            const SizedBox(height: SwissSpacing.xl),
+            SwissButton(
+              label: _busy ? 'Adding…' : 'Add source',
+              icon: Icons.add,
+              fullWidth: true,
+              onPressed: _busy ? null : _add,
+            ),
           ],
         ),
       ),

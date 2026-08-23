@@ -71,8 +71,12 @@ Future<void> submitPasteSheet(WidgetTester tester) async {
   // Find the SwissButton whose label starts with 'Add source' in the bottom sheet
   final sheetBtn = find.descendant(
     of: find.byType(BottomSheet),
-    matching: find.byWidgetPredicate((w) =>
-        w is SwissButton && w.label.contains('Add source') && w.onPressed != null),
+    matching: find.byWidgetPredicate(
+      (w) =>
+          w is SwissButton &&
+          w.label.contains('Add source') &&
+          w.onPressed != null,
+    ),
   );
   expect(sheetBtn, findsOneWidget);
   final btn = tester.widget<SwissButton>(sheetBtn);
@@ -95,15 +99,16 @@ void main() {
     return fake;
   }
 
-  testWidgets('Sources tab shows a real empty state with an Add source action', (
-    tester,
-  ) async {
-    await pumpWithNotebook(tester);
-    await openNotebookSourcesTab(tester);
+  testWidgets(
+    'Sources tab shows a real empty state with an Add source action',
+    (tester) async {
+      await pumpWithNotebook(tester);
+      await openNotebookSourcesTab(tester);
 
-    expect(find.text('NO SOURCES YET'), findsOneWidget);
-    expect(find.text('ADD SOURCE'), findsOneWidget);
-  });
+      expect(find.text('NO SOURCES YET'), findsOneWidget);
+      expect(find.text('ADD SOURCE'), findsOneWidget);
+    },
+  );
 
   testWidgets('pasting a source adds it to the list for real', (tester) async {
     final fake = await pumpWithNotebook(tester);
@@ -138,10 +143,7 @@ void main() {
     await openPasteSheet(tester);
     await submitPasteSheet(tester);
 
-    expect(
-      find.textContaining('ADD A TITLE AND THE TEXT'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('ADD A TITLE AND THE TEXT'), findsOneWidget);
   });
 
   testWidgets('removing a source confirms, deletes, and refreshes the list', (
@@ -216,8 +218,10 @@ void main() {
     // Tap the add sources button directly via onPressed
     final addBtn = find.descendant(
       of: find.byType(BottomSheet),
-      matching: find.byWidgetPredicate((w) =>
-          w is SwissButton && w.label.contains('Add') && w.onPressed != null),
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is SwissButton && w.label.contains('Add') && w.onPressed != null,
+      ),
     );
     expect(addBtn, findsOneWidget);
     final btn = tester.widget<SwissButton>(addBtn);

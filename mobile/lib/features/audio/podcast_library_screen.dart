@@ -31,30 +31,47 @@ class PodcastLibraryScreen extends ConsumerWidget {
 
             const SwissEyebrow(text: 'Audio'),
             const SizedBox(height: SwissSpacing.sm),
-            Text('LISTEN\nTO YOUR\nNOTES.', style: SwissTypography.display.copyWith(fontSize: 36)),
+            Text(
+              'LISTEN\nTO YOUR\nNOTES.',
+              style: SwissTypography.display.copyWith(fontSize: 36),
+            ),
             const SizedBox(height: SwissSpacing.xl),
             Expanded(
               child: asyncState.when(
-                loading: () => const SwissProcessingState(label: 'Loading episodes'),
-                error: (e, _) => SwissErrorState(title: 'Error', message: 'Could not load your episodes.',
-                  onRetry: () => ref.read(audioControllerProvider.notifier).refresh()),
+                loading: () =>
+                    const SwissProcessingState(label: 'Loading episodes'),
+                error: (e, _) => SwissErrorState(
+                  title: 'Error',
+                  message: 'Could not load your episodes.',
+                  onRetry: () =>
+                      ref.read(audioControllerProvider.notifier).refresh(),
+                ),
                 data: (state) {
                   if (state.episodes.isEmpty) {
-                    return SwissEmptyState(sectionNumber: '01', title: 'No episodes',
-                      description: 'Generate a podcast from your study spaces to start listening.');
+                    return SwissEmptyState(
+                      sectionNumber: '01',
+                      title: 'No episodes',
+                      description:
+                          'Generate a podcast from your study spaces to start listening.',
+                    );
                   }
                   return ListView.builder(
                     itemCount: state.episodes.length,
                     itemBuilder: (context, index) {
                       final ep = state.episodes[index];
-                      return Column(children: [
-                        SwissNumberedItem(
-                          index: index + 1, title: ep.title,
-                          subtitle: '${ep.style.toUpperCase()}${ep.durationSec != null ? " · ${(ep.durationSec! / 60).round()} MIN" : ""}',
-                          onTap: () => context.push('${AppRoutes.audio}/${ep.id}'),
-                        ),
-                        const SwissHairline(),
-                      ]);
+                      return Column(
+                        children: [
+                          SwissNumberedItem(
+                            index: index + 1,
+                            title: ep.title,
+                            subtitle:
+                                '${ep.style.toUpperCase()}${ep.durationSec != null ? " · ${(ep.durationSec! / 60).round()} MIN" : ""}',
+                            onTap: () =>
+                                context.push('${AppRoutes.audio}/${ep.id}'),
+                          ),
+                          const SwissHairline(),
+                        ],
+                      );
                     },
                   );
                 },

@@ -158,11 +158,7 @@ class BauhausLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      color: color,
-    );
+    return Container(width: width, height: height, color: color);
   }
 }
 
@@ -201,19 +197,13 @@ class BauhausComposition extends StatelessWidget {
             Positioned(
               top: height * 0.1,
               left: width * 0.05,
-              child: BauhausCircle(
-                size: width * 0.55,
-                color: circleColor,
-              ),
+              child: BauhausCircle(size: width * 0.55, color: circleColor),
             ),
           if (showSquare)
             Positioned(
               top: height * 0.2,
               right: width * 0.05,
-              child: BauhausSquare(
-                size: width * 0.45,
-                color: squareColor,
-              ),
+              child: BauhausSquare(size: width * 0.45, color: squareColor),
             ),
           if (showTriangle)
             Positioned(
@@ -264,18 +254,12 @@ class BauhausLogoMark extends StatelessWidget {
           Positioned(
             top: size * 0.12,
             left: size * 0.12,
-            child: BauhausCircle(
-              size: size * 0.35,
-              color: BauhausColors.red,
-            ),
+            child: BauhausCircle(size: size * 0.35, color: BauhausColors.red),
           ),
           Positioned(
             top: size * 0.15,
             right: size * 0.12,
-            child: BauhausSquare(
-              size: size * 0.28,
-              color: BauhausColors.blue,
-            ),
+            child: BauhausSquare(size: size * 0.28, color: BauhausColors.blue),
           ),
           Positioned(
             bottom: size * 0.12,
@@ -293,10 +277,7 @@ class BauhausLogoMark extends StatelessWidget {
 
 /// Bauhaus processing spinner — rotating geometric shapes.
 class BauhausSpinner extends StatefulWidget {
-  const BauhausSpinner({
-    super.key,
-    this.size = 48,
-  });
+  const BauhausSpinner({super.key, this.size = 48});
 
   final double size;
 

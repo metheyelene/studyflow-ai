@@ -18,10 +18,7 @@ class BauhausEmptyState extends StatelessWidget {
     required this.description,
     this.actionLabel,
     this.onAction,
-    this.composition = const BauhausComposition(
-      width: 160,
-      height: 160,
-    ),
+    this.composition = const BauhausComposition(width: 160, height: 160),
   });
 
   final String title;
@@ -89,10 +86,7 @@ class BauhausErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            BauhausSquare(
-              size: 64,
-              color: BauhausColors.red,
-            ),
+            BauhausSquare(size: 64, color: BauhausColors.red),
             const SizedBox(height: BauhausSpacing.xl),
             Text(
               title.toUpperCase(),
@@ -143,10 +137,7 @@ class BauhausSuccessState extends StatelessWidget {
           children: [
             const BauhausLogoMark(size: 80),
             const SizedBox(height: BauhausSpacing.xl),
-            Text(
-              'READY',
-              style: BauhausTypography.headline,
-            ),
+            Text('READY', style: BauhausTypography.headline),
             const SizedBox(height: BauhausSpacing.sm),
             Text(
               message,
@@ -172,11 +163,7 @@ class BauhausSuccessState extends StatelessWidget {
 
 /// Processing state — geometric animation.
 class BauhausProcessingState extends StatefulWidget {
-  const BauhausProcessingState({
-    super.key,
-    required this.label,
-    this.progress,
-  });
+  const BauhausProcessingState({super.key, required this.label, this.progress});
 
   final String label;
   final double? progress;
@@ -248,10 +235,7 @@ class _BauhausProcessingState extends State<BauhausProcessingState>
               },
             ),
             const SizedBox(height: BauhausSpacing.xl),
-            Text(
-              widget.label.toUpperCase(),
-              style: BauhausTypography.label,
-            ),
+            Text(widget.label.toUpperCase(), style: BauhausTypography.label),
             if (widget.progress != null) ...[
               const SizedBox(height: BauhausSpacing.md),
               SizedBox(

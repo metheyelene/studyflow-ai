@@ -46,7 +46,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ready to study?'), findsOneWidget);
-    expect(find.text('PROFILE'), findsOneWidget); // bottom nav (Swiss uppercase)
+    expect(
+      find.text('PROFILE'),
+      findsOneWidget,
+    ); // bottom nav (Swiss uppercase)
   });
 
   testWidgets('quick actions render and Ask AI navigates to notebooks', (

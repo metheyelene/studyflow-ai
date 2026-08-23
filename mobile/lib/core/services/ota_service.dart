@@ -75,14 +75,13 @@ class OtaState {
     String? currentVersion,
     double? downloadProgress,
     String? errorMessage,
-  }) =>
-      OtaState(
-        status: status ?? this.status,
-        release: release ?? this.release,
-        currentVersion: currentVersion ?? this.currentVersion,
-        downloadProgress: downloadProgress ?? this.downloadProgress,
-        errorMessage: errorMessage,
-      );
+  }) => OtaState(
+    status: status ?? this.status,
+    release: release ?? this.release,
+    currentVersion: currentVersion ?? this.currentVersion,
+    downloadProgress: downloadProgress ?? this.downloadProgress,
+    errorMessage: errorMessage,
+  );
 }
 
 /// Manages the full OTA update lifecycle: check → download → install.
@@ -139,9 +138,7 @@ class OtaNotifier extends AsyncNotifier<OtaState> {
       }
 
       // Parse version from tag (strip leading "v")
-      final version = tagName.startsWith('v')
-          ? tagName.substring(1)
-          : tagName;
+      final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
 
       final current = state.value!.currentVersion;
       final isNewer = _isNewerVersion(current, version);

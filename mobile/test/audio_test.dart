@@ -54,10 +54,7 @@ void main() {
 
     testWidgets('lists episodes with ready status', (tester) async {
       final audio = FakeAudioRepository(
-        episodes: [
-          readyEpisode('ep-1'),
-          readyEpisode('ep-2'),
-        ],
+        episodes: [readyEpisode('ep-1'), readyEpisode('ep-2')],
       );
       final router = buildAppRouter();
       await pumpApp(tester, audio: audio, router: router);

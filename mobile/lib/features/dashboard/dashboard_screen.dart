@@ -110,15 +110,13 @@ class _UsageBar extends ConsumerWidget {
         height: 20,
         decoration: BoxDecoration(
           color: isDark ? SwissColors.darkMuted : SwissColors.muted,
-          border: Border.all(
-            color: fg,
-            width: SwissShapes.borderThin,
-          ),
+          border: Border.all(color: fg, width: SwissShapes.borderThin),
         ),
       ),
       error: (e, _) => SwissErrorState(
         title: 'Usage',
-        message: 'Could not load your usage.\n${e.toString().replaceAll('Exception: ', '')}',
+        message:
+            'Could not load your usage.\n${e.toString().replaceAll('Exception: ', '')}',
         onRetry: () => ref.invalidate(usageProvider),
       ),
       data: (usage) {

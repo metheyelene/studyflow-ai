@@ -35,8 +35,9 @@ class NotebooksScreen extends ConsumerWidget {
         ),
         data: (notebooks) {
           if (selectedId != null) {
-            final notebook =
-                notebooks.where((n) => n.id == selectedId).firstOrNull;
+            final notebook = notebooks
+                .where((n) => n.id == selectedId)
+                .firstOrNull;
             if (notebook != null) {
               return NotebookDetailPane(notebook: notebook, showBack: true);
             }
@@ -55,10 +56,7 @@ class NotebooksScreen extends ConsumerWidget {
 
 /// Notebook list — Swiss editorial layout.
 class _NotebooksList extends StatelessWidget {
-  const _NotebooksList({
-    required this.notebooks,
-    required this.onRefresh,
-  });
+  const _NotebooksList({required this.notebooks, required this.onRefresh});
 
   final List<Notebook> notebooks;
   final VoidCallback onRefresh;
@@ -96,8 +94,7 @@ class _NotebooksList extends StatelessWidget {
                       final notebook = notebooks[index];
                       return _NotebookItem(
                         notebook: notebook,
-                        onTap: () =>
-                            context.push('/notebooks/${notebook.id}'),
+                        onTap: () => context.push('/notebooks/${notebook.id}'),
                       );
                     },
                   ),
@@ -124,10 +121,7 @@ class _NotebooksList extends StatelessWidget {
 
 /// Notebook item — Swiss numbered list.
 class _NotebookItem extends StatelessWidget {
-  const _NotebookItem({
-    required this.notebook,
-    required this.onTap,
-  });
+  const _NotebookItem({required this.notebook, required this.onTap});
 
   final Notebook notebook;
   final VoidCallback onTap;

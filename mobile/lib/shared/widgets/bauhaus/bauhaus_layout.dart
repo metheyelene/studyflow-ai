@@ -59,21 +59,13 @@ class BauhausDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      height: height,
-      color: color,
-    );
+    return Container(margin: margin, height: height, color: color);
   }
 }
 
 /// Hairline divider.
 class BauhausHairline extends StatelessWidget {
-  const BauhausHairline({
-    super.key,
-    this.color,
-    this.margin,
-  });
+  const BauhausHairline({super.key, this.color, this.margin});
 
   final Color? color;
   final EdgeInsetsGeometry? margin;
@@ -103,10 +95,7 @@ class BauhausEyebrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: BauhausTypography.label.copyWith(
-        color: color,
-        letterSpacing: 1.4,
-      ),
+      style: BauhausTypography.label.copyWith(color: color, letterSpacing: 1.4),
     );
   }
 }

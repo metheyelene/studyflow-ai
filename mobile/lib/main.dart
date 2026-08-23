@@ -58,9 +58,13 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
   ThemeData _buildSwissTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
 
-    final background = isDark ? SwissColors.darkBackground : SwissColors.background;
+    final background = isDark
+        ? SwissColors.darkBackground
+        : SwissColors.background;
     final surface = isDark ? SwissColors.darkSurface : SwissColors.surface;
-    final onSurface = isDark ? SwissColors.darkOnSurface : SwissColors.onSurface;
+    final onSurface = isDark
+        ? SwissColors.darkOnSurface
+        : SwissColors.onSurface;
     final border = isDark ? SwissColors.darkBorder : SwissColors.border;
     final muted = isDark ? SwissColors.darkMuted : SwissColors.muted;
 
@@ -134,15 +138,24 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
         ),
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
+          borderSide: BorderSide(
+            color: SwissColors.black,
+            width: SwissShapes.borderThin,
+          ),
         ),
         enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: SwissColors.black, width: SwissShapes.borderThin),
+          borderSide: BorderSide(
+            color: SwissColors.black,
+            width: SwissShapes.borderThin,
+          ),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: SwissColors.red, width: SwissShapes.borderThin),
+          borderSide: BorderSide(
+            color: SwissColors.red,
+            width: SwissShapes.borderThin,
+          ),
         ),
       ),
 
@@ -164,9 +177,7 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: surface,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
-        ),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
 
       snackBarTheme: SnackBarThemeData(
@@ -175,9 +186,7 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
         contentTextStyle: SwissTypography.body.copyWith(
           color: isDark ? SwissColors.black : SwissColors.white,
         ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
-        ),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
     );
   }

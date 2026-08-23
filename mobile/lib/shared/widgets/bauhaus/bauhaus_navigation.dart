@@ -162,7 +162,9 @@ class BauhausNavRail extends StatelessWidget {
             if (i != items.length - 1)
               Container(
                 height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: BauhausSpacing.md),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: BauhausSpacing.md,
+                ),
                 color: BauhausColors.black.withValues(alpha: 0.15),
               ),
           ],
@@ -210,8 +212,9 @@ class _RailItem extends StatelessWidget {
               : null,
         ),
         child: Row(
-          mainAxisAlignment:
-              extended ? MainAxisAlignment.start : MainAxisAlignment.center,
+          mainAxisAlignment: extended
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.center,
           children: [
             Icon(
               selected ? (item.selectedIcon ?? item.icon) : item.icon,

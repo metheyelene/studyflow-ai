@@ -38,9 +38,8 @@ class FlashcardsScreen extends ConsumerWidget {
             const SizedBox(height: SwissSpacing.xl),
             Expanded(
               child: asyncState.when(
-                loading: () => const SwissProcessingState(
-                  label: 'Loading flashcards',
-                ),
+                loading: () =>
+                    const SwissProcessingState(label: 'Loading flashcards'),
                 error: (e, _) => SwissErrorState(
                   title: 'Error',
                   message: 'Could not load your flashcards.',
@@ -66,7 +65,9 @@ class FlashcardsScreen extends ConsumerWidget {
                             index: index + 1,
                             title: deck.title,
                             subtitle: '${deck.cardCount} cards',
-                            onTap: () => context.push('${AppRoutes.flashcards}/${deck.id}'),
+                            onTap: () => context.push(
+                              '${AppRoutes.flashcards}/${deck.id}',
+                            ),
                           ),
                           const SwissHairline(),
                         ],

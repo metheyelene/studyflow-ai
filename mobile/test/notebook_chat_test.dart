@@ -73,8 +73,12 @@ Future<FakeNotebooksRepository> _setupChat(
 /// Sends a message by directly calling the chat controller's send method.
 /// This bypasses the UI tap chain which can be unreliable in tests.
 Future<void> _sendMessage(WidgetTester tester, String message) async {
-  final container = ProviderScope.containerOf(tester.element(find.byType(TextField)));
-  final controller = container.read(notebookChatControllerProvider('nb-1').notifier);
+  final container = ProviderScope.containerOf(
+    tester.element(find.byType(TextField)),
+  );
+  final controller = container.read(
+    notebookChatControllerProvider('nb-1').notifier,
+  );
   await controller.send(message);
   await tester.pump();
   await tester.pumpAndSettle();
@@ -148,10 +152,10 @@ void main() {
 
       // The user message may be off-screen in the reverse ListView, so
       // verify it via the controller state instead of the widget tree.
-      final container =
-          ProviderScope.containerOf(tester.element(find.byType(TextField)));
-      final chatState =
-          container.read(notebookChatControllerProvider('nb-1'));
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(TextField)),
+      );
+      final chatState = container.read(notebookChatControllerProvider('nb-1'));
       expect(chatState.messages, hasLength(2));
       expect(chatState.messages.first.content, 'Explain photosynthesis');
 
@@ -200,60 +204,57 @@ void main() {
           findsOneWidget,
         );
         // User message is in state even though off-screen.
-        final container =
-            ProviderScope.containerOf(tester.element(find.byType(TextField)));
-        final chatState =
-            container.read(notebookChatControllerProvider('nb-1'));
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(TextField)),
+        );
+        final chatState = container.read(
+          notebookChatControllerProvider('nb-1'),
+        );
         expect(chatState.messages.first.content, 'Explain photosynthesis');
       },
     );
 
-    testWidgets(
-      'the empty state shows ASK STUDYFLOW heading and suggestions',
-      (tester) async {
-        _freezeOrbMotion(tester);
-        await _setupChat(tester);
+    testWidgets('the empty state shows ASK STUDYFLOW heading and suggestions', (
+      tester,
+    ) async {
+      _freezeOrbMotion(tester);
+      await _setupChat(tester);
 
-        final emptyState = find.byKey(const Key('chat-empty-state'));
-        expect(emptyState, findsOneWidget);
-        expect(
-          find.descendant(
-            of: emptyState,
-            matching: find.text('ASK STUDYFLOW'),
-          ),
-          findsOneWidget,
-        );
+      final emptyState = find.byKey(const Key('chat-empty-state'));
+      expect(emptyState, findsOneWidget);
+      expect(
+        find.descendant(of: emptyState, matching: find.text('ASK STUDYFLOW')),
+        findsOneWidget,
+      );
 
-        await tester.ensureVisible(find.text('SUMMARIZE THIS NOTEBOOK'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('SUMMARIZE THIS NOTEBOOK'));
-        await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('SUMMARIZE THIS NOTEBOOK'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('SUMMARIZE THIS NOTEBOOK'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('SUMMARIZE THIS NOTEBOOK'), findsNothing);
-      },
-    );
+      expect(find.text('SUMMARIZE THIS NOTEBOOK'), findsNothing);
+    });
 
-    testWidgets(
-      'answers show AI label, content, and contextual actions',
-      (tester) async {
-        _freezeOrbMotion(tester);
-        await _setupChat(tester);
-        await _sendMessage(tester, 'Explain photosynthesis');
+    testWidgets('answers show AI label, content, and contextual actions', (
+      tester,
+    ) async {
+      _freezeOrbMotion(tester);
+      await _setupChat(tester);
+      await _sendMessage(tester, 'Explain photosynthesis');
 
-        expect(find.text('AI'), findsOneWidget);
-        expect(
-          find.text(
-            'Photosynthesis converts light into chemical energy, as covered in your notes.',
-          ),
-          findsOneWidget,
-        );
+      expect(find.text('AI'), findsOneWidget);
+      expect(
+        find.text(
+          'Photosynthesis converts light into chemical energy, as covered in your notes.',
+        ),
+        findsOneWidget,
+      );
 
-        expect(find.text('LISTEN'), findsOneWidget);
-        // FLASHCARDS appears in both the AI action bar and the Study tab tool row.
-        expect(find.text('FLASHCARDS'), findsWidgets);
-        expect(find.text('QUIZ'), findsWidgets);
-      },
-    );
+      expect(find.text('LISTEN'), findsOneWidget);
+      // FLASHCARDS appears in both the AI action bar and the Study tab tool row.
+      expect(find.text('FLASHCARDS'), findsWidgets);
+      expect(find.text('QUIZ'), findsWidgets);
+    });
 
     testWidgets('Listen speaks the answer and toggles to Stop', (tester) async {
       _freezeOrbMotion(tester);

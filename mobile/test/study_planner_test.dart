@@ -188,7 +188,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('FOCUSING ON Physics'), findsOneWidget);
-    expect(find.textContaining('FOCUSING ON Physics — 55% ACCURACY'), findsOneWidget);
+    expect(
+      find.textContaining('FOCUSING ON Physics — 55% ACCURACY'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('generic plans show no focus banner', (tester) async {

@@ -65,7 +65,10 @@ class SettingsScreen extends ConsumerWidget {
             // Audio
             const SwissSectionLabel(number: '03', title: 'Audio'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.headphones, label: 'Podcast settings'),
+            const _SettingsItem(
+              icon: Icons.headphones,
+              label: 'Podcast settings',
+            ),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -74,7 +77,10 @@ class SettingsScreen extends ConsumerWidget {
             // Notifications
             const SwissSectionLabel(number: '04', title: 'Notifications'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.notifications, label: 'Push notifications'),
+            const _SettingsItem(
+              icon: Icons.notifications,
+              label: 'Push notifications',
+            ),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -97,8 +103,14 @@ class SettingsScreen extends ConsumerWidget {
             // Privacy
             const SwissSectionLabel(number: '06', title: 'Privacy'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.privacy_tip, label: 'Privacy policy'),
-            const _SettingsItem(icon: Icons.description, label: 'Terms of service'),
+            const _SettingsItem(
+              icon: Icons.privacy_tip,
+              label: 'Privacy policy',
+            ),
+            const _SettingsItem(
+              icon: Icons.description,
+              label: 'Terms of service',
+            ),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -142,11 +154,7 @@ class SettingsScreen extends ConsumerWidget {
 
 /// Settings list item — Swiss style.
 class _SettingsItem extends StatelessWidget {
-  const _SettingsItem({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _SettingsItem({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;
@@ -232,26 +240,16 @@ class _ThemeOption extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: SwissSpacing.xs),
         decoration: BoxDecoration(
           color: selected ? fg : bg,
-          border: Border.all(
-            color: fg,
-            width: SwissShapes.borderMedium,
-          ),
+          border: Border.all(color: fg, width: SwissShapes.borderMedium),
         ),
         child: Row(
           children: [
             Text(
               label,
-              style: SwissTypography.label.copyWith(
-                color: selected ? bg : fg,
-              ),
+              style: SwissTypography.label.copyWith(color: selected ? bg : fg),
             ),
             const Spacer(),
-            if (selected)
-              Icon(
-                Icons.check,
-                size: 18,
-                color: bg,
-              ),
+            if (selected) Icon(Icons.check, size: 18, color: bg),
           ],
         ),
       ),

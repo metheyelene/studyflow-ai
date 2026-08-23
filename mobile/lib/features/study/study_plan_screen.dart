@@ -52,8 +52,9 @@ class StudyPlanScreen extends ConsumerWidget {
                     ref.read(studyPlannerControllerProvider.notifier).refresh(),
               ),
               data: (planList) {
-                final plan =
-                    planList.where((p) => p.examId == examId).firstOrNull;
+                final plan = planList
+                    .where((p) => p.examId == examId)
+                    .firstOrNull;
                 if (plan == null) {
                   return _ErrorState(
                     message: 'No plan yet for this exam.',
@@ -213,8 +214,18 @@ class _PlanBody extends StatelessWidget {
     if (date == _dateKey(tomorrow)) return 'Tomorrow';
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${days[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
   }
@@ -251,10 +262,7 @@ class _TaskTile extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 color: task.isDone ? fg : Colors.transparent,
-                border: Border.all(
-                  color: task.isDone ? fg : mutedFg,
-                  width: 2,
-                ),
+                border: Border.all(color: task.isDone ? fg : mutedFg, width: 2),
               ),
               child: task.isDone
                   ? const Icon(Icons.check, size: 16, color: SwissColors.white)
@@ -269,8 +277,9 @@ class _TaskTile extends StatelessWidget {
                     task.title.toUpperCase(),
                     style: SwissTypography.body.copyWith(
                       color: task.isDone ? mutedFg : fg,
-                      decoration:
-                          task.isDone ? TextDecoration.lineThrough : null,
+                      decoration: task.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: mutedFg,
                     ),
                   ),
@@ -278,8 +287,7 @@ class _TaskTile extends StatelessWidget {
                     const SizedBox(height: SwissSpacing.xxs),
                     Text(
                       task.detail,
-                      style:
-                          SwissTypography.caption.copyWith(color: mutedFg),
+                      style: SwissTypography.caption.copyWith(color: mutedFg),
                     ),
                   ],
                 ],

@@ -149,11 +149,7 @@ class ProfileScreen extends ConsumerWidget {
 
 /// Settings list item — Swiss style.
 class _SettingsItem extends StatelessWidget {
-  const _SettingsItem({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _SettingsItem({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;

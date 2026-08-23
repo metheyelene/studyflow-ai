@@ -45,8 +45,12 @@ class _BauhausCardState extends State<BauhausCard>
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: widget.onTap != null ? (_) => setState(() => _hovered = true) : null,
-      onExit: widget.onTap != null ? (_) => setState(() => _hovered = false) : null,
+      onEnter: widget.onTap != null
+          ? (_) => setState(() => _hovered = true)
+          : null,
+      onExit: widget.onTap != null
+          ? (_) => setState(() => _hovered = false)
+          : null,
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
@@ -66,16 +70,9 @@ class _BauhausCardState extends State<BauhausCard>
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Padding(
-                padding: widget.padding,
-                child: widget.child,
-              ),
+              Padding(padding: widget.padding, child: widget.child),
               if (widget.accent != BauhausCardAccent.none)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: _accentWidget(),
-                ),
+                Positioned(top: 12, right: 12, child: _accentWidget()),
             ],
           ),
         ),
@@ -86,17 +83,17 @@ class _BauhausCardState extends State<BauhausCard>
   Widget _accentWidget() {
     return switch (widget.accent) {
       BauhausCardAccent.circle => BauhausCircle(
-          size: 12,
-          color: widget.accentColor,
-        ),
+        size: 12,
+        color: widget.accentColor,
+      ),
       BauhausCardAccent.square => BauhausSquare(
-          size: 12,
-          color: widget.accentColor,
-        ),
+        size: 12,
+        color: widget.accentColor,
+      ),
       BauhausCardAccent.triangle => BauhausTriangle(
-          size: 12,
-          color: widget.accentColor,
-        ),
+        size: 12,
+        color: widget.accentColor,
+      ),
       BauhausCardAccent.none => const SizedBox.shrink(),
     };
   }

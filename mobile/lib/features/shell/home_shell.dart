@@ -73,8 +73,9 @@ class HomeShell extends ConsumerWidget {
                   }
                 },
                 onReplay: () => ref.read(nowPlayingProvider.notifier).replay(),
-                onScrub: (fraction) =>
-                    ref.read(nowPlayingProvider.notifier).seekToFraction(fraction),
+                onScrub: (fraction) => ref
+                    .read(nowPlayingProvider.notifier)
+                    .seekToFraction(fraction),
                 onOpen: () =>
                     context.push('${AppRoutes.audio}/${nowPlaying.episodeId}'),
               ),
@@ -200,11 +201,7 @@ class _SwissNavItem extends StatelessWidget {
             )
           else
             const SizedBox(height: 7),
-          Icon(
-            icon,
-            size: 22,
-            color: active ? fg : mutedFg,
-          ),
+          Icon(icon, size: 22, color: active ? fg : mutedFg),
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
@@ -353,17 +350,9 @@ class _SwissRailItem extends StatelessWidget {
                 )
               else
                 const SizedBox(width: 11),
-              Icon(
-                icon,
-                size: 22,
-                color: active ? fg : mutedFg,
-              ),
+              Icon(icon, size: 22, color: active ? fg : mutedFg),
             ] else ...[
-              Icon(
-                icon,
-                size: 20,
-                color: active ? fg : mutedFg,
-              ),
+              Icon(icon, size: 20, color: active ? fg : mutedFg),
               const SizedBox(width: SwissSpacing.sm),
               Text(
                 label.toUpperCase(),

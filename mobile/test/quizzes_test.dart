@@ -134,10 +134,7 @@ void main() {
   testWidgets('session shows an honest error when the quiz is missing', (
     tester,
   ) async {
-    await pumpApp(
-      tester,
-      quizzes: FakeQuizzesRepository(quizzes: const []),
-    );
+    await pumpApp(tester, quizzes: FakeQuizzesRepository(quizzes: const []));
 
     final router = GoRouter.of(tester.element(find.text('Ready to study?')));
     router.push('/quizzes/missing');

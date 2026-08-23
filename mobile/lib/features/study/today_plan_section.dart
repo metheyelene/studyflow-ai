@@ -68,8 +68,7 @@ class TodayPlanSection extends ConsumerWidget {
         ),
       ),
       data: (planList) {
-        final plan =
-            planList.where((p) => p.examId == nearest.id).firstOrNull;
+        final plan = planList.where((p) => p.examId == nearest.id).firstOrNull;
 
         if (plan == null) {
           return SwissCard(
@@ -154,7 +153,9 @@ class TodayPlanSection extends ConsumerWidget {
               if (overdue.isNotEmpty) ...[
                 Text(
                   '${overdue.length} OVERDUE TASK${overdue.length == 1 ? '' : 'S'}',
-                  style: SwissTypography.caption.copyWith(color: SwissColors.red),
+                  style: SwissTypography.caption.copyWith(
+                    color: SwissColors.red,
+                  ),
                 ),
                 const SizedBox(height: SwissSpacing.xs),
               ],
@@ -186,9 +187,8 @@ class TodayPlanSection extends ConsumerWidget {
                     label: 'Full plan',
                     variant: SwissButtonVariant.ghost,
                     compact: true,
-                    onPressed: () => context.push(
-                      '${AppRoutes.studyPlans}/${plan.examId}',
-                    ),
+                    onPressed: () =>
+                        context.push('${AppRoutes.studyPlans}/${plan.examId}'),
                   ),
                   SwissButton(
                     label: 'Regenerate',
@@ -236,10 +236,7 @@ class _PlanTaskRow extends StatelessWidget {
               height: 20,
               decoration: BoxDecoration(
                 color: task.isDone ? fg : Colors.transparent,
-                border: Border.all(
-                  color: task.isDone ? fg : mutedFg,
-                  width: 2,
-                ),
+                border: Border.all(color: task.isDone ? fg : mutedFg, width: 2),
               ),
               child: task.isDone
                   ? const Icon(Icons.check, size: 14, color: SwissColors.white)
@@ -255,8 +252,9 @@ class _PlanTaskRow extends StatelessWidget {
                     style: SwissTypography.body.copyWith(
                       color: task.isDone ? mutedFg : fg,
                       fontSize: 13,
-                      decoration:
-                          task.isDone ? TextDecoration.lineThrough : null,
+                      decoration: task.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: mutedFg,
                     ),
                   ),

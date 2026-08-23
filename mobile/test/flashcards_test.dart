@@ -57,7 +57,10 @@ void main() {
     await pumpApp(tester, flashcards: flashcards);
     await openFlashcards(tester);
 
-    expect(find.textContaining('Could not load your flashcards'), findsOneWidget);
+    expect(
+      find.textContaining('Could not load your flashcards'),
+      findsOneWidget,
+    );
 
     flashcards.failList = false;
     flashcards.decks = [deck(1)];

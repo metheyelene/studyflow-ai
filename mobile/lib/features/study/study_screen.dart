@@ -145,7 +145,9 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                         'study guides from that material.',
                         style: SwissTypography.body.copyWith(
                           color: isDark
-                              ? SwissColors.darkForeground.withValues(alpha: 0.6)
+                              ? SwissColors.darkForeground.withValues(
+                                  alpha: 0.6,
+                                )
                               : SwissColors.black.withValues(alpha: 0.6),
                           height: 1.45,
                         ),
@@ -186,9 +188,17 @@ class _ExamsSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(width: 180, height: 15, color: isDark ? SwissColors.darkMuted : SwissColors.muted),
+            Container(
+              width: 180,
+              height: 15,
+              color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+            ),
             const SizedBox(height: SwissSpacing.sm),
-            Container(width: 260, height: 12, color: isDark ? SwissColors.darkMuted : SwissColors.muted),
+            Container(
+              width: 260,
+              height: 12,
+              color: isDark ? SwissColors.darkMuted : SwissColors.muted,
+            ),
           ],
         ),
       ),

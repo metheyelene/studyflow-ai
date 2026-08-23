@@ -48,9 +48,10 @@ class _BauhausButtonState extends State<BauhausButton>
       duration: const Duration(milliseconds: 80),
       reverseDuration: const Duration(milliseconds: 320),
     );
-    _pressAnimation = Tween<double>(begin: 0, end: 2).animate(
-      CurvedAnimation(parent: _pressController, curve: Curves.easeOut),
-    );
+    _pressAnimation = Tween<double>(
+      begin: 0,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _pressController, curve: Curves.easeOut));
   }
 
   @override
@@ -111,7 +112,9 @@ class _BauhausButtonState extends State<BauhausButton>
                       ],
               ),
               child: Row(
-                mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisSize: widget.expand
+                    ? MainAxisSize.max
+                    : MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.icon != null) ...[
@@ -134,47 +137,47 @@ class _BauhausButtonState extends State<BauhausButton>
   (Color bg, Color fg, Color border) _colors() {
     return switch (widget.variant) {
       BauhausButtonVariant.primary => (
-          BauhausColors.red,
-          BauhausColors.white,
-          BauhausColors.black,
-        ),
+        BauhausColors.red,
+        BauhausColors.white,
+        BauhausColors.black,
+      ),
       BauhausButtonVariant.secondary => (
-          BauhausColors.blue,
-          BauhausColors.white,
-          BauhausColors.black,
-        ),
+        BauhausColors.blue,
+        BauhausColors.white,
+        BauhausColors.black,
+      ),
       BauhausButtonVariant.accent => (
-          BauhausColors.yellow,
-          BauhausColors.black,
-          BauhausColors.black,
-        ),
+        BauhausColors.yellow,
+        BauhausColors.black,
+        BauhausColors.black,
+      ),
       BauhausButtonVariant.outline => (
-          BauhausColors.white,
-          BauhausColors.black,
-          BauhausColors.black,
-        ),
+        BauhausColors.white,
+        BauhausColors.black,
+        BauhausColors.black,
+      ),
       BauhausButtonVariant.ghost => (
-          Colors.transparent,
-          BauhausColors.black,
-          Colors.transparent,
-        ),
+        Colors.transparent,
+        BauhausColors.black,
+        Colors.transparent,
+      ),
     };
   }
 
   EdgeInsets _padding() {
     return switch (widget.size) {
       BauhausButtonSize.small => const EdgeInsets.symmetric(
-          horizontal: BauhausSpacing.md,
-          vertical: BauhausSpacing.xs,
-        ),
+        horizontal: BauhausSpacing.md,
+        vertical: BauhausSpacing.xs,
+      ),
       BauhausButtonSize.medium => const EdgeInsets.symmetric(
-          horizontal: BauhausSpacing.xl,
-          vertical: BauhausSpacing.sm,
-        ),
+        horizontal: BauhausSpacing.xl,
+        vertical: BauhausSpacing.sm,
+      ),
       BauhausButtonSize.large => const EdgeInsets.symmetric(
-          horizontal: BauhausSpacing.xxl,
-          vertical: BauhausSpacing.md,
-        ),
+        horizontal: BauhausSpacing.xxl,
+        vertical: BauhausSpacing.md,
+      ),
     };
   }
 
@@ -182,8 +185,7 @@ class _BauhausButtonState extends State<BauhausButton>
     return switch (widget.size) {
       BauhausButtonSize.small => BauhausTypography.label.copyWith(fontSize: 11),
       BauhausButtonSize.medium => BauhausTypography.label,
-      BauhausButtonSize.large =>
-        BauhausTypography.label.copyWith(fontSize: 14),
+      BauhausButtonSize.large => BauhausTypography.label.copyWith(fontSize: 14),
     };
   }
 }

@@ -38,9 +38,8 @@ class QuizzesScreen extends ConsumerWidget {
             const SizedBox(height: SwissSpacing.xl),
             Expanded(
               child: asyncState.when(
-                loading: () => const SwissProcessingState(
-                  label: 'Loading quizzes',
-                ),
+                loading: () =>
+                    const SwissProcessingState(label: 'Loading quizzes'),
                 error: (e, _) => SwissErrorState(
                   title: 'Error',
                   message: 'Could not load your quizzes.',
@@ -67,7 +66,12 @@ class QuizzesScreen extends ConsumerWidget {
                             title: quiz.title,
                             subtitle:
                                 '${quiz.questionCount} questions · ${quiz.difficulty.toUpperCase()}',
-                            onTap: () => context.push(AppRoutes.quizDetail.replaceFirst(':quizId', quiz.id)),
+                            onTap: () => context.push(
+                              AppRoutes.quizDetail.replaceFirst(
+                                ':quizId',
+                                quiz.id,
+                              ),
+                            ),
                           ),
                           const SwissHairline(),
                         ],

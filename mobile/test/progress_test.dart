@@ -83,7 +83,10 @@ void main() {
     await pumpApp(tester, router: router, flashcards: failing);
     router.go('/progress');
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not load flashcard history'), findsOneWidget);
+    expect(
+      find.textContaining('Could not load flashcard history'),
+      findsOneWidget,
+    );
 
     failNext = false;
     await tester.tap(find.text('RETRY'));

@@ -23,9 +23,7 @@ class FlashcardSessionScreen extends ConsumerWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return _SessionScaffold(
             title: 'Loading deck…',
-            child: const Center(
-              child: SwissProcessingState(label: 'Loading'),
-            ),
+            child: const Center(child: SwissProcessingState(label: 'Loading')),
           );
         }
         if (snapshot.hasError || snapshot.data == null) {
@@ -275,7 +273,8 @@ class _EmptyDeck extends StatelessWidget {
       child: SwissEmptyState(
         sectionNumber: '01',
         title: 'This deck is empty',
-        description: 'Delete it and generate a new one from a notebook with sources.',
+        description:
+            'Delete it and generate a new one from a notebook with sources.',
       ),
     );
   }
@@ -325,7 +324,11 @@ class _Summary extends StatelessWidget {
                 children: [
                   _SummaryStat(label: 'EASY', value: easy, color: fg),
                   _SummaryStat(label: 'GOOD', value: good, color: fg),
-                  _SummaryStat(label: 'AGAIN', value: again, color: SwissColors.red),
+                  _SummaryStat(
+                    label: 'AGAIN',
+                    value: again,
+                    color: SwissColors.red,
+                  ),
                 ],
               ),
               const SizedBox(height: 22),
@@ -365,10 +368,7 @@ class _SummaryStat extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: SwissTypography.headline.copyWith(
-              fontSize: 24,
-              color: fg,
-            ),
+            style: SwissTypography.headline.copyWith(fontSize: 24, color: fg),
           ),
           const SizedBox(height: 2),
           Text(

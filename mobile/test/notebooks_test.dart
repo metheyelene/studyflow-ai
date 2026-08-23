@@ -25,8 +25,9 @@ void main() {
     expect(find.text('CREATE'), findsOneWidget);
   });
 
-  testWidgets('opening a notebook on phone shows the detail workspace',
-      (tester) async {
+  testWidgets('opening a notebook on phone shows the detail workspace', (
+    tester,
+  ) async {
     final fake = FakeNotebooksRepository();
     fake.notebooks.add(
       Notebook(
@@ -50,8 +51,9 @@ void main() {
     expect(find.byTooltip('Back'), findsOneWidget);
   });
 
-  testWidgets('create failure surfaces a friendly error and stays open',
-      (tester) async {
+  testWidgets('create failure surfaces a friendly error and stays open', (
+    tester,
+  ) async {
     final repo = _FailingNotebooksRepository();
     await pumpApp(tester, notebooks: repo);
     await openNotebooksTab(tester);

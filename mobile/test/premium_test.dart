@@ -52,9 +52,7 @@ void main() {
     expect(find.textContaining('WITHOUT'), findsOneWidget);
   });
 
-  testWidgets('a failed backend verification keeps plan free', (
-    tester,
-  ) async {
+  testWidgets('a failed backend verification keeps plan free', (tester) async {
     final fake = FakePlayBillingRepository(
       purchaseResult: const PurchaseResult(
         ok: false,
@@ -72,10 +70,7 @@ void main() {
     tester,
   ) async {
     final fake = FakePlayBillingRepository(
-      purchaseResult: const PurchaseResult(
-        ok: true,
-        plan: 'founding_member',
-      ),
+      purchaseResult: const PurchaseResult(ok: true, plan: 'founding_member'),
     );
     await pumpPremium(tester, premium: fake);
 

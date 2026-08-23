@@ -74,11 +74,7 @@ class SwissMiniPlayer extends StatelessWidget {
                     height: 42,
                     color: fg,
                     alignment: Alignment.center,
-                    child: Icon(
-                      Icons.graphic_eq,
-                      size: 20,
-                      color: bg,
-                    ),
+                    child: Icon(Icons.graphic_eq, size: 20, color: bg),
                   ),
                 ),
                 const SizedBox(width: SwissSpacing.md),
@@ -102,7 +98,9 @@ class SwissMiniPlayer extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: SwissTypography.caption.copyWith(
                           color: isDark
-                              ? SwissColors.darkForeground.withValues(alpha: 0.5)
+                              ? SwissColors.darkForeground.withValues(
+                                  alpha: 0.5,
+                                )
                               : SwissColors.black.withValues(alpha: 0.5),
                         ),
                       ),
@@ -132,8 +130,10 @@ class SwissMiniPlayer extends StatelessWidget {
                 // Simple scrub
                 final box = context.findRenderObject() as RenderBox?;
                 if (box != null) {
-                  final fraction = (d.localPosition.dx / box.size.width)
-                      .clamp(0.0, 1.0);
+                  final fraction = (d.localPosition.dx / box.size.width).clamp(
+                    0.0,
+                    1.0,
+                  );
                   onScrub(fraction);
                 }
               },

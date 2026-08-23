@@ -231,8 +231,7 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
     return Scaffold(
       body: SafeArea(
         child: episode == null
-            ? const Center(
-                child: CircularProgressIndicator(strokeWidth: 2.5))
+            ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
             : episode.isProcessing
             ? _PreparingView(episode: episode)
             : episode.isFailed
@@ -299,8 +298,7 @@ class _PodcastPlayerScreenState extends ConsumerState<PodcastPlayerScreen> {
                 const SizedBox(height: SwissSpacing.xs),
                 Text(
                   [
-                    if (episode.notebookTitle != null)
-                      episode.notebookTitle!,
+                    if (episode.notebookTitle != null) episode.notebookTitle!,
                     kPodcastStyleLabels[episode.style] ?? episode.style,
                   ].join(' · ').toUpperCase(),
                   style: SwissTypography.caption.copyWith(color: mutedFg),
@@ -343,11 +341,7 @@ class _Artwork extends StatelessWidget {
       height: 168,
       color: isDark ? SwissColors.darkSurface : SwissColors.black,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.headphones,
-        size: 56,
-        color: SwissColors.white,
-      ),
+      child: const Icon(Icons.headphones, size: 56, color: SwissColors.white),
     );
   }
 }
@@ -666,9 +660,7 @@ class _ChapterRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: SwissSpacing.sm,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: SwissSpacing.sm),
         child: Row(
           children: [
             if (active)
@@ -748,10 +740,7 @@ class _TranscriptBlock extends StatelessWidget {
               ],
             ),
             const SizedBox(height: SwissSpacing.xs),
-            Text(
-              section.text,
-              style: SwissTypography.body.copyWith(color: fg),
-            ),
+            Text(section.text, style: SwissTypography.body.copyWith(color: fg)),
             if (section.sources.isNotEmpty) ...[
               const SizedBox(height: SwissSpacing.sm),
               for (final source in section.sources)
@@ -775,8 +764,17 @@ class _PreparingView extends StatelessWidget {
       label: episode.title,
       steps: [
         (label: 'UPLOADED', done: true),
-        (label: 'SCRIPT', done: episode.pipelineStage == 'script' || episode.pipelineStage == 'voice' || episode.isReady),
-        (label: 'VOICE', done: episode.pipelineStage == 'voice' || episode.isReady),
+        (
+          label: 'SCRIPT',
+          done:
+              episode.pipelineStage == 'script' ||
+              episode.pipelineStage == 'voice' ||
+              episode.isReady,
+        ),
+        (
+          label: 'VOICE',
+          done: episode.pipelineStage == 'voice' || episode.isReady,
+        ),
         (label: 'READY', done: episode.isReady),
       ],
     );
@@ -826,5 +824,3 @@ class _DownloadingView extends StatelessWidget {
     );
   }
 }
-
-

@@ -213,7 +213,9 @@ void main() {
       );
     });
 
-    testWidgets('tapping the mini-player opens the full player', (tester) async {
+    testWidgets('tapping the mini-player opens the full player', (
+      tester,
+    ) async {
       final audio = FakeAudioRepository(episodes: [readyEpisode('ep-1')]);
       final player = FakePodcastPlayer();
       final router = buildAppRouter();

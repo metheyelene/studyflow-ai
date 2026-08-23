@@ -25,11 +25,7 @@ class SplashScreen extends StatelessWidget {
               height: 64,
               color: fg,
               alignment: Alignment.center,
-              child: Icon(
-                Icons.school,
-                size: 32,
-                color: bg,
-              ),
+              child: Icon(Icons.school, size: 32, color: bg),
             ),
             const SizedBox(height: SwissSpacing.xl),
             Text(

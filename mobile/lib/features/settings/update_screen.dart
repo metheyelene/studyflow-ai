@@ -36,12 +36,7 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
     return SafeArea(
       child: ota.when(
         loading: () => _buildBody(context, fg, mutedFg, isLoading: true),
-        error: (e, _) => _buildBody(
-          context,
-          fg,
-          mutedFg,
-          error: e.toString(),
-        ),
+        error: (e, _) => _buildBody(context, fg, mutedFg, error: e.toString()),
         data: (state) => _buildBody(context, fg, mutedFg, state: state),
       ),
     );
@@ -125,14 +120,20 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
               subtitle: 'The system installer should appear shortly',
             )
           else if (state?.status == OtaStatus.error)
-            _buildErrorCard(context, fg, mutedFg, state!.errorMessage ?? error ?? 'Unknown error')
+            _buildErrorCard(
+              context,
+              fg,
+              mutedFg,
+              state!.errorMessage ?? error ?? 'Unknown error',
+            )
           else
             _buildStatusCard(
               fg,
               mutedFg,
               icon: Icons.system_update,
               title: 'CHECK FOR UPDATES',
-              subtitle: 'Tap the button below to check GitHub for a new version',
+              subtitle:
+                  'Tap the button below to check GitHub for a new version',
             ),
 
           const SizedBox(height: SwissSpacing.xxl),
@@ -250,10 +251,7 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
             const SizedBox(height: SwissSpacing.sm),
             Text(
               release.body,
-              style: SwissTypography.body.copyWith(
-                color: fg,
-                height: 1.5,
-              ),
+              style: SwissTypography.body.copyWith(color: fg, height: 1.5),
               maxLines: 8,
               overflow: TextOverflow.ellipsis,
             ),
@@ -262,9 +260,7 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
             const SizedBox(height: SwissSpacing.md),
             Text(
               state.errorMessage!,
-              style: SwissTypography.caption.copyWith(
-                color: SwissColors.red,
-              ),
+              style: SwissTypography.caption.copyWith(color: SwissColors.red),
             ),
           ],
         ],
@@ -272,11 +268,7 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
     );
   }
 
-  Widget _buildDownloadingCard(
-    Color fg,
-    Color mutedFg,
-    OtaState state,
-  ) {
+  Widget _buildDownloadingCard(Color fg, Color mutedFg, OtaState state) {
     final pct = (state.downloadProgress * 100).toInt();
     return Container(
       padding: const EdgeInsets.all(SwissSpacing.xl),
@@ -349,20 +341,13 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
             ],
           ),
           const SizedBox(height: SwissSpacing.md),
-          Text(
-            message,
-            style: SwissTypography.body.copyWith(color: fg),
-          ),
+          Text(message, style: SwissTypography.body.copyWith(color: fg)),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(
-    BuildContext context,
-    Color fg,
-    OtaState? state,
-  ) {
+  Widget _buildActionButton(BuildContext context, Color fg, OtaState? state) {
     final ota = ref.read(otaProvider);
 
     if (ota.hasValue &&
@@ -385,10 +370,11 @@ class _UpdateScreenState extends ConsumerState<UpdateScreen> {
           SizedBox(
             width: double.infinity,
             child: SwissButton(
-              label: 'CHECK AGAIN',variant: SwissButtonVariant.ghost,
-                onPressed: () {
-                  ref.read(otaProvider.notifier).checkForUpdates();
-                },
+              label: 'CHECK AGAIN',
+              variant: SwissButtonVariant.ghost,
+              onPressed: () {
+                ref.read(otaProvider.notifier).checkForUpdates();
+              },
             ),
           ),
         ],

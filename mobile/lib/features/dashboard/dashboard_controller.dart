@@ -39,10 +39,7 @@ class DashboardController extends AsyncNotifier<DashboardSnapshot> {
         );
     final examsFuture = ref
         .watch(examsProvider.future)
-        .then<List<UpcomingExam>>(
-          (e) => e,
-          onError: (_) => <UpcomingExam>[],
-        );
+        .then<List<UpcomingExam>>((e) => e, onError: (_) => <UpcomingExam>[]);
 
     final results = await Future.wait<Object>([usageFuture, examsFuture]);
     return DashboardSnapshot(

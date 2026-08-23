@@ -159,11 +159,7 @@ class _BenefitItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            color: fg,
-          ),
+          Container(width: 8, height: 8, color: fg),
           const SizedBox(width: SwissSpacing.sm),
           Expanded(
             child: Text(

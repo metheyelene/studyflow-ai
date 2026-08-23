@@ -178,7 +178,9 @@ class _AddSourceSheetState extends State<AddSourceSheet> {
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
                   e,
-                  style: SwissTypography.caption.copyWith(color: SwissColors.red),
+                  style: SwissTypography.caption.copyWith(
+                    color: SwissColors.red,
+                  ),
                 ),
               ),
           ],
@@ -326,11 +328,7 @@ class _SelectedFileTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            fileIconFor(file.name),
-            color: fg,
-            size: 20,
-          ),
+          Icon(fileIconFor(file.name), color: fg, size: 20),
           const SizedBox(width: SwissSpacing.sm),
           Expanded(
             child: Column(
