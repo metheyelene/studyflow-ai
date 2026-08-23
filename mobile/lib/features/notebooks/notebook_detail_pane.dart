@@ -1511,16 +1511,17 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
         top: 8,
         bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SwissDivider(thickness: 4),
-          const SizedBox(height: SwissSpacing.lg),
-          Text(
-            'PASTE TEXT',
-            style: SwissTypography.section.copyWith(color: fg),
-          ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SwissDivider(thickness: 4),
+            const SizedBox(height: SwissSpacing.lg),
+            Text(
+              'PASTE TEXT',
+              style: SwissTypography.section.copyWith(color: fg),
+            ),
           const SizedBox(height: SwissSpacing.xs),
           Text(
             'StudyFlow AI indexes it and answers come from this material.',
@@ -1582,7 +1583,7 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
                         const SizedBox(width: 6),
                         ValueListenableBuilder<bool>(
                           valueListenable: widget.tts!.speaking,
-                          builder: (_, speaking, __) => _ToolbarChip(
+                          builder: (_, speaking, _) => _ToolbarChip(
                             label: speaking ? 'Stop' : 'Listen',
                             onTap: speaking ? _stopListening : _listen,
                           ),
@@ -1616,7 +1617,8 @@ class _PasteSourceSheetState extends State<_PasteSourceSheet> {
             fullWidth: true,
             onPressed: _busy ? null : _add,
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

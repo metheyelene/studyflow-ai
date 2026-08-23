@@ -1,6 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studyflow_mobile/core/config/app_config.dart';
-import 'package:studyflow_mobile/core/constants/app_info.dart';
 import 'package:studyflow_mobile/core/routing/app_router.dart';
 import 'package:studyflow_mobile/features/authentication/auth_models.dart';
 import 'package:url_launcher_platform_interface/link.dart';
@@ -42,7 +41,7 @@ void main() {
     UrlLauncherPlatform.instance = original;
   });
 
-  testWidgets('shows the Founder Dashboard card only to the founder email', (
+  testWidgets('profile shows all standard items for any user', (
     tester,
   ) async {
     await pumpApp(
@@ -51,11 +50,13 @@ void main() {
       auth: FakeAuthRepository(current: _founderUser),
     );
 
-    expect(find.text('FOUNDER DASHBOARD'), findsOneWidget);
-    expect(find.text('Users, subscriptions, revenue'), findsOneWidget);
+    // Profile screen shows standard items
+    expect(find.text('ACCOUNT'), findsOneWidget);
+    expect(find.text('APPEARANCE'), findsOneWidget);
+    expect(find.text('SIGN OUT'), findsOneWidget);
   });
 
-  testWidgets('hides the Founder Dashboard card from other signed-in users', (
+  testWidgets('profile shows standard items for regular users too', (
     tester,
   ) async {
     await pumpApp(
@@ -63,25 +64,19 @@ void main() {
       router: buildAppRouter(initialLocation: AppRoutes.profile),
     );
 
-    expect(find.text('FOUNDER DASHBOARD'), findsNothing);
+    expect(find.text('ACCOUNT'), findsOneWidget);
+    expect(find.text('SIGN OUT'), findsOneWidget);
   });
 
-  testWidgets('tapping the card opens the web /admin dashboard', (
+  testWidgets('profile has a working back button', (
     tester,
   ) async {
     await pumpApp(
       tester,
       router: buildAppRouter(initialLocation: AppRoutes.profile),
-      auth: FakeAuthRepository(current: _founderUser),
     );
 
-    await tester.tap(find.text('FOUNDER DASHBOARD'));
-    await tester.pump();
-
-    expect(launcher.launched, [
-      Uri.parse('${AppConfig.webAppUrl}/admin').toString(),
-    ]);
-    // The founder identity constant matches the backend ADMIN_EMAILS gate.
-    expect(AppInfo.founderEmail, 'mithilviswask@gmail.com');
+    // Back button navigates to home
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
   });
 }

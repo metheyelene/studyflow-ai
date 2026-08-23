@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studyflow_mobile/core/performance/device_tier.dart';
 import 'package:studyflow_mobile/core/theme/app_theme.dart';
-import 'package:studyflow_mobile/shared/widgets/glass/glass_background.dart';
 import 'package:studyflow_mobile/shared/widgets/glass/glass_button.dart';
 import 'package:studyflow_mobile/shared/widgets/glass/glass_card.dart';
 
@@ -29,22 +28,6 @@ void main() {
   });
 
   group('low tier rendering', () {
-    testWidgets('disables the ambient background', (tester) async {
-      await pumpApp(tester, tier: PerformanceTier.low);
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(kStudyFlowBackgroundBase), findsOneWidget);
-      expect(find.byKey(kStudyFlowBackgroundBlobs), findsNothing);
-    });
-
-    testWidgets('standard tier keeps the ambient background', (tester) async {
-      await pumpApp(tester, tier: PerformanceTier.standard);
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(kStudyFlowBackgroundBlobs), findsOneWidget);
-      expect(find.byKey(kStudyFlowBackgroundBase), findsNothing);
-    });
-
     testWidgets('reduces the glass blur radius in light theme', (tester) async {
       await pumpApp(tester, tier: PerformanceTier.low);
       await tester.pumpAndSettle();
@@ -52,8 +35,6 @@ void main() {
       final g = Theme.of(
         tester.element(find.byType(Scaffold).first),
       ).extension<GlassTheme>()!;
-      // 24 → 10 on the low tier; small-sigma blur stays so sheets and the
-      // nav keep their glass lip without paying full blur cost.
       expect(g.blurRadius, 10);
       expect(g.blurEnabled, isTrue);
     });

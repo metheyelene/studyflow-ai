@@ -107,7 +107,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // The CTA flips to the paused copy and is no longer tappable.
-        expect(find.text('AI paused — offline'), findsOneWidget);
+        expect(find.text('AI PAUSED — OFFLINE'), findsOneWidget);
         expect(find.text('ASK STUDYFLOW'), findsNothing);
 
         // The chat tab explains the pause instead of pretending to work.
@@ -115,7 +115,7 @@ void main() {
         await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
         expect(
-          find.textContaining("reconnect to ask StudyFlow"),
+          find.textContaining("RECONNECT TO ASK STUDYFLOW"),
           findsOneWidget,
         );
       },

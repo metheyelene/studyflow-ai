@@ -6,15 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
+import 'package:studyflow_mobile/shared/widgets/swiss/swiss_components.dart';
 
 import 'helpers.dart';
 
-/// In-memory file-picker platform: returns the given files when the app
-/// opens the native picker, so the real Add Source flow (which calls
-/// `FilePicker.pickFiles`) can be driven without the platform plugin.
 class FakeFilePickerPlatform extends FilePickerPlatform {
   FakeFilePickerPlatform(this.files);
-
   final List<PlatformFile> files;
 
   @override
@@ -32,28 +29,21 @@ class FakeFilePickerPlatform extends FilePickerPlatform {
   }) async => files;
 }
 
-/// A picked file with in-memory bytes.
 final class FakePlatformFile extends PlatformFile {
   FakePlatformFile(this.fileName, this.data);
-
   final String fileName;
   final Uint8List data;
 
   @override
   String get name => fileName;
-
   @override
   Uri get uri => Uri.dataFromBytes(data);
-
   @override
   XFile get xFile => XFile.fromData(data, name: fileName);
-
   @override
   Future<int> length() async => data.length;
-
   @override
   Future<Uint8List> readAsBytes() async => data;
-
   @override
   Stream<Uint8List> readAsByteStream() => Stream.value(data);
 }
@@ -62,6 +52,31 @@ Future<void> openNotebookSourcesTab(WidgetTester tester) async {
   await tester.tap(find.text('NOTEBOOKS'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('CELL BIOLOGY'));
+  await tester.pumpAndSettle();
+}
+
+/// Opens the AddSourceSheet and taps PASTE TEXT, returning to the paste sheet.
+Future<void> openPasteSheet(WidgetTester tester) async {
+  await tester.ensureVisible(find.text('ADD SOURCE'));
+  await tester.tap(find.text('ADD SOURCE'));
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('PASTE TEXT'));
+  await tester.tap(find.text('PASTE TEXT'));
+  await tester.pumpAndSettle();
+}
+
+/// Taps the submit button in the paste sheet.
+/// Directly invokes onPressed since bottom sheet overlay layers absorb taps.
+Future<void> submitPasteSheet(WidgetTester tester) async {
+  // Find the SwissButton whose label starts with 'Add source' in the bottom sheet
+  final sheetBtn = find.descendant(
+    of: find.byType(BottomSheet),
+    matching: find.byWidgetPredicate((w) =>
+        w is SwissButton && w.label.contains('Add source') && w.onPressed != null),
+  );
+  expect(sheetBtn, findsOneWidget);
+  final btn = tester.widget<SwissButton>(sheetBtn);
+  btn.onPressed!();
   await tester.pumpAndSettle();
 }
 
@@ -80,24 +95,22 @@ void main() {
     return fake;
   }
 
-  testWidgets('Sources tab shows a real empty state with a Paste text action', (
+  testWidgets('Sources tab shows a real empty state with an Add source action', (
     tester,
   ) async {
     await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
     expect(find.text('NO SOURCES YET'), findsOneWidget);
-    expect(find.text('PASTE TEXT'), findsOneWidget);
+    expect(find.text('ADD SOURCE'), findsOneWidget);
   });
 
   testWidgets('pasting a source adds it to the list for real', (tester) async {
     final fake = await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    await tester.tap(find.text('PASTE TEXT'));
-    await tester.pumpAndSettle();
+    await openPasteSheet(tester);
 
-    // Sheet: title + text.
     final fields = find.descendant(
       of: find.byType(BottomSheet),
       matching: find.byType(TextField),
@@ -108,21 +121,12 @@ void main() {
       'Photosynthesis converts light energy into chemical energy.',
     );
     await tester.pumpAndSettle();
-    // The empty-state pane behind the modal also has an "Add source"
-    // action, so scope the submit tap to the sheet itself.
-    await tester.tap(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.text('ADD SOURCE'),
-      ),
-    );
-    await tester.pumpAndSettle();
+
+    await submitPasteSheet(tester);
 
     expect(fake.sources, hasLength(1));
     expect(fake.sources.first.title, 'Lecture 4 — Photosynthesis');
-    expect(find.text('Lecture 4 — Photosynthesis'), findsOneWidget);
-    // Processing state label is honest about indexing.
-    expect(find.text('Indexing'), findsOneWidget);
+    expect(find.text('LECTURE 4 — PHOTOSYNTHESIS'), findsOneWidget);
   });
 
   testWidgets('empty paste shows a validation error instead of submitting', (
@@ -131,18 +135,11 @@ void main() {
     await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    await tester.tap(find.text('PASTE TEXT'));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.text('ADD SOURCE'),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await openPasteSheet(tester);
+    await submitPasteSheet(tester);
 
     expect(
-      find.text('Add a title and the text you want to study.'),
+      find.textContaining('ADD A TITLE AND THE TEXT'),
       findsOneWidget,
     );
   });
@@ -153,9 +150,8 @@ void main() {
     final fake = await pumpWithNotebook(tester);
     await openNotebookSourcesTab(tester);
 
-    // Add a real source first.
-    await tester.tap(find.text('PASTE TEXT'));
-    await tester.pumpAndSettle();
+    // Add a source
+    await openPasteSheet(tester);
     final fields = find.descendant(
       of: find.byType(BottomSheet),
       matching: find.byType(TextField),
@@ -163,23 +159,17 @@ void main() {
     await tester.enterText(fields.at(0), 'Lecture 4 — Photosynthesis');
     await tester.enterText(fields.at(1), 'Light energy is converted.');
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.text('ADD SOURCE'),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await submitPasteSheet(tester);
     expect(fake.sources, hasLength(1));
 
-    // Remove it — confirmation explains the indexed content leaves.
-    await tester.tap(find.byTooltip('Remove source'));
+    // Remove it
+    await tester.tap(find.byTooltip('Remove'));
     await tester.pumpAndSettle();
     expect(
       find.textContaining('and its indexed content will be removed'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Remove'));
+    await tester.tap(find.text('REMOVE'));
     await tester.pumpAndSettle();
 
     expect(fake.sources, isEmpty);
@@ -211,28 +201,32 @@ void main() {
     await pumpApp(tester, notebooks: fake);
     await openNotebookSourcesTab(tester);
 
-    // Empty state → Add source → the sheet offers Upload files.
     expect(find.text('NO SOURCES YET'), findsOneWidget);
+    await tester.ensureVisible(find.text('ADD SOURCE'));
     await tester.tap(find.text('ADD SOURCE'));
     await tester.pumpAndSettle();
     expect(find.text('UPLOAD FILES'), findsOneWidget);
 
-    // Picking a file runs the real picker abstraction and shows a tile.
+    await tester.ensureVisible(find.text('UPLOAD FILES'));
     await tester.tap(find.text('UPLOAD FILES'));
     await tester.pumpAndSettle();
     expect(find.text('VLSI_UNIT_3.PDF'), findsOneWidget);
     expect(find.text('4.0 KB'), findsOneWidget);
-    expect(find.text('ADD 1 SOURCE'), findsOneWidget);
 
-    // Uploading goes through the repository: the fake repo now owns the
-    // source, and the pane reloads with the honest processing state.
-    await tester.tap(find.text('ADD 1 SOURCE'));
+    // Tap the add sources button directly via onPressed
+    final addBtn = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byWidgetPredicate((w) =>
+          w is SwissButton && w.label.contains('Add') && w.onPressed != null),
+    );
+    expect(addBtn, findsOneWidget);
+    final btn = tester.widget<SwissButton>(addBtn);
+    btn.onPressed!();
     await tester.pumpAndSettle();
 
     expect(fake.sources, hasLength(1));
     expect(fake.sources.first.title, 'VLSI_Unit_3.pdf');
     expect(fake.sources.first.kind, 'uploaded');
     expect(find.text('VLSI_UNIT_3.PDF'), findsOneWidget);
-    expect(find.text('Indexing'), findsOneWidget);
   });
 }

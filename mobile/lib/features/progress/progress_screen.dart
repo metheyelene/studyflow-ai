@@ -39,7 +39,7 @@ class ProgressScreen extends ConsumerWidget {
             // Mastery hero
             progress.when(
               loading: () => const SwissProcessingState(label: 'Loading'),
-              error: (_, _) => SwissErrorState(title: 'Error', message: 'Could not load flashcard history.'),
+              error: (_, _) => SwissErrorState(title: 'Error', message: 'Could not load flashcard history.', onRetry: () => ref.invalidate(flashcardProgressControllerProvider)),
               data: (p) {
                 final decks = [...p.decks]..sort((a, b) => a.accuracy.compareTo(b.accuracy));
                 final weakest = decks.firstOrNull;

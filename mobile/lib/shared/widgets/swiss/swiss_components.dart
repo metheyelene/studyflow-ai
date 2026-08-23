@@ -44,12 +44,10 @@ class _SwissButtonState extends State<SwissButton>
     final height = widget.compact ? 40.0 : 48.0;
 
     return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onPressed?.call();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onPressed,
+      onTapDown: widget.onPressed != null ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: widget.onPressed != null ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: widget.onPressed != null ? () => setState(() => _pressed = false) : null,
       child: AnimatedContainer(
         duration: SwissMotion.fast,
         height: height,

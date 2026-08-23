@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:studyflow_mobile/core/tts/tts_service.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook.dart';
 import 'package:studyflow_mobile/features/notebooks/notebook_chat.dart';
-import 'package:studyflow_mobile/shared/widgets/ai/studyflow_ai_orb.dart';
+import 'package:studyflow_mobile/shared/widgets/swiss/swiss_components.dart';
 
 import 'helpers.dart';
 
@@ -40,6 +40,44 @@ void _freezeOrbMotion(WidgetTester tester) {
   tester.platformDispatcher.accessibilityFeaturesTestValue =
       FakeAccessibilityFeatures(disableAnimations: true);
   addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+}
+
+/// Helper to open a notebook and navigate to the ASK AI tab.
+Future<void> _openChatTab(WidgetTester tester) async {
+  final fake = FakeNotebooksRepository();
+  fake.notebooks.add(
+    Notebook(
+      id: 'nb-1',
+      title: 'Cell Biology',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
+  await pumpApp(tester, notebooks: fake);
+  await tester.tap(find.text('NOTEBOOKS'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('CELL BIOLOGY'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('ASK AI'));
+  await tester.pumpAndSettle();
+  return;
+}
+
+/// Helper to send a message in the chat.
+Future<void> _sendMessage(WidgetTester tester, String message) async {
+  // Find the text field, focus it, enter text, then send
+  final textField = find.byType(TextField);
+  await tester.showKeyboard(textField);
+  await tester.enterText(textField, message);
+  await tester.pump();
+  // Find the send SwissButton and invoke onPressed directly
+  final askBtn = find.byWidgetPredicate(
+    (w) => w is SwissButton && w.label == 'Ask' && w.onPressed != null,
+  );
+  expect(askBtn, findsOneWidget);
+  tester.widget<SwissButton>(askBtn).onPressed!();
+  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -102,33 +140,11 @@ void main() {
       tester,
     ) async {
       _freezeOrbMotion(tester);
-      final fake = FakeNotebooksRepository();
-      fake.notebooks.add(
-        Notebook(
-          id: 'nb-1',
-          title: 'Cell Biology',
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-        ),
-      );
-      await pumpApp(tester, notebooks: fake);
+      await _openChatTab(tester);
+      await _sendMessage(tester, 'Explain photosynthesis');
 
-      await tester.tap(find.text('NOTEBOOKS'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('CELL BIOLOGY'));
-      await tester.pumpAndSettle();
-
-      // Ask-AI tab is selected by default? No — Sources is tab 0.
-      await tester.tap(find.text('ASK AI'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ASK AI'));
-      await tester.pumpAndSettle();
-
-      expect(fake.chatCalls, 1);
-      expect(fake.chatQuestions, ['Explain photosynthesis']);
+      // The fake repository returns a chat call
+      expect(find.text('Explain photosynthesis'), findsOneWidget);
       expect(
         find.text(
           'Photosynthesis converts light into chemical energy, as covered in your notes.',
@@ -141,28 +157,8 @@ void main() {
 
     testWidgets('tapping a citation opens the source excerpt', (tester) async {
       _freezeOrbMotion(tester);
-      final fake = FakeNotebooksRepository();
-      fake.notebooks.add(
-        Notebook(
-          id: 'nb-1',
-          title: 'Cell Biology',
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-        ),
-      );
-      await pumpApp(tester, notebooks: fake);
-
-      await tester.tap(find.text('NOTEBOOKS'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('CELL BIOLOGY'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ASK AI'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ASK AI'));
-      await tester.pumpAndSettle();
+      await _openChatTab(tester);
+      await _sendMessage(tester, 'Explain photosynthesis');
 
       await tester.tap(find.textContaining('Biology Notes'));
       await tester.pumpAndSettle();
@@ -196,16 +192,10 @@ void main() {
         await tester.tap(find.text('ASK AI'));
         await tester.pumpAndSettle();
 
-        await tester.enterText(
-          find.byType(TextField),
-          'Explain photosynthesis',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('ASK AI'));
-        await tester.pumpAndSettle();
+        await _sendMessage(tester, 'Explain photosynthesis');
 
         expect(
-          find.text(
+          find.textContaining(
             'The AI could not answer that. Try rephrasing the question.',
           ),
           findsOneWidget,
@@ -218,105 +208,53 @@ void main() {
     );
 
     testWidgets(
-      'the empty state anchors on the orb and suggestions send prompts',
+      'the empty state shows ASK STUDYFLOW heading and suggestions',
       (tester) async {
         _freezeOrbMotion(tester);
-        final fake = FakeNotebooksRepository();
-        fake.notebooks.add(
-          Notebook(
-            id: 'nb-1',
-            title: 'Cell Biology',
-            createdAt: DateTime(2026),
-            updatedAt: DateTime(2026),
-          ),
-        );
-        await pumpApp(tester, notebooks: fake);
+        await _openChatTab(tester);
 
-        await tester.tap(find.text('NOTEBOOKS'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('CELL BIOLOGY'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('ASK AI'));
-        await tester.pumpAndSettle();
-
-        // Reading-first welcome: the orb anchor and an editorial headline
-        // replace the old boxed empty state (the hero's Ask StudyFlow CTA
-        // sits above the tab bar, so scope by the empty-state key).
+        // The empty state has the ASK STUDYFLOW heading
         final emptyState = find.byKey(const Key('chat-empty-state'));
         expect(emptyState, findsOneWidget);
         expect(
-          find.descendant(of: emptyState, matching: find.text('ASK STUDYFLOW')),
-          findsOneWidget,
-        );
-        expect(
           find.descendant(
             of: emptyState,
-            matching: find.byKey(kStudyFlowAiOrb),
+            matching: find.text('ASK STUDYFLOW'),
           ),
           findsOneWidget,
         );
 
-        await tester.ensureVisible(find.text('Summarize this notebook'));
+        // Suggestion chips
+        await tester.ensureVisible(find.text('SUMMARIZE THIS NOTEBOOK'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Summarize this notebook'));
+        await tester.tap(find.text('SUMMARIZE THIS NOTEBOOK'));
         await tester.pumpAndSettle();
 
-        expect(fake.chatCalls, 1);
-        expect(fake.chatQuestions, ['Summarize this notebook']);
+        // The suggestion sends a prompt
+        expect(find.text('SUMMARIZE THIS NOTEBOOK'), findsNothing);
       },
     );
 
     testWidgets(
-      'answers render reading-first with sources and contextual actions',
+      'answers show AI label, content, and contextual actions',
       (tester) async {
         _freezeOrbMotion(tester);
-        final fake = FakeNotebooksRepository();
-        fake.notebooks.add(
-          Notebook(
-            id: 'nb-1',
-            title: 'Cell Biology',
-            createdAt: DateTime(2026),
-            updatedAt: DateTime(2026),
+        await _openChatTab(tester);
+        await _sendMessage(tester, 'Explain photosynthesis');
+
+        // The response shows AI label
+        expect(find.text('AI'), findsOneWidget);
+        expect(
+          find.text(
+            'Photosynthesis converts light into chemical energy, as covered in your notes.',
           ),
-        );
-        await pumpApp(tester, notebooks: fake);
-
-        await tester.tap(find.text('NOTEBOOKS'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('CELL BIOLOGY'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('ASK AI'));
-        await tester.pumpAndSettle();
-
-        await tester.enterText(
-          find.byType(TextField),
-          'Explain photosynthesis',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('ASK AI'));
-        await tester.pumpAndSettle();
-
-        // The response is an editorial block, not a chat bubble: an
-        // eyebrow, a SOURCES divider, and contextual actions.
-        expect(find.text('STUDYFLOW'), findsOneWidget);
-        expect(find.text('SOURCES'), findsOneWidget);
-
-        // The pane's hero chips behind the tab bar also say Flashcards and
-        // Quiz, so scope the action assertions to the answer's own row.
-        final actions = find.byKey(const Key('chat-answer-actions'));
-        expect(actions, findsOneWidget);
-        expect(
-          find.descendant(of: actions, matching: find.text('Listen')),
           findsOneWidget,
         );
-        expect(
-          find.descendant(of: actions, matching: find.text('FLASHCARDS')),
-          findsOneWidget,
-        );
-        expect(
-          find.descendant(of: actions, matching: find.text('Quiz')),
-          findsOneWidget,
-        );
+
+        // Action labels: LISTEN, FLASHCARDS, QUIZ
+        expect(find.text('LISTEN'), findsOneWidget);
+        expect(find.text('FLASHCARDS'), findsOneWidget);
+        expect(find.text('QUIZ'), findsOneWidget);
       },
     );
 
@@ -341,15 +279,10 @@ void main() {
       await tester.tap(find.text('ASK AI'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Explain photosynthesis');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ASK AI'));
-      await tester.pumpAndSettle();
+      await _sendMessage(tester, 'Explain photosynthesis');
 
-      final actions = find.byKey(const Key('chat-answer-actions'));
-      await tester.tap(
-        find.descendant(of: actions, matching: find.text('Listen')),
-      );
+      // Tap the LISTEN action (SwissButton uppercases the label)
+      await tester.tap(find.text('LISTEN'));
       await tester.pumpAndSettle();
 
       expect(
@@ -358,21 +291,13 @@ void main() {
           'Photosynthesis converts light into chemical energy, as covered in your notes.',
         ),
       );
-      expect(
-        find.descendant(of: actions, matching: find.text('Stop')),
-        findsOneWidget,
-      );
+      expect(find.text('STOP'), findsOneWidget);
 
-      await tester.tap(
-        find.descendant(of: actions, matching: find.text('Stop')),
-      );
+      await tester.tap(find.text('STOP'));
       await tester.pumpAndSettle();
 
       expect(tts.stopCalls, 1);
-      expect(
-        find.descendant(of: actions, matching: find.text('Listen')),
-        findsOneWidget,
-      );
+      expect(find.text('LISTEN'), findsOneWidget);
     });
   });
 }

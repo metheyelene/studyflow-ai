@@ -187,8 +187,8 @@ void main() {
     router.go('/study');
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('FOCUSING ON PHYSICS'), findsOneWidget);
-    expect(find.textContaining('FOCUSING ON PHYSICS — 55% ACCURACY'), findsOneWidget);
+    expect(find.textContaining('FOCUSING ON Physics'), findsOneWidget);
+    expect(find.textContaining('FOCUSING ON Physics — 55% ACCURACY'), findsOneWidget);
   });
 
   testWidgets('generic plans show no focus banner', (tester) async {

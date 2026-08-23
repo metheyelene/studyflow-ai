@@ -11,27 +11,33 @@ Future<void> completeOnboardingFlow(WidgetTester tester) async {
   // Step 1/5 — course.
   await tester.enterText(find.byType(TextField).first, 'Medicine');
   await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('CONTINUE'));
   await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 2/5 — subjects.
   await tester.enterText(find.byType(TextField).first, 'Anatomy, Physiology');
   await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('CONTINUE'));
   await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 3/5 — exams (optional; skip).
+  await tester.ensureVisible(find.text('CONTINUE'));
   await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 4/5 — daily minutes (60 preselected; skip).
+  await tester.ensureVisible(find.text('CONTINUE'));
   await tester.tap(find.text('CONTINUE'));
   await tester.pumpAndSettle();
 
   // Step 5/5 — goals.
+  await tester.ensureVisible(find.text('FLASHCARDS'));
   await tester.tap(find.text('FLASHCARDS'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Finish setup'));
+  await tester.ensureVisible(find.text('FINISH SETUP'));
+  await tester.tap(find.text('FINISH SETUP'));
   await tester.pumpAndSettle();
 }
 
