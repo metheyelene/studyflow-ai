@@ -80,13 +80,22 @@ jobs:
         run: |
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | tail -1)/apksigner" verify --print-certs mobile/build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release and upload artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # The release API occasionally 503s under load; retry with backoff
-          # instead of failing the whole (already-signed) build.
+          # The release API occasionally 503s under load; retry with backoff.
+          # If the release already exists (e.g. created manually), upload
+          # artifacts to it instead of failing.
           for i in 1 2 3 4 5; do
+            if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+              echo "Release $GITHUB_REF_NAME already exists — uploading artifacts."
+              gh release upload "$GITHUB_REF_NAME" \
+                mobile/build/app/outputs/flutter-apk/app-release.apk \
+                mobile/build/app/outputs/bundle/release/app-release.aab \
+                --clobber
+              exit 0
+            fi
             if gh release create "$GITHUB_REF_NAME" \
               mobile/build/app/outputs/flutter-apk/app-release.apk \
               mobile/build/app/outputs/bundle/release/app-release.aab \
