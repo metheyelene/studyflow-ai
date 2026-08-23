@@ -129,11 +129,12 @@ class ProgressScreen extends ConsumerWidget {
               data: (p) {
                 final decks = [...p.decks]
                   ..sort((a, b) => a.accuracy.compareTo(b.accuracy));
-                if (decks.isEmpty)
+                if (decks.isEmpty) {
                   return Text(
                     'No review data yet.',
                     style: SwissTypography.body.copyWith(color: mutedFg),
                   );
+                }
                 return Column(
                   children: [
                     for (final d in decks) ...[

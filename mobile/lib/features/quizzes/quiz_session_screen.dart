@@ -163,13 +163,16 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
 
-    if (_total == 0)
+    if (_total == 0) {
       return SwissEmptyState(
         sectionNumber: '01',
         title: 'Empty quiz',
         description: 'Generate a new quiz from a notebook.',
       );
-    if (_result != null) return _Results(result: _result!, onRetake: _retake);
+    }
+    if (_result != null) {
+      return _Results(result: _result!, onRetake: _retake);
+    }
 
     final q = detail.questions[_index];
     final selected = _answers[_index];
