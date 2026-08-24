@@ -99,10 +99,10 @@ class _SwissButtonState extends State<SwissButton>
         isDark ? SwissColors.black : SwissColors.white,
       ),
       SwissButtonVariant.secondary => (
-        SwissColors.white,
+        isDark ? SwissColors.darkSurface : SwissColors.white,
         isDark ? SwissColors.red : SwissColors.red,
-        isDark ? SwissColors.white : SwissColors.black,
-        isDark ? SwissColors.white : SwissColors.black,
+        isDark ? SwissColors.darkBorder : SwissColors.black,
+        isDark ? SwissColors.darkForeground : SwissColors.black,
       ),
       SwissButtonVariant.accent => (
         SwissColors.red,
@@ -481,7 +481,7 @@ class _SwissProcessingStateState extends State<SwissProcessingState>
                     ),
                   ),
                   if (widget.steps[i].done)
-                    const Icon(Icons.check, size: 16, color: SwissColors.black)
+                    Icon(Icons.check, size: 16, color: fg)
                   else if (i == widget.steps.indexWhere((s) => !s.done))
                     AnimatedBuilder(
                       animation: _animation,
@@ -691,17 +691,17 @@ class SwissInput extends StatelessWidget {
               horizontal: SwissSpacing.md,
               vertical: 14,
             ),
-            border: const OutlineInputBorder(
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
               borderSide: BorderSide(
-                color: SwissColors.black,
+                color: isDark ? SwissColors.darkBorder : SwissColors.black,
                 width: SwissShapes.borderThin,
               ),
             ),
-            enabledBorder: const OutlineInputBorder(
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.zero,
               borderSide: BorderSide(
-                color: SwissColors.black,
+                color: isDark ? SwissColors.darkBorder : SwissColors.black,
                 width: SwissShapes.borderThin,
               ),
             ),

@@ -16,8 +16,11 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
+    final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
 
-    return SafeArea(
+    return Material(
+      color: bg,
+      child: SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(SwissSpacing.xl),
         child: Column(
@@ -45,7 +48,11 @@ class SettingsScreen extends ConsumerWidget {
             // Account
             const SwissSectionLabel(number: '01', title: 'Account'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.person, label: 'Profile'),
+            _SettingsItem(
+              icon: Icons.person,
+              label: 'Profile',
+              onTap: () => context.push(AppRoutes.profile),
+            ),
             const _SettingsItem(icon: Icons.lock, label: 'Password'),
 
             const SizedBox(height: SwissSpacing.xxl),
@@ -119,7 +126,11 @@ class SettingsScreen extends ConsumerWidget {
             // Subscription
             const SwissSectionLabel(number: '07', title: 'Subscription'),
             const SizedBox(height: SwissSpacing.md),
-            const _SettingsItem(icon: Icons.star, label: 'Manage subscription'),
+            _SettingsItem(
+              icon: Icons.star,
+              label: 'Manage subscription',
+              onTap: () => context.push(AppRoutes.premium),
+            ),
 
             const SizedBox(height: SwissSpacing.xxl),
             const SwissDivider(),
@@ -148,6 +159,7 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -168,7 +180,7 @@ class _SettingsItem extends StatelessWidget {
         ? SwissColors.darkForeground.withValues(alpha: 0.4)
         : SwissColors.black.withValues(alpha: 0.4);
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: SwissSpacing.md),
@@ -182,7 +194,8 @@ class _SettingsItem extends StatelessWidget {
                 style: SwissTypography.label.copyWith(color: fg),
               ),
             ),
-            Icon(Icons.chevron_right, size: 20, color: mutedFg),
+            if (onTap != null)
+              Icon(Icons.chevron_right, size: 20, color: mutedFg),
           ],
         ),
       ),
@@ -232,24 +245,42 @@ class _ThemeOption extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final bg = isDark ? SwissColors.darkBackground : SwissColors.background;
+    final iconData = switch (label) {
+      'SYSTEM' => Icons.phone_android,
+      'LIGHT' => Icons.light_mode,
+      'DARK' => Icons.dark_mode,
+      _ => Icons.circle,
+    };
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(SwissSpacing.md),
         margin: const EdgeInsets.only(bottom: SwissSpacing.xs),
         decoration: BoxDecoration(
           color: selected ? fg : bg,
-          border: Border.all(color: fg, width: SwissShapes.borderMedium),
+          border: Border.all(
+            color: selected ? (isDark ? SwissColors.white : SwissColors.black) : fg,
+            width: SwissShapes.borderThin,
+          ),
         ),
         child: Row(
           children: [
+            Icon(
+              iconData,
+              size: 20,
+              color: selected ? bg : fg,
+            ),
+            const SizedBox(width: SwissSpacing.md),
             Text(
               label,
-              style: SwissTypography.label.copyWith(color: selected ? bg : fg),
+              style: SwissTypography.label.copyWith(
+                color: selected ? bg : fg,
+              ),
             ),
             const Spacer(),
-            if (selected) Icon(Icons.check, size: 18, color: bg),
+            if (selected)
+              Icon(Icons.check, size: 18, color: bg),
           ],
         ),
       ),

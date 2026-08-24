@@ -67,6 +67,9 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
         : SwissColors.onSurface;
     final border = isDark ? SwissColors.darkBorder : SwissColors.border;
     final muted = isDark ? SwissColors.darkMuted : SwissColors.muted;
+    final mutedFg = isDark
+        ? SwissColors.darkForeground.withValues(alpha: 0.5)
+        : SwissColors.black.withValues(alpha: 0.5);
 
     return ThemeData(
       useMaterial3: true,
@@ -134,19 +137,23 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
         filled: true,
         fillColor: muted,
         hintStyle: SwissTypography.body.copyWith(
-          color: onSurface.withValues(alpha: 0.4),
+          color: mutedFg,
         ),
-        border: const OutlineInputBorder(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: SwissSpacing.md,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
           borderSide: BorderSide(
-            color: SwissColors.black,
+            color: border,
             width: SwissShapes.borderThin,
           ),
         ),
-        enabledBorder: const OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
           borderSide: BorderSide(
-            color: SwissColors.black,
+            color: border,
             width: SwissShapes.borderThin,
           ),
         ),
@@ -161,7 +168,7 @@ class _StudyFlowAppState extends ConsumerState<StudyFlowApp> {
 
       dividerTheme: DividerThemeData(
         color: border,
-        thickness: SwissShapes.borderThin,
+        thickness: 1,
         space: 0,
       ),
 

@@ -29,11 +29,11 @@ abstract final class SwissColors {
   static const Color accent = red;
 
   // ── Dark mode ───────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF000000);
+  static const Color darkBackground = Color(0xFF0A0A0A);
   static const Color darkForeground = Color(0xFFFFFFFF);
-  static const Color darkSurface = Color(0xFF111111);
+  static const Color darkSurface = Color(0xFF161616);
   static const Color darkOnSurface = Color(0xFFFFFFFF);
-  static const Color darkBorder = Color(0xFFFFFFFF);
+  static const Color darkBorder = Color(0xFF2A2A2A);
   static const Color darkMuted = Color(0xFF1A1A1A);
 }
 

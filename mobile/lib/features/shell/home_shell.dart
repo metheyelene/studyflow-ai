@@ -130,11 +130,10 @@ class _SwissBottomNav extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(
+        color: bg,          border: Border(
           top: BorderSide(
             color: isDark ? SwissColors.darkBorder : SwissColors.black,
-            width: SwissShapes.borderMedium,
+            width: SwissShapes.borderThin,
           ),
         ),
       ),
@@ -241,11 +240,10 @@ class _SwissNavRail extends StatelessWidget {
     return Container(
       width: extended ? 200 : 72,
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(
+        color: bg,          border: Border(
           right: BorderSide(
             color: isDark ? SwissColors.darkBorder : SwissColors.black,
-            width: SwissShapes.borderMedium,
+            width: SwissShapes.borderThin,
           ),
         ),
       ),

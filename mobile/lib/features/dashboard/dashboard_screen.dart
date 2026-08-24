@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
 import '../../core/theme/swiss_tokens.dart';
+import '../../core/theme/theme_controller.dart';
 import '../../shared/widgets/swiss/swiss_components.dart';
 import '../authentication/auth_controller.dart';
 import '../authentication/auth_models.dart';
@@ -63,23 +64,57 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 /// Swiss hero — massive greeting, flush left, no geometric shapes.
-class _SwissHero extends StatelessWidget {
+class _SwissHero extends ConsumerWidget {
   const _SwissHero({this.firstName});
 
   final String? firstName;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? SwissColors.darkForeground : SwissColors.black;
     final mutedFg = isDark
         ? SwissColors.darkForeground.withValues(alpha: 0.5)
         : SwissColors.black.withValues(alpha: 0.5);
+    final currentMode = ref.watch(themeModeProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SwissEyebrow(text: 'Welcome back'),
+        Row(
+          children: [
+            const SwissEyebrow(text: 'Welcome back'),
+            const Spacer(),
+            // Quick theme toggle
+            GestureDetector(
+              onTap: () {
+                final next = switch (currentMode) {
+                  ThemeMode.light => ThemeMode.dark,
+                  ThemeMode.dark => ThemeMode.system,
+                  ThemeMode.system => ThemeMode.light,
+                };
+                ref.read(themeModeProvider.notifier).setMode(next);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SwissSpacing.md,
+                  vertical: SwissSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: fg,
+                    width: SwissShapes.borderThin,
+                  ),
+                ),
+                child: Icon(
+                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  size: 18,
+                  color: fg,
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: SwissSpacing.sm),
         Text(
           (firstName ?? 'Friend').toUpperCase(),
